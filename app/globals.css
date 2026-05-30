@@ -1,26 +1,75 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f4f0;
+  --foreground: #1c1a18;
+  --muted: #6e6862;
+  --subtle: #9a938b;
+  --border: #e3ddd4;
+  --surface: #fdfcfa;
+  --track-brand: 0.2em;
+  --track-display: 0.08em;
+  --track-label: 0.1em;
+  --track-ui: 0.07em;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --font-bodoni: var(--font-bodoni);
+  --font-serif-jp: var(--font-serif-jp);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-serif-jp), "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-feature-settings: "kern" 1, "liga" 1, "palt" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.type-brand {
+  font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
+  font-weight: 500;
+  font-optical-sizing: auto;
+  letter-spacing: var(--track-brand);
+  text-transform: uppercase;
+  line-height: 1.1;
+  font-synthesis: none;
+  /* Gucci: compensate wide tracking on the last letter */
+  padding-right: var(--track-brand);
+}
+
+.type-display {
+  font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
+  font-weight: 500;
+  font-optical-sizing: auto;
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+  line-height: 1.15;
+  font-synthesis: none;
+}
+
+.type-label {
+  font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
+  font-weight: 400;
+  font-optical-sizing: auto;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  font-synthesis: none;
+  color: var(--muted);
+}
+
+.type-ui {
+  font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
+  font-weight: 400;
+  font-optical-sizing: auto;
+  letter-spacing: var(--track-ui);
+  text-transform: uppercase;
+  font-synthesis: none;
 }
