@@ -89,7 +89,7 @@ export default function LikesPageClient({ id }: Props) {
 
         {likes.length === 0 && (
           <p className="text-sm text-muted tracking-[0.02em]">
-            まだいいねはありません。
+            まだお気に入りはありません。
           </p>
         )}
       </div>
