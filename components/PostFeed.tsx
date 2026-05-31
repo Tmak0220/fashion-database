@@ -263,7 +263,7 @@ export default function PostFeed() {
                   "
                 >
 
-                  {post.users?.username || "Unknown"}
+                  {post.users?.username || "名称非公開"}
 
                 </Link>
 

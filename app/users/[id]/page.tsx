@@ -243,7 +243,7 @@ export default function UserPage() {
 
             <h1 className="text-3xl">
 
-              {profile.username || "Unknown"}
+              {profile.username || "名称非公開"}
 
             </h1>
 

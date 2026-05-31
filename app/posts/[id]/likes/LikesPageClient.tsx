@@ -80,7 +80,7 @@ export default function LikesPageClient({ id }: Props) {
 
               <div className="min-w-0 flex-1">
                 <p className="text-base sm:text-lg font-medium truncate">
-                  {user.username || "Unknown"}
+                  {user.username || "名称非公開"}
                 </p>
               </div>
             </Link>

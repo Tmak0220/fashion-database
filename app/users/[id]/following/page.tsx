@@ -130,7 +130,7 @@ export default function FollowingPage() {
 
                 <p className="text-lg">
 
-                  {user.username || "Unknown"}
+                  {user.username || "名称非公開"}
 
                 </p>
 
