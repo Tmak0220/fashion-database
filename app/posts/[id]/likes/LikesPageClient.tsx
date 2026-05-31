@@ -53,7 +53,7 @@ export default function LikesPageClient({ id }: Props) {
   return (
     <main className="max-w-3xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
       <h1 className="text-3xl sm:text-4xl tracking-[0.08em] uppercase font-medium">
-        Likes
+        お気に入り
       </h1>
 
       <div className="mt-8 sm:mt-12 space-y-4 sm:space-y-6">
