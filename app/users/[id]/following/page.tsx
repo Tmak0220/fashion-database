@@ -66,7 +66,7 @@ export default function FollowingPage() {
 
     return (
       <main className="p-10">
-        Loading...
+        読み込み中...
       </main>
     )
   }
@@ -81,7 +81,7 @@ export default function FollowingPage() {
           uppercase
         "
       >
-        Following
+        フォロー中
       </h1>
 
       <div className="mt-12 space-y-6">

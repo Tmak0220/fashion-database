@@ -154,7 +154,7 @@ export default function UserPage() {
   const handleFollow = async () => {
 
     if (!currentUserId) {
-      alert("Login required")
+      alert("ログインが必要です")
       return
     }
 
@@ -199,7 +199,7 @@ export default function UserPage() {
 
     return (
       <main className="p-10">
-        Loading...
+        読み込み中...
       </main>
     )
   }
@@ -208,7 +208,7 @@ export default function UserPage() {
 
     return (
       <main className="p-10">
-        User not found
+        ユーザーが見つかりませんでした
       </main>
     )
   }
@@ -258,7 +258,7 @@ export default function UserPage() {
                 </p>
 
                 <p className="text-sm text-subtle">
-                  Posts
+                  投稿
                 </p>
 
               </div>
@@ -273,7 +273,7 @@ export default function UserPage() {
                 </p>
 
                 <p className="text-sm text-subtle">
-                  Followers
+                  フォロワー
                 </p>
 
               </Link>
@@ -288,7 +288,7 @@ export default function UserPage() {
                 </p>
 
                 <p className="text-sm text-subtle">
-                  Following
+                  フォロー中
                 </p>
 
               </Link>
@@ -329,8 +329,8 @@ export default function UserPage() {
                 "
               >
                 {following
-                  ? "Following"
-                  : "Follow"}
+                  ? "フォロー中"
+                  : "フォロー"}
               </button>
 
             )}
@@ -352,7 +352,7 @@ export default function UserPage() {
             uppercase
           "
         >
-          Posts
+          投稿
         </h2>
 
         <div

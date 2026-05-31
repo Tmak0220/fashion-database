@@ -89,7 +89,7 @@ export default function BookmarksPage() {
           uppercase
         "
       >
-        Saved Posts
+        ブックマーク
       </h1>
 
       <div
