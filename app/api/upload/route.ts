@@ -19,6 +19,14 @@ export async function POST(req: Request) {
       )
     }
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "ファイルサイズが大きすぎます（5MB以下にしてください）" },
+        { status: 400 }
+      )
+    }
+
     const bytes = await file.arrayBuffer()
 
     const buffer = Buffer.from(bytes)
