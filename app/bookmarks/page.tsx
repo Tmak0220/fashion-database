@@ -74,7 +74,7 @@ export default function BookmarksPage() {
 
     return (
       <main className="p-10">
-        Loading...
+        読み込み中...
       </main>
     )
   }
