@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import imageCompression from 'browser-image-compressio';
+import imageCompression from 'browser-image-compression';
 
 type Tag = {
   id: string
