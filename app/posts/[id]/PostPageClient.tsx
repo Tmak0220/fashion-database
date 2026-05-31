@@ -89,7 +89,7 @@ export default function PostPageClient({ id }: Props) {
         .single()
 
       if (error || !data) {
-        console.log(error)
+        console.error("投稿の取得に失敗しました:", error)
         setLoading(false)
         return
       }
@@ -151,7 +151,7 @@ export default function PostPageClient({ id }: Props) {
   const handleLike = async () => {
     if (!requirePlus()) return
     if (!currentUserId) {
-      alert("Login required")
+      alert("ログインが必要です")
       return
     }
     if (likeLoading) return
@@ -183,7 +183,7 @@ export default function PostPageClient({ id }: Props) {
   const handleFollow = async () => {
     if (!requirePlus()) return
     if (!currentUserId) {
-      alert("Login required")
+      alert("ログインが必要です")
       return
     }
     if (!post?.users?.id) return
@@ -215,7 +215,7 @@ export default function PostPageClient({ id }: Props) {
   const handleBookmark = async () => {
     if (!requirePlus()) return
     if (!currentUserId) {
-      alert("Login required")
+      alert("ログインが必要です")
       return
     }
     if (bookmarkLoading) return
@@ -243,13 +243,13 @@ export default function PostPageClient({ id }: Props) {
   }
 
   if (loading) {
-    return <main className="p-6 sm:p-10 text-sm text-muted">Loading...</main>
+    return <main className="p-6 sm:p-10 text-sm text-muted">読み込み中...</main>
   }
 
   if (dailyViewLimitReached) {
     return (
       <main className="max-w-2xl p-6 sm:p-10 md:p-14 lg:p-16">
-        <h1 className="text-3xl sm:text-4xl font-medium">Daily Limit Reached</h1>
+        <h1 className="text-3xl sm:text-4xl font-medium">閲覧制限に達しました</h1>
         <p className="mt-6 text-[14px] sm:text-base leading-7 sm:leading-8 text-muted">
           無料会員は1日50枚まで画像を閲覧できます。
           PLUS MEMBERになると無制限で閲覧できます。
@@ -265,7 +265,7 @@ export default function PostPageClient({ id }: Props) {
   }
 
   if (!post) {
-    return <main className="p-6 sm:p-10 text-sm text-muted">Post not found</main>
+    return <main className="p-6 sm:p-10 text-sm text-muted">投稿が見つかりませんでした</main>
   }
 
   return (
@@ -296,9 +296,9 @@ export default function PostPageClient({ id }: Props) {
               )}
             </Link>
             <div>
-              <p className="text-xs text-subtle">Posted by</p>
+              <p className="text-xs text-subtle">投稿者</p>
               <Link href={`/users/${post.users?.id}`} className="text-sm sm:text-base font-medium hover:underline">
-                {post.users?.username || "Unknown"}
+                {post.users?.username || "名称非公開"}
               </Link>
             </div>
           </div>
@@ -320,20 +320,20 @@ export default function PostPageClient({ id }: Props) {
               disabled={likeLoading}
               className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium hover:bg-black hover:text-white transition duration-300"
             >
-              {liked ? "♥ Liked" : "♡ Like"} ({likeCount})
+              {liked ? "♥ お気に入り済み" : "♡ お気に入り"} ({likeCount})
             </button>
             <Link
               href={`/posts/${id}/likes`}
               className="text-xs sm:text-sm underline text-muted hover:text-foreground transition"
             >
-              View likes
+              お気に入りを見る
             </Link>
             <button
               onClick={handleBookmark}
               disabled={bookmarkLoading}
               className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium hover:bg-black hover:text-white transition duration-300"
             >
-              {bookmarked ? "Saved" : "Save"}
+              {bookmarked ? "保存済み" : "保存"}
             </button>
             {currentUserId !== post.users?.id && (
               <button
@@ -341,14 +341,14 @@ export default function PostPageClient({ id }: Props) {
                 disabled={followLoading}
                 className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium hover:bg-black hover:text-white transition duration-300"
               >
-                {following ? "Following" : "Follow"}
+                {following ? "フォロー中" : "フォロー"}
               </button>
             )}
           </div>
 
           <div className="mt-12 sm:mt-16">
             <Link href="/" className="text-xs sm:text-sm underline text-muted hover:text-foreground transition">
-              Back
+              ホームに戻る
             </Link>
           </div>
         </div>
