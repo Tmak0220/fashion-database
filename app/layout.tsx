@@ -10,6 +10,19 @@ import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 
+import { GoogleAnalytics } from '@next/third-parties/google'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ja">
+      <body>
+        {children}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} /> 
+      </body>
+    </html>
+  )
+}
+
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni",
   subsets: ["latin"],
