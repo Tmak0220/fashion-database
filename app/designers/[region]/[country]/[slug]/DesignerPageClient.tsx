@@ -1,20 +1,25 @@
 "use client"
 
 import Link from "next/link"
-
 import { useEffect, useState } from "react"
-
 import { useParams } from "next/navigation"
-
 import { supabase } from "@/lib/supabase"
 
 import CollectionButton from "@/components/CollectionButton"
 import SectionHeading from "@/components/SectionHeading"
+import Breadcrumb from "@/components/Breadcrumb"
+import DesignerBrandTimeline from "@/components/DesignerBrandTimeline"
 
 type Designer = {
+  id: string
+  slug: string
   name: string
   name_ja: string | null
   description: string | null
+  region_slug: string
+  region_name_ja: string
+  country_slug: string
+  country_name_ja: string
 }
 
 type Post = {
@@ -23,10 +28,8 @@ type Post = {
   title: string | null
 }
 
-export default function DesignerPage() {
-
+export default function DesignerPageClient() {
   const params = useParams()
-
   const slug = params.slug as string
 
   const [designer, setDesigner] =
@@ -35,21 +38,20 @@ export default function DesignerPage() {
   const [collections, setCollections] =
     useState<any[]>([])
 
+  const [brands, setBrands] =
+    useState<any[]>([]) 
+
   const [posts, setPosts] =
     useState<Post[]>([])
 
   const [loading, setLoading] =
     useState(true)
 
-  // plus member
+  const [currentUserId, setCurrentUserId] =
+    useState<string | null>(null)
 
   const [isPlusMember, setIsPlusMember] =
     useState(false)
-
-  // follow
-
-  const [currentUserId, setCurrentUserId] =
-    useState<string | null>(null)
 
   const [following, setFollowing] =
     useState(false)
@@ -61,34 +63,25 @@ export default function DesignerPage() {
     useState(false)
 
   useEffect(() => {
-
     const fetchData = async () => {
-
-      // current user
-
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
       if (user) {
-
         setCurrentUserId(user.id)
 
-        // plus member check
-
-        const { data: profile } =
+        const { data: memberData } =
           await supabase
-            .from("profiles")
+            .from("users")
             .select("plus_member")
             .eq("id", user.id)
             .single()
 
         setIsPlusMember(
-          profile?.plus_member || false
+          memberData?.plus_member || false
         )
       }
-
-      // designer
 
       const { data: designerData } =
         await supabase
@@ -99,7 +92,19 @@ export default function DesignerPage() {
 
       setDesigner(designerData)
 
-      // collections
+      const { data: brandsData } =
+      await supabase
+        .from("brand_designers")
+        .select(`
+          *,
+          brands (*)
+        `)
+        .eq("designer_slug", slug)
+        .order("start_year", {
+          ascending: true,
+        })
+    
+      setBrands(brandsData || []) 
 
       const { data: collectionsData } =
         await supabase
@@ -111,8 +116,6 @@ export default function DesignerPage() {
           })
 
       setCollections(collectionsData || [])
-
-      // posts
 
       const { data: postsData } =
         await supabase
@@ -129,24 +132,18 @@ export default function DesignerPage() {
 
       setPosts(postsData || [])
 
-      // followers count
-
-      const {
-        count,
-      } = await supabase
-        .from("designer_follows")
-        .select("*", {
-          count: "exact",
-          head: true,
-        })
-        .eq("designer_slug", slug)
+      const { count } =
+        await supabase
+          .from("designer_follows")
+          .select("*", {
+            count: "exact",
+            head: true,
+          })
+          .eq("designer_slug", slug)
 
       setFollowersCount(count || 0)
 
-      // following check
-
       if (user) {
-
         const { data: followData } =
           await supabase
             .from("designer_follows")
@@ -162,24 +159,16 @@ export default function DesignerPage() {
     }
 
     fetchData()
-
   }, [slug])
 
   const handleFollow = async () => {
-
     if (!currentUserId) {
-
       alert("Login required")
-
       return
     }
 
-    // plus only
-
     if (!isPlusMember) {
-
-      alert("PLUS MEMBERS限定機能です")
-
+      alert("PLUS MEMBER限定機能です")
       return
     }
 
@@ -188,7 +177,6 @@ export default function DesignerPage() {
     setFollowLoading(true)
 
     if (following) {
-
       await supabase
         .from("designer_follows")
         .delete()
@@ -198,9 +186,7 @@ export default function DesignerPage() {
       setFollowing(false)
 
       setFollowersCount((prev) => prev - 1)
-
     } else {
-
       await supabase
         .from("designer_follows")
         .insert({
@@ -217,233 +203,170 @@ export default function DesignerPage() {
   }
 
   if (loading) {
-
     return (
-      <main className="p-10">
+      <main className="p-6 sm:p-10 text-sm text-muted">
         Loading...
       </main>
     )
   }
 
   if (!designer) {
-
     return (
-      <main className="p-10">
+      <main className="p-6 sm:p-10 text-sm text-muted">
         Designer not found
       </main>
     )
   }
 
   return (
-    <main className="p-10 md:p-14 lg:p-16">
+    <main className="p-6 sm:p-10 md:p-14 lg:p-16">
+      <Breadcrumb
+        items={[
+          {
+            label: "ファッションデータベース",
+            href: "/",
+          },
+          {
+            label: "デザイナー",
+            href: "/designers",
+          },
+          {
+            label: designer.region_name_ja,
+            href: `/designers/${designer.region_slug}`,
+          },
+          {
+            label: designer.country_name_ja,
+            href: `/designers/${designer.region_slug}/${designer.country_slug}`,
+          },
+          {
+            label:
+              designer.name_ja ||
+              designer.name,
+          },
+        ]}
+      />
 
-      {/* header */}
-
-      <div
-        className="
-          flex
-          flex-col
-          md:flex-row
-          md:items-end
-          md:justify-between
-          gap-8
-        "
-      >
-
-        <div>
-
-          <h1
-            className="type-brand text-5xl md:text-6xl"
-            style={
-              designer.name.length <= 6
-                ? {
-                    letterSpacing: "0.24em",
-                    paddingRight: "0.24em",
-                  }
-                : undefined
-            }
-          >
-            {designer.name}
-          </h1>
-
-          {designer.name_ja && (
-
-            <p className="mt-3 text-xl tracking-[0.04em] text-muted">
-              {designer.name_ja}
-            </p>
-
-          )}
-
-        </div>
-
-        {/* follow area */}
-
-        <div className="flex items-center gap-6">
-
+      <div className="mt-8 sm:mt-10">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 sm:gap-8">
           <div>
+            <h1
+              className={`type-brand text-4xl sm:text-5xl md:text-6xl ${
+                designer.name.length <= 6
+                  ? "tracking-[0.24em] pr-[0.24em]"
+                  : ""
+              }`}
+            >
+              {designer.name}
+            </h1>
 
-            <p className="text-sm text-subtle">
-              Followers
-            </p>
-
-            <p className="mt-1 text-2xl">
-              {followersCount}
-            </p>
-
+            {designer.name_ja && (
+              <p className="mt-3 text-lg sm:text-xl tracking-[0.04em] text-muted">
+                {designer.name_ja}
+              </p>
+            )}
           </div>
 
-          <button
-            onClick={handleFollow}
-            disabled={followLoading}
-            className="
-              border
-              border-border
-              rounded-xl
-              px-5
-              py-3
-              hover:bg-black
-              hover:text-white
-              transition
-            "
-          >
-            {following
-              ? "Following"
-              : "Follow Designer"}
-          </button>
+          <div className="flex items-center gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-border justify-between md:justify-end">
+            <div>
+              <p className="text-xs sm:text-sm text-subtle">
+                Followers
+              </p>
 
-        </div>
+              <p className="mt-0.5 text-xl sm:text-2xl font-medium">
+                {followersCount}
+              </p>
+            </div>
 
-      </div>
-
-      {/* description */}
-
-      {designer.description && (
-
-        <p className="mt-10 max-w-3xl text-[15px] leading-8 text-muted whitespace-pre-line">
-          {designer.description}
-        </p>
-
-      )}
-
-      {/* collections */}
-
-      <section className="mt-16">
-
-        <SectionHeading
-          title="Collections"
-          titleJa="コレクション"
-          className="mb-6"
-        />
-
-        <div className="flex flex-wrap gap-4">
-
-          {collections.map((collection) => (
-
-            <CollectionButton
-              key={collection.id}
-              collection={collection}
-            />
-
-          ))}
-
-        </div>
-
-      </section>
-
-      {/* posts */}
-
-      <section className="mt-24">
-
-        <SectionHeading
-          title="Posts"
-          titleJa="投稿"
-          className="mb-8"
-        />
-
-        <div
-          className="
-            grid
-            grid-cols-2
-            md:grid-cols-3
-            gap-6
-          "
-        >
-
-          {(isPlusMember
-            ? posts
-            : posts.slice(0, 50)
-          ).map((post) => (
-
-            <Link
-              key={post.id}
-              href={`/posts/${post.id}`}
-              className="block"
+            <button
+              onClick={handleFollow}
+              disabled={followLoading}
+              className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm tracking-[0.04em] hover:bg-black hover:text-white transition-colors duration-300"
             >
-
-              <article className="space-y-3">
-
-                <img
-                  src={post.image_urls?.[0]}
-                  alt=""
-                  className="
-                    w-full
-                    aspect-[4/5]
-                    object-cover
-                    rounded-2xl
-                    border
-                    border-border
-                  "
-                />
-
-                {post.title && (
-
-                  <p className="text-sm">
-                    {post.title}
-                  </p>
-
-                )}
-
-              </article>
-
-            </Link>
-
-          ))}
-
-        </div>
-
-        {!isPlusMember &&
-          posts.length > 50 && (
-
-          <div className="mt-10 text-center">
-
-            <p className="text-sm text-muted">
-              続きを見るにはPLUS MEMBERS登録が必要です
-            </p>
-
-            <Link
-              href="/members"
-              className="
-                inline-block
-                mt-4
-                border
-                border-black
-                bg-black
-                text-white
-                px-6
-                py-3
-                rounded-xl
-                text-sm
-                tracking-[0.08em]
-              "
-            >
-              PLUS MEMBERS
-            </Link>
-
+              {following
+                ? "Following"
+                : "Follow Designer"}
+            </button>
           </div>
+        </div>
+
+        {designer.description && (
+          <p className="mt-8 sm:mt-10 max-w-3xl text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted whitespace-pre-line">
+            {designer.description}
+          </p>
         )}
 
-      </section>
+         <DesignerBrandTimeline
+           brands={brands}
+         />
 
+        <section className="mt-12 sm:mt-16">
+          <SectionHeading
+            title="Collections"
+            titleJa="コレクション"
+            className="mb-6"
+          />
+
+          <div className="flex flex-wrap gap-2.5 sm:gap-4">
+            {collections.map((collection) => (
+              <CollectionButton
+                key={collection.id}
+                collection={collection}
+              />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-16 sm:mt-24">
+          <SectionHeading
+            title="Posts"
+            titleJa="投稿"
+            className="mb-8"
+          />
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            {(isPlusMember
+              ? posts
+              : posts.slice(0, 50)
+            ).map((post) => (
+              <Link
+                key={post.id}
+                href={`/posts/${post.id}`}
+                className="block"
+              >
+                <article className="space-y-3">
+                  <img
+                    src={post.image_urls?.[0]}
+                    alt=""
+                    className="w-full aspect-[4/5] object-cover rounded-2xl border border-border"
+                  />
+
+                  {post.title && (
+                    <p className="text-sm tracking-[0.02em] text-foreground truncate">
+                      {post.title}
+                    </p>
+                  )}
+                </article>
+              </Link>
+            ))}
+          </div>
+
+          {!isPlusMember &&
+            posts.length > 50 && (
+              <div className="mt-10 text-center">
+                <p className="text-sm text-muted">
+                  続きを見るにはPLUS MEMBERS登録が必要です
+                </p>
+
+                <Link
+                  href="/members"
+                  className="inline-block mt-4 border border-black bg-black text-white px-6 py-3 rounded-xl text-sm tracking-[0.08em]"
+                >
+                  PLUS MEMBERS
+                </Link>
+              </div>
+            )}
+        </section>
+      </div>
     </main>
   )
 }

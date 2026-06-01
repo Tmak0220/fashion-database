@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 
-type Brand = {
+type Designer = {
   id: number
   slug: string
   name: string
@@ -10,14 +10,14 @@ type Brand = {
   country_slug: string
 }
 
-export default function BrandButton({
-  brand,
+export default function DesignerButton({
+  designer,
 }: {
-  brand: Brand
+  designer: Designer
 }) {
   return (
     <Link
-      href={`/brands/${brand.region_slug}/${brand.country_slug}/${brand.slug}`}
+      href={`/designers/${designer.region_slug}/${designer.country_slug}/${designer.slug}`}
       className="
         inline-block
         border
@@ -33,13 +33,13 @@ export default function BrandButton({
         duration-300
       "
     >
-      <span 
+      <span
         className="type-ui text-xs font-medium tracking-[0.12em]"
         style={{
           paddingRight: "0.12em"
         }}
       >
-        {brand.name.toUpperCase()} 
+        {designer.name.toUpperCase()}
       </span>
     </Link>
   )

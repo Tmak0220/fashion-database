@@ -24,7 +24,6 @@ type Props = {
   designers: Designer[]
 }
 
-/** 左右列で開始年がずれたとき、1年あたりのずらし量（px） */
 const PX_PER_YEAR_OFFSET = 24
 
 type BothRow = {
