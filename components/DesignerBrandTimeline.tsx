@@ -159,6 +159,9 @@ function BrandEntry({
   brand: Brand
   centered?: boolean
 }) {
+
+  if (!brand.brands) return null
+
   const align = centered
     ? "text-center"
     : ""

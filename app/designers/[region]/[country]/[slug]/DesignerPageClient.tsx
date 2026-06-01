@@ -28,12 +28,28 @@ type Post = {
   title: string | null
 }
 
-export default function DesignerPageClient() {
+type Props = {
+  designer: Designer
+  relatedDesigners: {
+    id: string
+    name: string
+    name_ja: string | null
+    slug: string
+    region_slug: string
+    country_slug: string
+  }[]
+}
+
+export default function DesignerPageClient({
+  designer: initialDesigner,
+  relatedDesigners,
+}: Props) {
+
   const params = useParams()
   const slug = params.slug as string
 
   const [designer, setDesigner] =
-    useState<Designer | null>(null)
+    useState<Designer | null>(initialDesigner)
 
   const [collections, setCollections] =
     useState<any[]>([])
