@@ -38,39 +38,68 @@ export default function Home() {
           ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。
         </p>
 
-        <nav className="mt-12 sm:mt-14 flex flex-wrap gap-3 sm:gap-4">
+        <nav className="mt-12 sm:mt-14 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <Link
             href="/brands"
-            className="type-ui inline-block border border-border bg-surface px-5 md:px-8 py-3.5 text-[12px] sm:text-[13px] tracking-[0.1em] transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
+            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
           >
-            BRANDS
+            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
+              BRANDS
+            </p>
+            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
+              ブランド一覧
+            </p>
           </Link>
+
           <Link
             href="/designers"
-            className="type-ui inline-block border border-border bg-surface px-5 md:px-8 py-3.5 text-[12px] sm:text-[13px] tracking-[0.1em] transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
+            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
           >
-            DESIGNERS
+            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
+              DESIGNERS
+            </p>
+            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
+              デザイナー一覧
+            </p>
           </Link>
+
           <Link
             href="/collections"
-            className="type-ui inline-block border border-border bg-surface px-5 md:px-8 py-3.5 text-[12px] sm:text-[13px] tracking-[0.1em] transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
+            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
           >
-            COLLECTIONS
+            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
+              COLLECTIONS
+            </p>
+            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
+              コレクション一覧
+            </p>
           </Link>
+
           <Link
             href="/tags"
-            className="type-ui inline-block border border-border bg-surface px-5 md:px-8 py-3.5 text-[12px] sm:text-[13px] tracking-[0.1em] transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
+            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
           >
-            TAGS
+            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
+              TAGS
+            </p>
+            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
+              タグ検索
+            </p>
           </Link>
+
           <Link
             href="/groups"
-            className="type-ui inline-block border border-border bg-surface px-5 md:px-8 py-3.5 text-[12px] sm:text-[13px] tracking-[0.1em] transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
+            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
           >
-            GROUPS
+            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
+              GROUPS
+            </p>
+            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
+              ブランドグループ
+            </p>
           </Link>
         </nav>
-      </section>
+       </section>
 
       <section className="px-6 pb-20 sm:px-10 md:px-14 lg:px-16">
         <div className="mb-8 sm:mb-12">
