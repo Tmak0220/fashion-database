@@ -11,7 +11,13 @@ type Tag = {
   slug: string
 }
 
-export default function CreatePostForm() {
+type Props = {
+  onPostCreated?: () => Promise<void> | void
+}
+
+export default function CreatePostForm(
+  { onPostCreated }: Props
+) { 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [brandSlug, setBrandSlug] = useState("")
@@ -243,6 +249,10 @@ export default function CreatePostForm() {
           tag_id: tagId,
         }))
         await supabase.from("post_tags").insert(postTags)
+      }
+
+      if (onPostCreated) {
+        await onPostCreated()
       }
 
       alert("ポストが作成されました")

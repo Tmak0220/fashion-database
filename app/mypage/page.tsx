@@ -48,6 +48,15 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
+  const fetchPosts = async (userId: string) => {
+    const { data } = await supabase
+      .from("posts")
+      .select("id, image_urls, title")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+  
+    setPosts(data || [])
+  }
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [bookmarksCount, setBookmarksCount] = useState(0)
@@ -100,12 +109,7 @@ export default function MyPage() {
         .single()
       setProfile(data)
 
-      const { data: postsData } = await supabase
-        .from("posts")
-        .select("id, image_urls, title")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-      setPosts(postsData || [])
+      await fetchPosts(user.id)
 
       const { count: followers } = await supabase
         .from("follows")
@@ -323,7 +327,9 @@ export default function MyPage() {
             </p>
           </div>
           <div className="mt-8">
-            <CreatePostForm />
+          <CreatePostForm
+            onPostCreated={() => fetchPosts(profile.id)}
+          />
           </div>
         </div>
 
