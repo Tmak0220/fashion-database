@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import imageCompression from 'browser-image-compression';
+import { compressImage } from "@/lib/imageCompression";
 
 type Tag = {
   id: string
@@ -106,31 +106,20 @@ export default function CreatePostForm() {
       return
     }
   
-    // 1. 圧縮処理
     setUploading(true)
-    let fileToUpload = file;
+    let fileToUpload: File;
+
     try {
-      const options = {
-        maxSizeMB: 1,            // 1MB以下に圧縮
-        maxWidthOrHeight: 1200,  // 長辺を1200pxにリサイズ
-        useWebWorker: true,
-      }
-      fileToUpload = await imageCompression(file, options);
+      fileToUpload = await compressImage(file);
     } catch (err) {
-      console.error("圧縮失敗:", err);
-      // 圧縮に失敗しても元のファイルで続行するか、ここでreturnして停止するか選べます
-      // 今回は安全のため、圧縮失敗時はここで停止します
-      alert("画像の圧縮に失敗しました。別の画像をお試しください。");
+      alert(
+        err instanceof Error
+          ? err.message
+          : "画像の圧縮に失敗しました。"
+      );
+
       setUploading(false);
       return;
-    }
-  
-    // 2. サイズ再チェック（圧縮後も念のため）
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    if (fileToUpload.size > MAX_SIZE) {
-      alert("画像サイズが大きすぎます。5MB以下の画像を選択してください。");
-      setUploading(false);
-      return; 
     }
   
     setFileName(file.name)
@@ -140,10 +129,9 @@ export default function CreatePostForm() {
       return
     }
   
-    // 3. アップロード処理
     try {
       const formData = new FormData()
-      formData.append("file", fileToUpload) // 圧縮した方を使う
+      formData.append("file", fileToUpload) 
   
       const res = await fetch("/api/upload", {
         method: "POST",
