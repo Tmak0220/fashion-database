@@ -65,6 +65,10 @@ body {
   color: var(--muted);
 }
 
+.type-label-ja {
+  letter-spacing: var(--track-label);
+}
+
 .type-ui {
   font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
   font-weight: 400;

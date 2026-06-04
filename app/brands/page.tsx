@@ -54,7 +54,7 @@ export default async function BrandsPage() {
                 {region.name}
               </p>
               {region.name_ja && (
-                <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
+                <p className="type-label-ja mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
                   {region.name_ja}
                 </p>
               )}
