@@ -28,35 +28,35 @@ const supabase = createClient(
 export async function POST(
   req: NextRequest
 ) {
-
   try {
-
     const { postId } = await req.json()
 
     // post取得
-    const { data: post, error } =
-      await supabase
-        .from("posts")
-        .select("*")
-        .eq("id", postId)
-        .single()
+    const {
+      data: post,
+      error: postFetchError,
+    } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("id", postId)
+      .single()
 
-    if (error || !post) {
+    if (postFetchError || !post) {
       return NextResponse.json(
         { error: "Post not found" },
         { status: 404 }
       )
     }
 
-    // R2 key 抽出
-    const imageUrl =
-      post.image_url as string
-
-    const key =
-      imageUrl.split(".r2.dev/")[1]
-
     // R2画像削除
-    if (key) {
+    const imageUrls: string[] =
+      post.image_urls || []
+
+    for (const imageUrl of imageUrls) {
+      const key =
+        imageUrl.split(".r2.dev/")[1]
+
+      if (!key) continue
 
       await s3.send(
         new DeleteObjectCommand({
@@ -68,27 +68,41 @@ export async function POST(
     }
 
     // tag削除
-    await supabase
-      .from("post_tags")
-      .delete()
-      .eq("post_id", postId)
+    const { error: tagError } =
+      await supabase
+        .from("post_tags")
+        .delete()
+        .eq("post_id", postId)
+
+    if (tagError) {
+      throw tagError
+    }
 
     // post削除
-    await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId)
+    const { error: deletePostError } =
+      await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId)
+
+    if (deletePostError) {
+      throw deletePostError
+    }
 
     return NextResponse.json({
       success: true,
     })
 
   } catch (err) {
-
-    console.log(err)
+    console.error(
+      "Delete post error:",
+      err
+    )
 
     return NextResponse.json(
-      { error: "Delete failed" },
+      {
+        error: "Delete failed",
+      },
       { status: 500 }
     )
   }
