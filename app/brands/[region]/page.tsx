@@ -90,14 +90,14 @@ export default async function RegionPage({ params }: Props) {
             <Link
               key={country.id}
               href={`/brands/${region}/${country.slug}`}
-              className="group flex flex-col items-center border border-neutral-300 rounded-xl px-5 sm:px-6 py-3.5 sm:py-4 bg-white transition-all duration-300 md:hover:bg-black md:hover:text-white md:hover:border-black active:bg-neutral-100"
+              className="group block border border-neutral-300 rounded-xl px-5 sm:px-6 py-3.5 sm:py-4 bg-white transition-all duration-300 md:hover:bg-black md:hover:text-white md:hover:border-black active:bg-neutral-100"
             >
-              <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase text-center group-hover:text-inherit">
+              <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
                 {country.name}
               </p>
 
               {country.name_ja && (
-                <p className="mt-1 text-xs text-center text-muted group-hover:text-inherit opacity-80">
+                <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
                   {country.name_ja}
                 </p>
               )}
