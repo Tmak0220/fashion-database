@@ -15,8 +15,6 @@ export default function Breadcrumb({
   items,
 }: Props) {
 
-  // JSON-LD
-
   const jsonLd = {
     "@context": "https://schema.org",
 
@@ -40,7 +38,6 @@ export default function Breadcrumb({
 
   return (
     <>
-
       {/* JSON-LD */}
 
       <script
