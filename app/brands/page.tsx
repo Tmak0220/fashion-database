@@ -6,12 +6,11 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import IntroSection from "@/components/IntroSection"
 import CardSection from "@/components/CardSection"
-
-import { useSiteContent } from "@/lib/useSiteContent"
+import HistoryAccordion from "@/components/HistoryAccordion"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Brands | Fashion Database",
+    title: "ブランド一覧 | Fashion Database",
     description:
       "ファッションデータベースに登録されているブランドを、地域・国別に探すことができます。",
     alternates: {
@@ -20,28 +19,44 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+type HistoryItem = {
+  title: string
+  content: string
+  order: number
+}
+
 export default async function BrandsPage() {
-  const [{ data: regions }, intro] = await Promise.all([
+  const [{ data: regions }, { data: contents }] = await Promise.all([
     supabase
       .from("regions")
       .select("*")
       .order("name", { ascending: true }),
 
-    useSiteContent("brands", {
-      fallback: "世界のファッションの歴史を準備中です。",
-    }),
+    supabase
+      .from("site_contents")
+      .select("key, title, content, order")
+      .eq("key", "history"),
   ])
 
+  const history: HistoryItem[] =
+    (contents ?? [])
+      .map((item) => ({
+        title: item.title,
+        content: item.content,
+        order: item.order ?? 0,
+      }))
+      .sort((a, b) => a.order - b.order)
+
   return (
-    <PageLayout
-      title="Brands"
-      subtitle="ブランド"
-    >
+    <PageLayout title="Brands" subtitle="ブランド">
       <IntroSection
         title="世界のファッションの歴史"
-        content={intro?.content}
-        isVisible={intro?.is_visible}
+        content="ファッションの歴史は時代ごとに大きく変化し、社会・文化・技術と密接に関わって発展してきました。"
+        isVisible={true}
       />
+
+      {/* 構造化データ版 */}
+      <HistoryAccordion items={history} />
 
       <CardSection
         title="Regions"
