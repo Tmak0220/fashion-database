@@ -28,7 +28,7 @@ export default async function BrandsPage() {
       .from("site_contents")
       .select("key, title, content, order, type, lang")
       .eq("key", "history")
-      .eq("lang", "ja"), // 日本語データのみを取得するようにフィルタリング
+      .eq("lang", "ja"),
   ])
 
   const history: HistoryItem[] = (contents ?? [])

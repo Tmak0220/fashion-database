@@ -26,9 +26,9 @@ export default async function DesignersPage() {
     supabase.from("regions").select("*").order("name", { ascending: true }),
     supabase
       .from("site_contents")
-      .select("key, title, content, order, type, lang") // lang を追加
+      .select("key, title, content, order, type, lang")
       .eq("key", "history")
-      .eq("lang", "ja"), // 日本語のみに限定
+      .eq("lang", "ja"),
   ])
 
   const history: HistoryItem[] = (contents ?? [])
