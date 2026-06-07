@@ -11,30 +11,31 @@ type Props = {
 }
 
 export default function HistoryAccordion({ items }: Props) {
-  const [open, setOpen] = useState<number | null>(null)
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
+    <div className="w-full max-w-3xl mx-auto">
       <div className="space-y-4">
         {items.map((item, i) => (
           <div
             key={i}
-            className="border rounded-xl bg-white shadow-sm overflow-hidden"
+            className="border border-border rounded-xl bg-surface overflow-hidden transition-colors"
           >
             <button
-              onClick={() => setOpen(open === i ? null : i)}
-              className="w-full px-5 py-4 flex justify-between items-center hover:bg-gray-50 transition"
+              onClick={() => setOpenIndex(openIndex === i ? null : i)}
+              className="w-full px-6 py-5 flex justify-between items-center group transition-colors hover:bg-foreground/5"
             >
-              <span className="font-medium">{item.title}</span>
-              <span className="text-gray-400">
-                {open === i ? "−" : "+"}
+              <span className="type-ui text-sm font-medium tracking-[0.12em] text-foreground">
+                {item.title.toUpperCase()}
+              </span>
+              <span className="text-foreground/40 transition-transform duration-300">
+                {openIndex === i ? "—" : "+"}
               </span>
             </button>
 
-            {/* 👇ここがポイント */}
-            {open === i && (
-              <div className="px-5 py-4">
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+            {openIndex === i && (
+              <div className="px-6 pb-6 pt-0">
+                <p className="text-sm leading-relaxed text-muted whitespace-pre-line">
                   {item.content}
                 </p>
               </div>

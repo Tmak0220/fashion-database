@@ -1,70 +1,62 @@
 export const dynamic = "force-dynamic"
 
 import type { Metadata } from "next"
-import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import SectionHeading from "@/components/SectionHeading"
+
+import PageLayout from "@/components/PageLayout"
+import CardSection from "@/components/CardSection"
+import HistoryAccordion from "@/components/HistoryAccordion"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Designers | Fashion Database",
-    description: "ファッションデータベースに登録されているデザイナーを、地域・国別に探すことができます。",
+    title: "デザイナー一覧 | Fashion Database",
+    description:
+      "ファッションデータベースに登録されているデザイナーを、地域・国別に探すことができます。",
     alternates: {
       canonical: "https://fashdb.com/designers",
     },
   }
 }
 
+type HistoryItem = {
+  title: string
+  content: string
+  order: number
+}
+
 export default async function DesignersPage() {
-  const { data: regions } = await supabase
-    .from("regions")
-    .select("*")
-    .order("name", { ascending: true })
+  const [{ data: regions }, { data: contents }] = await Promise.all([
+    supabase
+      .from("regions")
+      .select("*")
+      .order("name", { ascending: true }),
+
+    supabase
+      .from("site_contents")
+      .select("key, title, content, order")
+      .eq("key", "history"),
+  ])
+
+  const history: HistoryItem[] =
+    (contents ?? [])
+      .map((item) => ({
+        title: item.title,
+        content: item.content,
+        order: item.order ?? 0,
+      }))
+      .sort((a, b) => a.order - b.order)
 
   return (
-    <main className="p-6 sm:p-10 md:p-14 lg:p-16">
-      <nav className="flex flex-wrap items-center gap-2 text-sm text-subtle">
-        <Link href="/" className="hover:text-black transition-colors duration-300">
-          ファッションデータベース
-        </Link>
-        <span>＞</span>
-        <span className="text-black">デザイナー</span>
-      </nav>
+    <PageLayout title="Designers" subtitle="デザイナー">
+      
+      <HistoryAccordion items={history} />
 
-      <h1 className="mt-8 type-brand text-4xl sm:text-5xl md:text-6xl tracking-[0.18em] pr-[0.18em]">
-        Designers
-      </h1>
-
-      <p className="mt-3 text-lg sm:text-xl tracking-[0.04em] text-muted">
-        デザイナー
-      </p>
-
-      <section className="mt-12 sm:mt-16">
-        <SectionHeading
-          title="Regions"
-          titleJa="地域"
-          className="mb-6"
-        />
-        <div className="flex flex-wrap gap-3 sm:gap-4">
-          {regions?.map((region) => (
-            <Link
-              key={region.id}
-              href={`/designers/${region.slug}`}
-              className="group flex flex-col items-center border border-neutral-300 rounded-xl px-5 sm:px-6 py-3.5 sm:py-4 bg-white transition-all duration-300 md:hover:bg-black md:hover:text-white md:hover:border-black active:bg-neutral-100"
-            >
-              <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase text-center group-hover:text-inherit">
-                {region.name}
-              </p>
-
-              {region.name_ja && (
-                <p className="type-label-ja mt-1 text-xs text-center text-muted group-hover:text-inherit opacity-80">
-                  {region.name_ja}
-                </p>
-              )}
-            </Link>
-          ))}
-        </div>
-      </section>
-    </main>
+      <CardSection
+        title="Regions"
+        titleJa="地域"
+        items={regions}
+        basePath="/designers"
+      />
+    </PageLayout>
   )
 }

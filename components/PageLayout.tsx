@@ -14,7 +14,6 @@ export default function PageLayout({
 }: Props) {
   return (
     <main className="p-6 sm:p-10 md:p-14 lg:p-16">
-      {/* breadcrumb */}
       <nav className="flex flex-wrap items-center gap-2 text-sm text-subtle">
         <Link
           href="/"
@@ -22,27 +21,23 @@ export default function PageLayout({
         >
           ファッションデータベース
         </Link>
-
         <span>＞</span>
-
         <span className="text-black">
           {subtitle ?? title}
         </span>
       </nav>
 
-      {/* title */}
-      <h1 className="mt-8 type-brand text-4xl sm:text-5xl md:text-6xl tracking-[0.18em] pr-[0.18em]">
-        {title}
-      </h1>
+      <header className="mt-8 mb-12 sm:mb-16">
+        <h1 className="type-brand text-4xl sm:text-5xl md:text-6xl tracking-[0.18em] pr-[0.18em]">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-3 text-lg sm:text-xl tracking-[0.04em] text-muted">
+            {subtitle}
+          </p>
+        )}
+      </header>
 
-      {/* subtitle */}
-      {subtitle && (
-        <p className="mt-3 text-lg sm:text-xl tracking-[0.04em] text-muted">
-          {subtitle}
-        </p>
-      )}
-
-      {/* page content */}
       {children}
     </main>
   )

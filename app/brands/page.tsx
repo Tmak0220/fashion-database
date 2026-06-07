@@ -49,13 +49,7 @@ export default async function BrandsPage() {
 
   return (
     <PageLayout title="Brands" subtitle="ブランド">
-      <IntroSection
-        title="世界のファッションの歴史"
-        content="ファッションの歴史は時代ごとに大きく変化し、社会・文化・技術と密接に関わって発展してきました。"
-        isVisible={true}
-      />
 
-      {/* 構造化データ版 */}
       <HistoryAccordion items={history} />
 
       <CardSection

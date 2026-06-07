@@ -21,16 +21,14 @@ export default function CardSection({
   items,
   basePath,
 }: Props) {
+  if (!items || items.length === 0) return null
+
   return (
     <section className="mt-12 sm:mt-16">
-      <SectionHeading
-        title={title}
-        titleJa={titleJa}
-        className="mb-6"
-      />
+      <SectionHeading title={title} titleJa={titleJa} className="mb-6" />
 
-      <div className="flex flex-wrap gap-3 sm:gap-4">
-        {items?.map((item) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 max-w-7xl">
+        {items.map((item) => (
           <Link
             key={item.id}
             href={`${basePath}/${item.slug}`}
@@ -39,48 +37,26 @@ export default function CardSection({
               flex
               flex-col
               items-center
+              justify-center
               border
-              border-neutral-300
+              border-border
               rounded-xl
-              px-5
-              sm:px-6
-              py-3.5
-              sm:py-4
-              bg-white
+              px-4
+              py-4
+              bg-surface
               transition-all
               duration-300
-              md:hover:bg-black
-              md:hover:text-white
-              md:hover:border-black
-              active:bg-neutral-100
+              hover:bg-foreground
+              hover:border-foreground
+              active:scale-[0.98]
             "
           >
-            <p
-              className="
-                type-label
-                text-sm
-                tracking-[0.08em]
-                font-semibold
-                uppercase
-                text-center
-                group-hover:text-inherit
-              "
-            >
+            <p className="type-label group-hover:text-background transition-colors">
               {item.name}
             </p>
 
             {item.name_ja && (
-              <p
-                className="
-                  type-label-ja
-                  mt-1
-                  text-xs
-                  text-center
-                  text-muted
-                  group-hover:text-inherit
-                  opacity-80
-                "
-              >
+              <p className="type-label-ja mt-1 text-xs text-muted group-hover:text-background/80 transition-colors">
                 {item.name_ja}
               </p>
             )}
