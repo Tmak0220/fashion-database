@@ -1,13 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import ContentRenderer from "./ContentRenderer"
+
+type HistoryItem = {
+  title: string
+  content: string
+  order: number
+  type?: 'text' | 'markdown' | 'html'
+}
 
 type Props = {
-  items: {
-    title: string
-    content: string
-    order: number
-  }[]
+  items: HistoryItem[]
 }
 
 export default function HistoryAccordion({ items }: Props) {
@@ -35,9 +39,7 @@ export default function HistoryAccordion({ items }: Props) {
 
             {openIndex === i && (
               <div className="px-6 pb-6 pt-0">
-                <p className="text-sm leading-relaxed text-muted whitespace-pre-line">
-                  {item.content}
-                </p>
+                <ContentRenderer content={item.content} type={item.type || 'text'} />
               </div>
             )}
           </div>
