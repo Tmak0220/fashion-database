@@ -36,26 +36,21 @@ export async function createPost(input: unknown, userId: string) {
     if (d?.slug) finalDesigner = d.slug
   }
 
+  // 最小構成のデータを挿入してみる
   const { data: post, error } = await supabase
     .from("posts")
     .insert({
       user_id: userId,
-      title: data.title,
-      description: description,
+      title: data.title || "無題", // title が空だとDB制約に触れる可能性があるためデフォルトを入れる
       image_urls: data.imageUrls,
-      brand_slug: finalBrand,
-      designer_slug: finalDesigner,
-      season_slug: finalSeasonSlug,
-      collection_slug: finalCollectionSlug,
-      season: season,
-      year: yearValue,
+      // それ以外のオプション項目を一旦全て削る
     })
     .select()
-    .single()
+    .single();
 
   if (error) {
-    console.error("DB Insert Error:", error)
-    throw new Error("データベースへの書き込みに失敗しました")
+    console.error("DB Error Details:", JSON.stringify(error, null, 2));
+    throw new Error("DB Error: " + error.message);
   }
 
   if (data.selectedTags?.length) {
