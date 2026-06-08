@@ -220,22 +220,25 @@ export default function EditPostPage() {
       return
     }
   
-    // 3. タグ更新
-    await supabase.from("post_tags").delete().eq("post_id", postId)
-    if (selectedTags.length > 0) {
-      const { error: insertError } = await supabase.from("post_tags").insert(
-        selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
-      )
-      if (insertError) {
-        console.error(insertError)
-        alert("タグの保存に失敗しました。")
-      }
-    }
+// 3. タグ更新部分を以下のように明確な await 処理に書き換えてください
+await supabase.from("post_tags").delete().eq("post_id", postId)
+    
+if (selectedTags.length > 0) {
+  const { error: insertError } = await supabase.from("post_tags").insert(
+    selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
+  )
   
+  if (insertError) {
+    console.error("タグ保存エラー:", insertError)
+    alert("タグの保存に失敗しました。")
     setSaving(false)
-    alert("投稿を更新しました")
-    router.push("/mypage")
+    return // ここで止めるのが安全です
   }
+}
+
+setSaving(false)
+alert("投稿を更新しました")
+router.push("/mypage")
 
   if (loading || !post) {
     return (
