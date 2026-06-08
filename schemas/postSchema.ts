@@ -8,7 +8,7 @@ export const postSchema = z.object({
   designerSlug: z.string().optional(),
 
   year: z.string().optional(),
-  seasonType: z.enum(["ss", "fw", ""]).optional(),
+  season: z.enum(["ss", "fw", ""]).optional(),
 
   imageUrls: z.array(z.string()).min(1),
   selectedTags: z.array(z.string()).optional(),

@@ -37,7 +37,7 @@ export default function EditPostPage() {
   const [brandSlug, setBrandSlug] = useState("")
   const [year, setYear] = useState("")
   const [yearError, setYearError] = useState("")
-  const [seasonType, setSeasonType] = useState<"ss" | "fw" | "">("")
+  const [season, setSeason] = useState<"ss" | "fw" | "">("")
   const [collectionSlug, setCollectionSlug] = useState("")
   const [seasonSlug, setSeasonSlug] = useState("")
   const [designerSlug, setDesignerSlug] = useState("")
@@ -71,7 +71,7 @@ export default function EditPostPage() {
       setTags(tagsRes.data || [])
 
       setYear(data.year ? String(data.year) : "")
-      setSeasonType((data.season as "ss" | "fw") || "")
+      setSeason((data.season as "ss" | "fw") || "")
 
       const currentTags = postTagsRes.data?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
@@ -82,15 +82,15 @@ export default function EditPostPage() {
   }, [postId])
 
   useEffect(() => {
-    if (!seasonType) {
+    if (!season) {
       setSeasonSlug("")
       setCollectionSlug("")
       return
     }
   
     const generatedSeasonSlug = year
-      ? `${year}-${seasonType}`
-      : seasonType
+      ? `${year}-${season}`
+      : season
   
     setSeasonSlug(generatedSeasonSlug)
   
@@ -99,7 +99,7 @@ export default function EditPostPage() {
     } else {
       setCollectionSlug(generatedSeasonSlug)
     }
-  }, [brandSlug, year, seasonType])
+  }, [brandSlug, year, season])
 
   const toggleTag = (rawTagId: string | number) => {
     const tagId = String(rawTagId)
@@ -112,7 +112,7 @@ export default function EditPostPage() {
   }
 
   const handleSeasonSelect = (type: "ss" | "fw") => {
-    setSeasonType((prev) => (prev === type ? "" : type))
+    setSeason((prev) => (prev === type ? "" : type))
   }
 
   const handleYearChange = (val: string) => {
@@ -174,8 +174,8 @@ export default function EditPostPage() {
     
     // 1. スラグ生成ロジック
     const yearValue = year ? parseInt(year, 10) : null
-    const seasonType = seasonType || null
-    const seasonSlug = (yearValue && seasonType) ? `${yearValue}-${seasonType}` : null
+    const seasonValue = season || null
+    const seasonSlug = (yearValue && season) ? `${yearValue}-${season}` : null
     
     let finalBrandSlug = brandSlug.trim().toLowerCase() || null
     let finalDesignerSlug = designerSlug.trim() || null
@@ -206,7 +206,7 @@ export default function EditPostPage() {
         designer_slug: finalDesignerSlug,
         collection_slug: finalCollectionSlug,
         season_slug: seasonSlug,
-        season: seasonType,
+        season: season,
         year: yearValue,
         image_urls: imageUrls,
       })
@@ -246,6 +246,26 @@ export default function EditPostPage() {
         読み込み中...
       </main>
     )
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm("この投稿を削除しますか？")) return
+    
+    setDeleting(true)
+    const { error } = await supabase
+      .from("posts")
+      .delete()
+      .eq("id", postId)
+      
+    if (error) {
+      console.error(error)
+      alert("削除に失敗しました。")
+      setDeleting(false)
+      return
+    }
+    
+    alert("投稿を削除しました")
+    router.push("/mypage")
   }
 
   return (
@@ -319,7 +339,7 @@ export default function EditPostPage() {
                 type="button"
                 onClick={() => handleSeasonSelect("ss")}
                 className={`px-5 py-3 rounded-xl border text-sm transition ${
-                  seasonType === "ss" ? "bg-black text-white border-black" : "bg-white border-border"
+                  season === "ss" ? "bg-black text-white border-black" : "bg-white border-border"
                 }`}
               >
                 SS
@@ -328,7 +348,7 @@ export default function EditPostPage() {
                 type="button"
                 onClick={() => handleSeasonSelect("fw")}
                 className={`px-5 py-3 rounded-xl border text-sm transition ${
-                  seasonType === "fw" ? "bg-black text-white border-black" : "bg-white border-border"
+                  season === "fw" ? "bg-black text-white border-black" : "bg-white border-border"
                 }`}
               >
                 FW
