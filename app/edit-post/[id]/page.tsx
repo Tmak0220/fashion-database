@@ -169,7 +169,7 @@ export default function EditPostPage() {
   const handleUpdate = async () => {
     if (yearError) return alert("YEARの入力内容を確認してください。")
     if (imageUrls.length === 0) return alert("少なくとも1枚の画像が必要です。")
-  
+
     setSaving(true)
     
     // 1. スラグ生成ロジック
@@ -179,24 +179,23 @@ export default function EditPostPage() {
     
     let finalBrandSlug = brandSlug.trim().toLowerCase() || null
     let finalDesignerSlug = designerSlug.trim() || null
-  
-    // ブランド/デザイナー解決
+
     if (brandSlug.trim()) {
       const { data: b } = await supabase.from("brands").select("slug")
         .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
       if (b?.slug) finalBrandSlug = b.slug
     }
-  
+
     if (designerSlug.trim()) {
       const { data: d } = await supabase.from("designers").select("slug")
         .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
       if (d?.slug) finalDesignerSlug = d.slug
     }
-  
+
     const finalCollectionSlug = seasonSlug 
       ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
       : null
-  
+
     // 2. DB更新
     const { error: postError } = await supabase
       .from("posts")
@@ -212,33 +211,34 @@ export default function EditPostPage() {
         image_urls: imageUrls,
       })
       .eq("id", postId)
-  
+
     if (postError) {
       console.error(postError)
       setSaving(false)
       alert("更新に失敗しました。")
       return
     }
-  
-// 3. タグ更新部分を以下のように明確な await 処理に書き換えてください
-await supabase.from("post_tags").delete().eq("post_id", postId)
-    
-if (selectedTags.length > 0) {
-  const { error: insertError } = await supabase.from("post_tags").insert(
-    selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
-  )
-  
-  if (insertError) {
-    console.error("タグ保存エラー:", insertError)
-    alert("タグの保存に失敗しました。")
-    setSaving(false)
-    return // ここで止めるのが安全です
-  }
-}
 
-setSaving(false)
-alert("投稿を更新しました")
-router.push("/mypage")
+    // 3. タグ更新
+    await supabase.from("post_tags").delete().eq("post_id", postId)
+    
+    if (selectedTags.length > 0) {
+      const { error: insertError } = await supabase.from("post_tags").insert(
+        selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
+      )
+      
+      if (insertError) {
+        console.error("タグ保存エラー:", insertError)
+        alert("タグの保存に失敗しました。")
+        setSaving(false)
+        return
+      }
+    }
+
+    setSaving(false)
+    alert("投稿を更新しました")
+    router.push("/mypage")
+  }
 
   if (loading || !post) {
     return (
