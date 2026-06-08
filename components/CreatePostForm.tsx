@@ -146,36 +146,38 @@ export default function CreatePostForm(
     setImageUrls((prev) => prev.filter((item) => item !== url))
   }
 
-const handleCreatePost = async () => {
-  if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
-  if (yearError) return alert("YEARの入力内容を確認してください。")
-  if (imageUrls.length === 0) return alert("画像をアップロードしてください。")
-
-  setCreating(true)
-
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error("ログインしてください")
-
-    const result = await createPost({
-      title,
-      description,
-      brandSlug,
-      designerSlug,
-      year: year ? Number(year) : null,
-      season: seasonType || null,
-      imageUrls,
-      selectedTags,
-    }, user.id)
-
-    alert("ポストが作成されました")
-  } catch (e: any) {
-    console.error(e)
-    alert(e.message || "作成に失敗しました")
-  } finally {
-    setCreating(false)
+  const handleCreatePost = async () => {
+    if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
+    if (yearError) return alert("YEARの入力内容を確認してください。")
+    if (imageUrls.length === 0) return alert("画像をアップロードしてください。")
+  
+    setCreating(true)
+  
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("ログインしてください")
+  
+      // ここで実際に呼び出している関数を確認
+      const result = await createPost({
+        title,
+        description,
+        brandSlug,
+        designerSlug,
+        year: year ? String(year) : null,
+        season: seasonType || null,
+        imageUrls,
+        selectedTags,
+      }, user.id)
+  
+      alert("ポストが作成されました")
+    } catch (e: any) {
+      // 【重要】ここでエラーの詳細を表示させます
+      console.error(e)
+      alert("エラーが発生しました: " + e.message)
+    } finally {
+      setCreating(false)
+    }
   }
-}
 
   if (checkingPlan) {
     return (
