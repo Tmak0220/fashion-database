@@ -49,14 +49,20 @@ export default function MyPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const fetchPosts = async (userId: string) => {
-    const { data } = await supabase
-      .from("posts")
-      .select("id, image_urls, title")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-  
-    setPosts(data || [])
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id, image_urls, title")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (err) {
+      console.error("Fetch posts error:", err);
+    }
   }
+
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [bookmarksCount, setBookmarksCount] = useState(0)
@@ -317,7 +323,7 @@ export default function MyPage() {
           )}
         </div>
 
-        <div className="border-t border-border pt-14">
+    <div className="border-t border-border pt-14">
           <div className="flex flex-col mb-10">
             <h2 className="type-display text-xl sm:text-2xl md:text-3xl text-foreground break-words leading-tight">
               Create Post
@@ -326,11 +332,12 @@ export default function MyPage() {
               新しいポストを作成する
             </p>
           </div>
-          <div className="mt-8">
-          <CreatePostForm
-            onPostCreated={() => profile && fetchPosts(profile.id)}
-          />
-          </div>
+          
+          {profile && (
+            <div className="mt-8">
+              <CreatePostForm onPostCreated={() => fetchPosts(profile.id)} />
+            </div>
+          )}
         </div>
 
         <div className="border-t border-border pt-14 pb-14">
@@ -373,7 +380,6 @@ export default function MyPage() {
             ))}
           </div>
         </div>
-
       </section>
     </main>
   )
