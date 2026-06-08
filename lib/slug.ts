@@ -1,4 +1,4 @@
-export const buildSeasonSlug = (year: string | null, season: string) => {
+  export const buildSeasonSlug = (year: string | null, season: string) => {
     if (!season) return null
     return year ? `${year}-${season}` : season
   }

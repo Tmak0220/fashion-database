@@ -2,7 +2,6 @@
 
 import { postSchema } from "@/schemas/postSchema"
 import { toNullString } from "@/lib/normalize"
-import { buildSeasonSlug, buildCollectionSlug } from "@/lib/slug"
 import { supabase } from "@/lib/supabase"
 
 export async function createPost(input: unknown, userId: string) {
@@ -15,17 +14,19 @@ export async function createPost(input: unknown, userId: string) {
 
   const brand = toNullString(data.brandSlug)
   const designer = toNullString(data.designerSlug)
-  const year = data.year?.trim() || null
+
+  const seasonType = data.seasonType || null
+  const yearValue = data.year?.trim() || null
 
   const finalSeasonSlug =
-  data.seasonType
-    ? (year ? `${year}-${data.seasonType}` : data.seasonType)
-    : null
+    seasonType && yearValue
+      ? `${yearValue}-${seasonType}`
+      : null
 
   const finalCollectionSlug =
-   finalSeasonSlug
-     ? (brand ? `${brand}-${finalSeasonSlug}` : finalSeasonSlug)
-     : null
+    finalSeasonSlug
+      ? (brand ? `${brand}-${finalSeasonSlug}` : finalSeasonSlug)
+      : null
 
   let finalBrand = brand
   if (brand) {
@@ -61,10 +62,11 @@ export async function createPost(input: unknown, userId: string) {
       brand_slug: finalBrand,
       designer_slug: finalDesigner,
 
+      season_type: seasonType,
       season_slug: finalSeasonSlug,
       collection_slug: finalCollectionSlug,
 
-      year,
+      year: yearValue,
     })
     .select()
     .single()

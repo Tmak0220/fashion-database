@@ -70,14 +70,8 @@ export default function EditPostPage() {
       setImageUrls(data.image_urls || [])
       setTags(tagsRes.data || [])
 
-      if (data.season_slug.includes("-")) {
-        const [y, s] = data.season_slug.split("-")
-        setYear(y)
-        setSeasonType(s as "ss" | "fw")
-      } else {
-        setYear("")
-        setSeasonType(data.season_slug as "ss" | "fw")
-      }
+      setYear(data.year ? String(data.year) : "")
+      setSeasonType((data.season_type as "ss" | "fw") || "")
 
       const currentTags = postTagsRes.data?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
