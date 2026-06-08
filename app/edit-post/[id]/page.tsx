@@ -70,12 +70,13 @@ export default function EditPostPage() {
       setImageUrls(data.image_urls || [])
       setTags(tagsRes.data || [])
 
-      if (data.season_slug) {
-        const parts = data.season_slug.split("-")
-        if (parts.length === 2) {
-          setYear(parts[0])
-          setSeasonType(parts[1] as "ss" | "fw")
-        }
+      if (data.season_slug.includes("-")) {
+        const [y, s] = data.season_slug.split("-")
+        setYear(y)
+        setSeasonType(s as "ss" | "fw")
+      } else {
+        setYear("")
+        setSeasonType(data.season_slug as "ss" | "fw")
       }
 
       const currentTags = postTagsRes.data?.map((item) => String(item.tag_id)) || []
