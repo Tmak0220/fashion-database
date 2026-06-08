@@ -166,74 +166,68 @@ export default function EditPostPage() {
     setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
   }
 
-// 既存の handleUpdate を以下に差し替えてください
+  const handleUpdate = async () => {
+    if (yearError) return alert("YEARの入力内容を確認してください。")
+    if (imageUrls.length === 0) return alert("少なくとも1枚の画像が必要です。")
 
-const handleUpdate = async () => {
-  if (yearError) return alert("YEARの入力内容を確認してください。")
-  if (imageUrls.length === 0) return alert("少なくとも1枚の画像が必要です。")
+    setSaving(true)
+    
+    const yearValue = year ? parseInt(year, 10) : null
+    const seasonType = seasonType || null
+    const seasonSlug = (yearValue && seasonType) ? `${yearValue}-${seasonType}` : null
+    
+    let finalBrandSlug = brandSlug.trim().toLowerCase() || null
+    let finalDesignerSlug = designerSlug.trim() || null
 
-  setSaving(true)
-  
-  // 1. スラグ生成ロジックを createPost と共通化
-  const yearValue = year ? parseInt(year, 10) : null
-  const seasonType = seasonType || null
-  const seasonSlug = (yearValue && seasonType) ? `${yearValue}-${seasonType}` : null
-  
-  let finalBrandSlug = brandSlug.trim().toLowerCase() || null
-  let finalDesignerSlug = designerSlug.trim() || null
+    if (brandSlug.trim()) {
+      const { data: b } = await supabase.from("brands").select("slug")
+        .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
+      if (b?.slug) finalBrandSlug = b.slug
+    }
 
-  // ブランド/デザイナー解決 (既存の検索ロジック)
-  if (brandSlug.trim()) {
-    const { data: b } = await supabase.from("brands").select("slug")
-      .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
-    if (b?.slug) finalBrandSlug = b.slug
-  }
+    if (designerSlug.trim()) {
+      const { data: d } = await supabase.from("designers").select("slug")
+        .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
+      if (d?.slug) finalDesignerSlug = d.slug
+    }
 
-  if (designerSlug.trim()) {
-    const { data: d } = await supabase.from("designers").select("slug")
-      .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
-    if (d?.slug) finalDesignerSlug = d.slug
-  }
+    const finalCollectionSlug = seasonSlug 
+      ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
+      : null
 
-  // コレクションスラグの生成
-  const finalCollectionSlug = seasonSlug 
-    ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
-    : null
+    const { error: postError } = await supabase
+      .from("posts")
+      .update({
+        title,
+        description,
+        brand_slug: finalBrandSlug,
+        designer_slug: finalDesignerSlug,
+        collection_slug: finalCollectionSlug,
+        season_slug: seasonSlug,
+        season: seasonType,
+        year: yearValue,
+        image_urls: imageUrls,
+      })
+      .eq("id", postId)
 
-  // 2. DB更新
-  const { error: postError } = await supabase
-    .from("posts")
-    .update({
-      title,
-      description,
-      brand_slug: finalBrandSlug,
-      designer_slug: finalDesignerSlug,
-      collection_slug: finalCollectionSlug, // 新規追加
-      season_slug: seasonSlug,              // 新規追加
-      season: seasonType,                   // 新規追加
-      year: yearValue,                      // 新規追加
-      image_urls: imageUrls,
-    })
-    .eq("id", postId)
+    if (postError) {
+      console.error(postError)
+      setSaving(false)
+      alert("更新に失敗しました。")
+      return
+    }
 
-  if (postError) {
-    console.error(postError)
+    await supabase.from("post_tags").delete().eq("post_id", postId)
+    if (selectedTags.length > 0) {
+      await supabase.from("post_tags").insert(
+        selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
+      )
+    }
+
     setSaving(false)
-    return alert("更新に失敗しました。")
+    alert("投稿を更新しました")
+    router.push("/mypage")
   }
-
-  // 3. タグ更新 (既存処理)
-  await supabase.from("post_tags").delete().eq("post_id", postId)
-  if (selectedTags.length > 0) {
-    await supabase.from("post_tags").insert(
-      selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
-    )
-  }
-
-  setSaving(false)
-  alert("投稿を更新しました")
-  router.push("/mypage")
-}
 
   const handleDelete = async () => {
     const confirmed = window.confirm("この投稿を削除しますか？")
