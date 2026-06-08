@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { postSchema } from "@/schemas/postSchema"
+import { mapPostInput } from "@/lib/postMapper"
+import { createPost } from "@/app/actions/createPost"
 import { compressImage } from "@/lib/imageCompression";
 
 type Tag = {
@@ -154,68 +157,19 @@ export default function CreatePostForm(
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return alert("ログインが必要です")
   
-        let finalBrandSlug = null
-        let finalDesignerSlug = null
-  
-      if (brandSlug.trim()) {
-        const input = brandSlug.trim()
-        const { data } = await supabase
-          .from("brands")
-          .select("slug")
-          .or(`slug.eq.${input},name.eq.${input},search_keywords.ilike.%${input}%`)
-          .maybeSingle()
-  
-        if (data?.slug) finalBrandSlug = data.slug
-      }
-  
-      if (designerSlug.trim()) {
-        const input = designerSlug.trim()
-        const { data } = await supabase
-          .from("designers")
-          .select("slug")
-          .or(`slug.eq.${input},name.eq.${input},search_keywords.ilike.%${input}%`)
-          .maybeSingle()
-  
-        if (data?.slug) finalDesignerSlug = data.slug
-      }
-  
-      const finalSeasonSlug = seasonType
-        ? (year ? `${year}-${seasonType}` : seasonType)
-        : null
-  
-      const finalCollectionSlug = finalSeasonSlug
-        ? (finalBrandSlug
-            ? `${finalBrandSlug}-${finalSeasonSlug}`
-            : finalSeasonSlug)
-        : null
-  
-      const { data: post, error } = await supabase
-        .from("posts")
-        .insert({
-          user_id: user.id,
-          image_urls: imageUrls,
+      await createPost(
+        {
           title,
           description,
-          brand_slug: finalBrandSlug,
-          collection_slug: finalCollectionSlug,
-          season_slug: finalSeasonSlug,
-          designer_slug: finalDesignerSlug,
-        })
-        .select()
-        .single()
-  
-      if (error || !post) return alert("ポスト作成失敗")
-  
-      if (selectedTags.length > 0) {
-        await supabase.from("post_tags").insert(
-          selectedTags.map(tagId => ({
-            post_id: post.id,
-            tag_id: tagId,
-          }))
-        )
-      }
-  
-      await onPostCreated?.()
+          brandSlug,
+          designerSlug,
+          year,
+          seasonType,
+          imageUrls,
+          selectedTags,
+        },
+        user.id
+      )
   
       alert("ポストが作成されました")
   
@@ -231,6 +185,8 @@ export default function CreatePostForm(
       setImageUrls([])
       setFileName("選択されていません")
   
+    } catch (e) {
+      alert("作成に失敗しました")
     } finally {
       setCreating(false)
     }
