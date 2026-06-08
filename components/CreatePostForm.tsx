@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { postSchema } from "@/schemas/postSchema"
-import { mapPostInput } from "@/lib/postMapper"
 import { createPost } from "@/app/actions/createPost"
-import { compressImage } from "@/lib/imageCompression";
+import { compressImage } from "@/lib/imageCompression"
 
 type Tag = {
   id: string
@@ -18,9 +16,7 @@ type Props = {
   onPostCreated?: () => Promise<void> | void
 }
 
-export default function CreatePostForm(
-  { onPostCreated }: Props
-) { 
+export default function CreatePostForm({ onPostCreated }: Props) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [brandSlug, setBrandSlug] = useState("")
@@ -61,119 +57,43 @@ export default function CreatePostForm(
     fetchInitialData()
   }, [])
 
-  const toggleTag = (tagId: string) => {
-    setSelectedTags((prev) => {
-      if (prev.includes(tagId)) {
-        return prev.filter((id) => id !== tagId)
-      }
-      return [...prev, tagId]
-    })
-  }
-
-  const handleSeasonSelect = (type: "ss" | "fw") => {
-    setSeasonType((prev) => (prev === type ? "" : type))
-  }
-
-  const handleYearChange = (val: string) => {
-    setYear(val)
-    if (!val) {
-      setYearError("")
-      return
-    }
-
-    const isHalfWidthNumber = /^[0-9]+$/.test(val)
-    if (!isHalfWidthNumber) {
-      setYearError("半角数字で入力して下さい")
-    } else {
-      setYearError("")
-    }
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) {
-      setFileName("選択されていません")
-      return
-    }
-  
-    setUploading(true)
-    let fileToUpload: File;
-
-    try {
-      fileToUpload = await compressImage(file);
-    } catch (err) {
-      alert(
-        err instanceof Error
-          ? err.message
-          : "画像の圧縮に失敗しました。"
-      );
-
-      setUploading(false);
-      return;
-    }
-  
-    setFileName(file.name)
-    if (imageUrls.length >= 2) {
-      alert("画像は最大2枚までアップロード可能です。")
-      setUploading(false);
-      return
-    }
-  
-    try {
-      const formData = new FormData()
-      formData.append("file", fileToUpload) 
-  
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
-      const data = await res.json()
-  
-      if (!res.ok) {
-        alert(data.error || "画像のアップロードに失敗しました。")
-        return
-      }
-      setImageUrls((prev) => [...prev, data.url])
-    } catch (err) {
-      console.error(err)
-      alert("予期せぬエラーが発生しました。")
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const removeImage = (url: string) => {
-    setImageUrls((prev) => prev.filter((item) => item !== url))
-  }
-
   const handleCreatePost = async () => {
     if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
     if (yearError) return alert("YEARの入力内容を確認してください。")
     if (imageUrls.length === 0) return alert("画像をアップロードしてください。")
-  
+    if (!title.trim()) return alert("タイトルを入力してください。")
+
     setCreating(true)
-  
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("ログインしてください")
-  
-      // ここで実際に呼び出している関数を確認
-      const result = await createPost({
+
+      // Server Action を実行
+      await createPost({
         title,
         description,
         brandSlug,
         designerSlug,
-        year: year ? String(year) : null,
+        year: year || null,
         season: seasonType || null,
         imageUrls,
         selectedTags,
       }, user.id)
-  
+
       alert("ポストが作成されました")
+      
+      // フォームをリセット
+      setTitle("")
+      setDescription("")
+      setImageUrls([])
+      setFileName("選択されていません")
+      
+      // 画面を更新
+      await onPostCreated?.()
     } catch (e: any) {
-      // 【重要】ここでエラーの詳細を表示させます
-      console.error(e)
-      alert("エラーが発生しました: " + e.message)
+      console.error("Submission error:", e)
+      alert("投稿に失敗しました: " + (e.message || "予期せぬエラー"))
     } finally {
       setCreating(false)
     }
