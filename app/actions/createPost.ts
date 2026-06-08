@@ -17,8 +17,15 @@ export async function createPost(input: unknown, userId: string) {
   const designer = toNullString(data.designerSlug)
   const year = data.year?.trim() || null
 
-  const seasonSlug = buildSeasonSlug(year, data.seasonType ?? "")
-  const collectionSlug = buildCollectionSlug(brand, seasonSlug)
+  const finalSeasonSlug =
+  data.seasonType
+    ? (year ? `${year}-${data.seasonType}` : data.seasonType)
+    : null
+
+  const finalCollectionSlug =
+   finalSeasonSlug
+     ? (brand ? `${brand}-${finalSeasonSlug}` : finalSeasonSlug)
+     : null
 
   let finalBrand = brand
   if (brand) {
@@ -54,8 +61,8 @@ export async function createPost(input: unknown, userId: string) {
       brand_slug: finalBrand,
       designer_slug: finalDesigner,
 
-      season_slug: seasonSlug,
-      collection_slug: collectionSlug,
+      season_slug: finalSeasonSlug,
+      collection_slug: finalCollectionSlug,
 
       year,
     })
@@ -64,7 +71,6 @@ export async function createPost(input: unknown, userId: string) {
 
   if (error) throw error
 
-  // tags
   if (data.selectedTags?.length) {
     await supabase.from("post_tags").insert(
       data.selectedTags.map(tagId => ({
