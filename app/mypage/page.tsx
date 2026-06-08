@@ -328,7 +328,7 @@ export default function MyPage() {
           </div>
           <div className="mt-8">
           <CreatePostForm
-            onPostCreated={() => fetchPosts(profile.id)}
+            onPostCreated={() => profile && fetchPosts(profile.id)}
           />
           </div>
         </div>
