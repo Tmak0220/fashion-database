@@ -87,21 +87,24 @@ export default function EditPostPage() {
   }, [postId])
 
   useEffect(() => {
-    if (yearError || !year || !seasonType) {
+    if (!seasonType) {
       setSeasonSlug("")
       setCollectionSlug("")
       return
     }
-
-    const generatedSeasonSlug = `${year}-${seasonType}`
+  
+    const generatedSeasonSlug = year
+      ? `${year}-${seasonType}`
+      : seasonType
+  
     setSeasonSlug(generatedSeasonSlug)
-
+  
     if (brandSlug.trim()) {
       setCollectionSlug(`${brandSlug.trim()}-${generatedSeasonSlug}`)
     } else {
       setCollectionSlug(generatedSeasonSlug)
     }
-  }, [brandSlug, year, seasonType, yearError])
+  }, [brandSlug, year, seasonType])
 
   const toggleTag = (rawTagId: string | number) => {
     const tagId = String(rawTagId)
