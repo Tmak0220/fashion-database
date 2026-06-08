@@ -62,10 +62,10 @@ export async function createPost(input: unknown, userId: string) {
       brand_slug: finalBrand,
       designer_slug: finalDesigner,
 
-      season: seasonType,
       season_slug: finalSeasonSlug,
       collection_slug: finalCollectionSlug,
 
+      season: seasonType,
       year: yearValue,
     })
     .select()

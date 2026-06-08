@@ -71,7 +71,7 @@ export default function EditPostPage() {
       setTags(tagsRes.data || [])
 
       setYear(data.year ? String(data.year) : "")
-      setSeasonType((data.season_type as "ss" | "fw") || "")
+      setSeasonType((data.season as "ss" | "fw") || "")
 
       const currentTags = postTagsRes.data?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
