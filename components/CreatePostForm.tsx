@@ -44,60 +44,58 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           .single()
         setIsPlusMember(!!profile?.plus_member)
       }
-
-      const { data, error } = await supabase
-        .from("tags")
-        .select("*")
-        .order("name")
-      if (!error) {
-        setTags(data || [])
-      }
+      const { data, error } = await supabase.from("tags").select("*").order("name")
+      if (!error) setTags(data || [])
       setCheckingPlan(false)
     }
     fetchInitialData()
   }, [])
 
+  // --- 必要な関数をすべてここに配置 ---
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return;
+    setUploading(true)
+    try {
+      const compressed = await compressImage(file);
+      const formData = new FormData()
+      formData.append("file", compressed)
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setImageUrls((prev) => [...prev, data.url])
+      setFileName(file.name)
+    } catch (err: any) {
+      alert(err.message || "アップロード失敗")
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const handleCreatePost = async () => {
     if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
     if (yearError) return alert("YEARの入力内容を確認してください。")
     if (imageUrls.length === 0) return alert("画像をアップロードしてください。")
-    if (!title.trim()) return alert("タイトルを入力してください。")
-
     setCreating(true)
-
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("ログインしてください")
-
-      // Server Action を実行
-      await createPost({
-        title,
-        description,
-        brandSlug,
-        designerSlug,
-        year: year || null,
-        season: seasonType || null,
-        imageUrls,
-        selectedTags,
-      }, user.id)
-
+      await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags }, user.id)
       alert("ポストが作成されました")
-      
-      // フォームをリセット
-      setTitle("")
-      setDescription("")
-      setImageUrls([])
-      setFileName("選択されていません")
-      
-      // 画面を更新
-      await onPostCreated?.()
+      onPostCreated?.()
     } catch (e: any) {
-      console.error("Submission error:", e)
-      alert("投稿に失敗しました: " + (e.message || "予期せぬエラー"))
+      alert("投稿に失敗しました: " + e.message)
     } finally {
       setCreating(false)
     }
   }
+
+  // (※toggleTag, handleSeasonSelect, handleYearChange, removeImage もここに記載してください)
+  const toggleTag = (id: string) => setSelectedTags(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
+  const handleSeasonSelect = (s: "ss" | "fw") => setSeasonType(p => p === s ? "" : s);
+  const handleYearChange = (v: string) => { setYear(v); setYearError(/^[0-9]*$/.test(v) ? "" : "半角数字で入力"); };
+  const removeImage = (url: string) => setImageUrls(p => p.filter(i => i !== url));
 
   if (checkingPlan) {
     return (
