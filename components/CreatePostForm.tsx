@@ -146,8 +146,6 @@ export default function CreatePostForm(
     setImageUrls((prev) => prev.filter((item) => item !== url))
   }
 
-// CreatePostForm.tsx 内の handleCreatePost を以下のように修正
-
 const handleCreatePost = async () => {
   if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
   if (yearError) return alert("YEARの入力内容を確認してください。")
@@ -159,20 +157,18 @@ const handleCreatePost = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("ログインしてください")
 
-    // 送信データ構造をスキーマに合わせる
     const result = await createPost({
       title,
       description,
       brandSlug,
       designerSlug,
       year: year ? Number(year) : null,
-      season: seasonType || null, // ここを season に統一
+      season: seasonType || null,
       imageUrls,
       selectedTags,
     }, user.id)
 
     alert("ポストが作成されました")
-    // ...リセット処理...
   } catch (e: any) {
     console.error(e)
     alert(e.message || "作成に失敗しました")

@@ -172,7 +172,6 @@ export default function EditPostPage() {
 
     setSaving(true)
     
-    // 1. スラグ生成ロジック
     const yearValue = year ? parseInt(year, 10) : null
     const seasonValue = season || null
     const seasonSlug = (yearValue && season) ? `${yearValue}-${season}` : null
@@ -196,7 +195,6 @@ export default function EditPostPage() {
       ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
       : null
 
-    // 2. DB更新
     const { error: postError } = await supabase
       .from("posts")
       .update({
@@ -219,7 +217,6 @@ export default function EditPostPage() {
       return
     }
 
-    // 3. タグ更新
     await supabase.from("post_tags").delete().eq("post_id", postId)
     
     if (selectedTags.length > 0) {
