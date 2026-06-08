@@ -24,8 +24,6 @@ export default function CreatePostForm(
   const [year, setYear] = useState("")
   const [yearError, setYearError] = useState("")
   const [seasonType, setSeasonType] = useState<"ss" | "fw" | "">("")
-  const [collectionSlug, setCollectionSlug] = useState("")
-  const [seasonSlug, setSeasonSlug] = useState("")
   const [designerSlug, setDesignerSlug] = useState("")
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
@@ -59,23 +57,6 @@ export default function CreatePostForm(
     }
     fetchInitialData()
   }, [])
-
-  useEffect(() => {
-    if (yearError || !year || !seasonType) {
-      setSeasonSlug("")
-      setCollectionSlug("")
-      return
-    }
-
-    const generatedSeasonSlug = `${year}-${seasonType}`
-    setSeasonSlug(generatedSeasonSlug)
-
-    if (brandSlug.trim()) {
-      setCollectionSlug(`${brandSlug.trim()}-${generatedSeasonSlug}`)
-    } else {
-      setCollectionSlug(generatedSeasonSlug)
-    }
-  }, [brandSlug, year, seasonType, yearError])
 
   const toggleTag = (tagId: string) => {
     setSelectedTags((prev) => {
@@ -163,66 +144,51 @@ export default function CreatePostForm(
   }
 
   const handleCreatePost = async () => {
-    if (!isPlusMember) {
-      alert("PLUS MEMBER限定機能です")
-      return
-    }
-
-    if (yearError) {
-      alert("YEARの入力内容を確認してください。")
-      return
-    }
-
-    if (imageUrls.length === 0) {
-      alert("最初に画像をアップロードしてください。")
-      return
-    }
-
+    if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
+    if (yearError) return alert("YEARの入力内容を確認してください。")
+    if (imageUrls.length === 0) return alert("画像をアップロードしてください。")
+  
     setCreating(true)
+  
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        alert("ログインが必要です")
-        return
-      }
-
-      let finalBrandSlug = brandSlug.trim().toLowerCase() || null
-      let finalDesignerSlug = designerSlug.trim() || null
-
+      if (!user) return alert("ログインが必要です")
+  
+        let finalBrandSlug = null
+        let finalDesignerSlug = null
+  
       if (brandSlug.trim()) {
-        const inputBrand = brandSlug.trim()
-        const { data: matchedBrand } = await supabase
+        const input = brandSlug.trim()
+        const { data } = await supabase
           .from("brands")
           .select("slug")
-          .or(`slug.eq.${inputBrand},name.eq.${inputBrand},search_keywords.ilike.%${inputBrand}%`)
-          .range(0, 0)
+          .or(`slug.eq.${input},name.eq.${input},search_keywords.ilike.%${input}%`)
           .maybeSingle()
-
-        if (matchedBrand?.slug) {
-          finalBrandSlug = matchedBrand.slug
-        }
+  
+        if (data?.slug) finalBrandSlug = data.slug
       }
-
+  
       if (designerSlug.trim()) {
-        const inputDesigner = designerSlug.trim()
-        const { data: matchedDesigner } = await supabase
+        const input = designerSlug.trim()
+        const { data } = await supabase
           .from("designers")
           .select("slug")
-          .or(`slug.eq.${inputDesigner},name.eq.${inputDesigner},search_keywords.ilike.%${inputDesigner}%`)
-          .range(0, 0)
+          .or(`slug.eq.${input},name.eq.${input},search_keywords.ilike.%${input}%`)
           .maybeSingle()
-
-        if (matchedDesigner?.slug) {
-          finalDesignerSlug = matchedDesigner.slug
-        }
+  
+        if (data?.slug) finalDesignerSlug = data.slug
       }
-
-      let finalCollectionSlug = seasonSlug || null
-      if (finalBrandSlug && seasonSlug) {
-        finalCollectionSlug = `${finalBrandSlug}-${seasonSlug}`
-      }
-      const finalSeasonSlug = seasonSlug || null
-
+  
+      const finalSeasonSlug = seasonType
+        ? (year ? `${year}-${seasonType}` : seasonType)
+        : null
+  
+      const finalCollectionSlug = finalSeasonSlug
+        ? (finalBrandSlug
+            ? `${finalBrandSlug}-${finalSeasonSlug}`
+            : finalSeasonSlug)
+        : null
+  
       const { data: post, error } = await supabase
         .from("posts")
         .insert({
@@ -237,42 +203,35 @@ export default function CreatePostForm(
         })
         .select()
         .single()
-
-      if (error || !post) {
-        alert("ポストの作成に失敗しました。")
-        return
-      }
-
+  
+      if (error || !post) return alert("ポスト作成失敗")
+  
       if (selectedTags.length > 0) {
-        const postTags = selectedTags.map((tagId) => ({
-          post_id: post.id,
-          tag_id: tagId,
-        }))
-        await supabase.from("post_tags").insert(postTags)
+        await supabase.from("post_tags").insert(
+          selectedTags.map(tagId => ({
+            post_id: post.id,
+            tag_id: tagId,
+          }))
+        )
       }
-
-      if (onPostCreated) {
-        await onPostCreated()
-      }
-
+  
+      await onPostCreated?.()
+  
       alert("ポストが作成されました")
-
+  
+      // reset
       setTitle("")
       setDescription("")
       setBrandSlug("")
       setYear("")
       setYearError("")
       setSeasonType("")
-      setCollectionSlug("")
-      setSeasonSlug("")
       setDesignerSlug("")
       setSelectedTags([])
       setImageUrls([])
       setFileName("選択されていません")
-    } catch (err) {
-      console.error(err)
-      alert("予期せぬエラーが発生しました。")
-    }  finally {
+  
+    } finally {
       setCreating(false)
     }
   }
