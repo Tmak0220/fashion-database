@@ -169,32 +169,35 @@ export default function EditPostPage() {
   const handleUpdate = async () => {
     if (yearError) return alert("YEARの入力内容を確認してください。")
     if (imageUrls.length === 0) return alert("少なくとも1枚の画像が必要です。")
-
+  
     setSaving(true)
     
+    // 1. スラグ生成ロジック
     const yearValue = year ? parseInt(year, 10) : null
     const seasonType = seasonType || null
     const seasonSlug = (yearValue && seasonType) ? `${yearValue}-${seasonType}` : null
     
     let finalBrandSlug = brandSlug.trim().toLowerCase() || null
     let finalDesignerSlug = designerSlug.trim() || null
-
+  
+    // ブランド/デザイナー解決
     if (brandSlug.trim()) {
       const { data: b } = await supabase.from("brands").select("slug")
         .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
       if (b?.slug) finalBrandSlug = b.slug
     }
-
+  
     if (designerSlug.trim()) {
       const { data: d } = await supabase.from("designers").select("slug")
         .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
       if (d?.slug) finalDesignerSlug = d.slug
     }
-
+  
     const finalCollectionSlug = seasonSlug 
       ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
       : null
-
+  
+    // 2. DB更新
     const { error: postError } = await supabase
       .from("posts")
       .update({
@@ -209,46 +212,28 @@ export default function EditPostPage() {
         image_urls: imageUrls,
       })
       .eq("id", postId)
-
+  
     if (postError) {
       console.error(postError)
       setSaving(false)
       alert("更新に失敗しました。")
       return
     }
-
+  
+    // 3. タグ更新
     await supabase.from("post_tags").delete().eq("post_id", postId)
     if (selectedTags.length > 0) {
-      await supabase.from("post_tags").insert(
+      const { error: insertError } = await supabase.from("post_tags").insert(
         selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
       )
+      if (insertError) {
+        console.error(insertError)
+        alert("タグの保存に失敗しました。")
+      }
     }
-
+  
     setSaving(false)
     alert("投稿を更新しました")
-    router.push("/mypage")
-  }
-
-  const handleDelete = async () => {
-    const confirmed = window.confirm("この投稿を削除しますか？")
-    if (!confirmed) return
-
-    setDeleting(true)
-
-    const res = await fetch("/api/delete-post", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ postId }),
-    })
-    const data = await res.json()
-
-    if (!res.ok) {
-      setDeleting(false)
-      alert("削除に失敗しました。")
-      return
-    }
-
-    alert("投稿を削除しました")
     router.push("/mypage")
   }
 
