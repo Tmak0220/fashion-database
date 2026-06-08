@@ -12,10 +12,12 @@ export async function createPost(input: unknown, userId: string) {
   }
 
   const data = parsed.data
+  
   const brand = toNullString(data.brandSlug)
   const designer = toNullString(data.designerSlug)
-  const yearValue = data.year ? String(data.year) : null
-  const season = data.season || null 
+  const description = toNullString(data.description)
+  const season = data.season ? data.season : null
+  const yearValue = data.year ? parseInt(data.year, 10) : null
 
   const finalSeasonSlug = (season && yearValue) ? `${yearValue}-${season}` : null
   const finalCollectionSlug = finalSeasonSlug
@@ -39,14 +41,14 @@ export async function createPost(input: unknown, userId: string) {
     .insert({
       user_id: userId,
       title: data.title,
-      description: data.description,
+      description: description,
       image_urls: data.imageUrls,
       brand_slug: finalBrand,
       designer_slug: finalDesigner,
       season_slug: finalSeasonSlug,
       collection_slug: finalCollectionSlug,
       season: season,
-      year: yearValue ? parseInt(yearValue, 10) : null,
+      year: yearValue,
     })
     .select()
     .single()
