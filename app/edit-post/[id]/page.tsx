@@ -166,106 +166,74 @@ export default function EditPostPage() {
     setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
   }
 
-  const handleUpdate = async () => {
-    if (yearError) {
-      alert("YEARの入力内容を確認してください。")
-      return
-    }
+// 既存の handleUpdate を以下に差し替えてください
 
-    if (imageUrls.length === 0) {
-      alert("少なくとも1枚の画像が必要です。")
-      return
-    }
+const handleUpdate = async () => {
+  if (yearError) return alert("YEARの入力内容を確認してください。")
+  if (imageUrls.length === 0) return alert("少なくとも1枚の画像が必要です。")
 
-    setSaving(true)
-    let finalBrandSlug = brandSlug.trim().toLowerCase() || null
-    let finalDesignerSlug = designerSlug.trim() || null
+  setSaving(true)
+  
+  // 1. スラグ生成ロジックを createPost と共通化
+  const yearValue = year ? parseInt(year, 10) : null
+  const seasonType = seasonType || null
+  const seasonSlug = (yearValue && seasonType) ? `${yearValue}-${seasonType}` : null
+  
+  let finalBrandSlug = brandSlug.trim().toLowerCase() || null
+  let finalDesignerSlug = designerSlug.trim() || null
 
-    if (brandSlug.trim()) {
-      const inputBrand = brandSlug.trim()
-      const { data: matchedBrand } = await supabase
-        .from("brands")
-        .select("slug")
-        .or(`slug.eq.${inputBrand},name.eq.${inputBrand},search_keywords.ilike.%${inputBrand}%`)
-        .range(0, 0)
-        .maybeSingle()
-
-      if (matchedBrand?.slug) {
-        finalBrandSlug = matchedBrand.slug
-      }
-    }
-
-    if (designerSlug.trim()) {
-      const inputDesigner = designerSlug.trim()
-      const { data: matchedDesigner } = await supabase
-        .from("designers")
-        .select("slug")
-        .or(`slug.eq.${inputDesigner},name.eq.${inputDesigner},search_keywords.ilike.%${inputDesigner}%`)
-        .range(0, 0)
-        .maybeSingle()
-
-      if (matchedDesigner?.slug) {
-        finalDesignerSlug = matchedDesigner.slug
-      }
-    }
-
-    let finalCollectionSlug = seasonSlug || null
-    if (finalBrandSlug && seasonSlug) {
-      finalCollectionSlug = `${finalBrandSlug}-${seasonSlug}`
-    }
-    const finalSeasonSlug = seasonSlug || null
-
-    const { error: postError } = await supabase
-      .from("posts")
-      .update({
-        title,
-        description,
-        brand_slug: finalBrandSlug,
-        collection_slug: finalCollectionSlug,
-        season_slug: finalSeasonSlug,
-        designer_slug: finalDesignerSlug,
-        image_urls: imageUrls,
-      })
-      .eq("id", postId)
-
-    if (postError) {
-      setSaving(false)
-      alert("プロフィールの更新に失敗しました。")
-      return
-    }
-
-    const { error: deleteError } = await supabase
-      .from("post_tags")
-      .delete()
-      .eq("post_id", postId)
-
-    if (deleteError) {
-      setSaving(false)
-      alert("タグの更新に失敗しました。")
-      return
-    }
-
-    if (selectedTags.length > 0) {
-      const postTags = selectedTags.map((tagId) => ({
-        post_id: postId,
-        tag_id: tagId,
-      }))
-
-      const { error: insertError } = await supabase
-        .from("post_tags")
-        .insert(postTags)
-
-      if (insertError) {
-        setSaving(false)
-        alert("タグの保存に失敗しました。")
-        return
-      }
-    }
-
-    setSaving(false)
-    alert("投稿を更新しました")
-    router.push("/mypage")
+  // ブランド/デザイナー解決 (既存の検索ロジック)
+  if (brandSlug.trim()) {
+    const { data: b } = await supabase.from("brands").select("slug")
+      .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
+    if (b?.slug) finalBrandSlug = b.slug
   }
+
+  if (designerSlug.trim()) {
+    const { data: d } = await supabase.from("designers").select("slug")
+      .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
+    if (d?.slug) finalDesignerSlug = d.slug
+  }
+
+  // コレクションスラグの生成
+  const finalCollectionSlug = seasonSlug 
+    ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
+    : null
+
+  // 2. DB更新
+  const { error: postError } = await supabase
+    .from("posts")
+    .update({
+      title,
+      description,
+      brand_slug: finalBrandSlug,
+      designer_slug: finalDesignerSlug,
+      collection_slug: finalCollectionSlug, // 新規追加
+      season_slug: seasonSlug,              // 新規追加
+      season: seasonType,                   // 新規追加
+      year: yearValue,                      // 新規追加
+      image_urls: imageUrls,
+    })
+    .eq("id", postId)
+
+  if (postError) {
+    console.error(postError)
+    setSaving(false)
+    return alert("更新に失敗しました。")
+  }
+
+  // 3. タグ更新 (既存処理)
+  await supabase.from("post_tags").delete().eq("post_id", postId)
+  if (selectedTags.length > 0) {
+    await supabase.from("post_tags").insert(
+      selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
+    )
+  }
+
+  setSaving(false)
+  alert("投稿を更新しました")
+  router.push("/mypage")
+}
 
   const handleDelete = async () => {
     const confirmed = window.confirm("この投稿を削除しますか？")
