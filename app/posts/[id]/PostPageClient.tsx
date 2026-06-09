@@ -79,14 +79,13 @@ export default function PostPageClient({ id }: Props) {
         .from("posts")
         .select(`
           *,
-          users (
-            id,
-            username,
-            avatar_url
-          )
+          users (id, username, avatar_url),
+          brands (slug, name, region_slug, country_slug),
+          designers (slug, name, region_slug, country_slug),
+          post_tags (tags (slug, name))
         `)
         .eq("id", id)
-        .single()
+        .single();
 
       if (error || !data) {
         console.error("投稿の取得に失敗しました:", error)
@@ -307,8 +306,65 @@ export default function PostPageClient({ id }: Props) {
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug">
               {post.title}
             </h1>
+
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+             {post.brands ? (
+               <Link
+                 href={`/brands/${post.brands.region_slug}/${post.brands.country_slug}/${post.brands.slug}`}
+                 className="bg-neutral-100 hover:bg-neutral-200 px-3 py-1 rounded-full text-xs transition"
+               >
+                 {post.brands.name}
+               </Link>
+             ) : post.brand_slug ? (
+               <span className="bg-neutral-100 px-3 py-1 rounded-full text-xs">
+                 {post.brand_slug}
+               </span>
+             ) : null}
+
+             {post.designers ? (
+               <Link
+                 href={`/designers/${post.designers.region_slug}/${post.designers.country_slug}/${post.designers.slug}`}
+                 className="bg-neutral-100 hover:bg-neutral-200 px-3 py-1 rounded-full text-xs transition"
+               >
+                 {post.designers.name}
+               </Link>
+             ) : post.designer_slug ? (
+               <span className="bg-neutral-100 px-3 py-1 rounded-full text-xs">
+                 {post.designer_slug}
+               </span>
+             ) : null}
+
+              {post.collection_slug && (
+                <Link
+                  href={`/collections/${post.brand_slug}/${post.collection_slug}`}
+                  className="bg-neutral-100 hover:bg-neutral-200 px-3 py-1 rounded-full text-xs transition"
+                >
+                  {post.brand_slug} {post.year} {post.season}
+                </Link>
+              )}
+
+              {(post.year || post.season) && (
+                <Link
+                  href={`/collections/${post.year}-${post.season}`}
+                  className="bg-neutral-100 hover:bg-neutral-200 px-3 py-1 rounded-full text-xs transition"
+                >
+                  {post.year} {post.season}
+                </Link>
+              )}
+
+              {post.post_tags?.map((pt: any) => (
+                <Link
+                  key={pt.tags.slug}
+                  href={`/tags/${pt.tags.slug}`}
+                  className="text-blue-600 hover:underline text-xs"
+                >
+                  #{pt.tags.name}
+                </Link>
+              ))}
+            </div>
+
             {post.description && (
-              <p className="mt-4 sm:mt-6 text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted whitespace-pre-line">
+              <p className="mt-6 text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted whitespace-pre-line">
                 {post.description}
               </p>
             )}

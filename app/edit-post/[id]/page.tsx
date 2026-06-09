@@ -49,31 +49,42 @@ export default function EditPostPage() {
     const fetchPost = async () => {
       if (!postId) return
 
-      const [postRes, tagsRes, postTagsRes] = await Promise.all([
-        supabase.from("posts").select("*").eq("id", postId).single(),
-        supabase.from("tags").select("*").order("name"),
-        supabase.from("post_tags").select("tag_id").eq("post_id", postId),
-      ])
+      const { data: postData, error: postError } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          users (id, username, avatar_url)
+        `)
+        .eq("id", postId)
+        .single()
 
-      if (postRes.error || !postRes.data) {
-        console.error(postRes.error)
+      if (postError) {
+        console.error("Fetch Error:", postError.message)
         setLoading(false)
         return
       }
 
-      const data = postRes.data
-      setPost(data)
-      setTitle(data.title || "")
-      setDescription(data.description || "")
-      setBrandSlug(data.brand_slug || "")
-      setDesignerSlug(data.designer_slug || "")
-      setImageUrls(data.image_urls || [])
-      setTags(tagsRes.data || [])
+      if (!postData) {
+        console.error("No post data found for ID:", postId)
+        setLoading(false)
+        return
+      }
 
-      setYear(data.year ? String(data.year) : "")
-      setSeason((data.season as "ss" | "fw") || "")
+      const { data: tagsData } = await supabase.from("tags").select("*").order("name")
+      const { data: postTagsData } = await supabase.from("post_tags").select("tag_id").eq("post_id", postId)
 
-      const currentTags = postTagsRes.data?.map((item) => String(item.tag_id)) || []
+      setPost(postData)
+      setTitle(postData.title || "")
+      setDescription(postData.description || "")
+      setBrandSlug(postData.brand_slug || "")
+      setDesignerSlug(postData.designer_slug || "")
+      setImageUrls(postData.image_urls || [])
+      setTags(tagsData || [])
+
+      setYear(postData.year ? String(postData.year) : "")
+      setSeason((postData.season as "ss" | "fw") || "")
+
+      const currentTags = postTagsData?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
       setLoading(false)
     }
