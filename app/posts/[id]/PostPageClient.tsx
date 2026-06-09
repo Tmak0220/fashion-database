@@ -367,7 +367,7 @@ export default function PostPageClient({ id }: Props) {
                 </Link>
               )}
 
-              {(post.year || post.season) && (
+              {(post.year && post.season) && (
                 <Link
                   href={`/collections/${post.year}-${post.season}`}
                   className="bg-neutral-100 hover:bg-neutral-200 px-3 py-1 rounded-full text-xs transition"
