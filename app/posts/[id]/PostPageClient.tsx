@@ -11,11 +11,35 @@ type Post = {
   image_urls: string[]
   created_at: string
   user_id: string
+  brand_slug: string | null
+  designer_slug: string | null
+  collection_slug: string | null
+  season_slug: string | null
+  year: number | null
+  season: string | null
   users: {
     id: string
     username: string | null
     avatar_url: string | null
   } | null
+  brands: {
+    slug: string
+    name: string
+    region_slug: string
+    country_slug: string
+  } | null
+  designers: {
+    slug: string
+    name: string
+    region_slug: string
+    country_slug: string
+  } | null
+  post_tags: {
+    tags: {
+      slug: string
+      name: string
+    }
+  }[]
 }
 
 type Props = {
