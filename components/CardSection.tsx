@@ -13,6 +13,7 @@ type Props = {
   titleJa: string
   items: CardItem[] | null
   basePath: string
+  uppercase?: boolean
 }
 
 export default function CardSection({
@@ -20,6 +21,7 @@ export default function CardSection({
   titleJa,
   items,
   basePath,
+  uppercase = false,
 }: Props) {
   if (!items || items.length === 0) return null
 
@@ -38,11 +40,12 @@ export default function CardSection({
               flex-col
               items-center
               justify-center
+              text-center
               border
               border-border
               rounded-xl
               px-4
-              py-4
+              py-5
               bg-surface
               transition-all
               duration-300
@@ -51,8 +54,8 @@ export default function CardSection({
               active:scale-[0.98]
             "
           >
-            <p className="type-label group-hover:text-background transition-colors">
-              {item.name}
+            <p className="type-label group-hover:text-background transition-colors text-xs font-medium tracking-[0.12em]">
+              {uppercase ? item.name.toUpperCase() : item.name}
             </p>
 
             {item.name_ja && (

@@ -64,8 +64,18 @@ export default async function RegionPage({ params }: Props) {
     type: 'markdown' as const,
   }))
 
+  const breadcrumbs = [
+    { label: "ファッションデータベース", href: "/" },
+    { label: "ブランド", href: "/brands" },
+    { label: regionData.name_ja || regionData.name },
+  ]
+
   return (
-    <PageLayout title={regionData.name} subtitle={regionData.name_ja}>
+    <PageLayout 
+      title={regionData.name} 
+      subtitle={regionData.name_ja}
+      breadcrumbs={breadcrumbs}
+    >
       {history.length > 0 && (
         <div className="mb-12">
           <HistoryAccordion items={history} />

@@ -1,30 +1,57 @@
 import Link from "next/link"
 import React from "react"
 
+type BreadcrumbItem = {
+  label: string
+  href?: string
+}
+
 type Props = {
   title: string
   subtitle?: string
+  breadcrumbs?: BreadcrumbItem[]
   children: React.ReactNode
 }
 
 export default function PageLayout({
   title,
   subtitle,
+  breadcrumbs,
   children,
 }: Props) {
   return (
     <main className="p-6 sm:p-10 md:p-14 lg:p-16">
       <nav className="flex flex-wrap items-center gap-2 text-sm text-subtle">
-        <Link
-          href="/"
-          className="hover:text-black transition-colors duration-300"
-        >
-          ファッションデータベース
-        </Link>
-        <span>＞</span>
-        <span className="text-black">
-          {subtitle ?? title}
-        </span>
+        {breadcrumbs ? (
+          breadcrumbs.map((item, index) => (
+            <React.Fragment key={index}>
+              {index > 0 && <span>＞</span>}
+              {item.href ? (
+                <Link
+                  href={item.href}
+                  className="hover:text-black transition-colors duration-300"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span className="text-black">{item.label}</span>
+              )}
+            </React.Fragment>
+          ))
+        ) : (
+          <>
+            <Link
+              href="/"
+              className="hover:text-black transition-colors duration-300"
+            >
+              ファッションデータベース
+            </Link>
+            <span>＞</span>
+            <span className="text-black">
+              {subtitle ?? title}
+            </span>
+          </>
+        )}
       </nav>
 
       <header className="mt-8 mb-12 sm:mb-16">
