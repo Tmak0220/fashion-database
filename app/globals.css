@@ -23,6 +23,26 @@
   --color-surface: var(--surface);
   --font-bodoni: var(--font-bodoni);
   --font-serif-jp: var(--font-serif-jp);
+
+  /* Tailwind Typography 用のカラーマッピング */
+  --color-prose-body: var(--foreground);
+  --color-prose-headings: var(--foreground);
+  --color-prose-lead: var(--muted);
+  --color-prose-links: var(--foreground);
+  --color-prose-bold: var(--foreground);
+  --color-prose-counters: var(--subtle);
+  --color-prose-bullets: var(--subtle);
+  --color-prose-hr: var(--border);
+  --color-prose-quotes: var(--muted);
+  --color-prose-quote-borders: var(--border);
+  --color-prose-captions: var(--subtle);
+  --color-prose-kbd: var(--foreground);
+  --color-prose-kbd-shadows: var(--foreground);
+  --color-prose-code: var(--foreground);
+  --color-prose-pre-code: var(--background);
+  --color-prose-pre-bg: var(--foreground);
+  --color-prose-th-borders: var(--border);
+  --color-prose-td-borders: var(--border);
 }
 
 body {
@@ -34,6 +54,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* =========================================
+   Typography Base Classes
+========================================= */
+
 .type-brand {
   font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
   font-weight: 500;
@@ -42,7 +66,6 @@ body {
   text-transform: uppercase;
   line-height: 1.1;
   font-synthesis: none;
-  /* Gucci: compensate wide tracking on the last letter */
   padding-right: var(--track-brand);
 }
 
@@ -79,4 +102,155 @@ body {
   letter-spacing: var(--track-ui);
   text-transform: uppercase;
   font-synthesis: none;
+}
+
+/* =========================================
+   Markdown (.prose) Editorial Styling
+========================================= */
+
+@layer components {
+  .prose {
+    /* 全体のベース設定 */
+    font-size: 0.95rem;
+    line-height: 1.8;
+    letter-spacing: 0.03em;
+    max-width: 65ch; /* 読みやすい最適な文字長 */
+    margin-inline: auto; /* 中央揃え */
+
+    /* 見出し全体の共通設定 */
+    & h1, & h2, & h3, & h4 {
+      font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
+      font-weight: 500;
+      color: var(--foreground);
+      font-feature-settings: normal; /* 英字見出しはpaltをリセット */
+      text-transform: uppercase;
+    }
+
+    /* h1: 記事タイトルとしての風格 */
+    & h1 {
+      font-size: 2.25rem;
+      letter-spacing: var(--track-display);
+      line-height: 1.2;
+      margin-top: 0;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    /* h2: セクションの区切り */
+    & h2 {
+      font-size: 1.5rem;
+      letter-spacing: var(--track-display);
+      margin-top: 4rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* h3: 小見出し */
+    & h3 {
+      font-size: 1.1rem;
+      letter-spacing: var(--track-label);
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--muted);
+    }
+
+    /* 段落 */
+    & p {
+      margin-top: 1.5em;
+      margin-bottom: 1.5em;
+    }
+
+    /* リンクの洗練されたホバー効果 */
+    & a {
+      color: var(--foreground);
+      text-decoration-color: var(--border);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+      transition: all 0.3s ease;
+      font-weight: inherit;
+
+      &:hover {
+        color: var(--muted);
+        text-decoration-color: var(--muted);
+      }
+    }
+
+    /* 引用 (Blockquote) */
+    & blockquote {
+      font-style: italic;
+      color: var(--muted);
+      border-left-width: 2px;
+      border-left-color: var(--border);
+      padding-left: 1.5rem;
+      margin-top: 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* リスト */
+    & ul, & ol {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding-left: 1.5rem;
+    }
+
+    & li {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    & li::marker {
+      color: var(--subtle);
+    }
+
+    /* 水平線 */
+    & hr {
+      border-color: var(--border);
+      margin-top: 3.5rem;
+      margin-bottom: 3.5rem;
+    }
+
+    /* インラインコード */
+    & code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85em;
+      background-color: var(--surface);
+      padding: 0.2em 0.4em;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      font-weight: normal;
+    }
+
+    /* デフォルトのバッククォートを非表示 */
+    & code::before,
+    & code::after {
+      content: none;
+    }
+
+    /* コードブロック (Pre) */
+    & pre {
+      background-color: var(--foreground);
+      color: var(--background);
+      padding: 1.5rem;
+      border-radius: 0px; /* エディトリアルらしくシャープに */
+      overflow-x: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      
+      & code {
+        background-color: transparent;
+        border: none;
+        padding: 0;
+        color: inherit;
+        font-size: 0.9em;
+      }
+    }
+    
+    /* 画像 */
+    & img {
+      margin-top: 2.5rem;
+      margin-bottom: 2.5rem;
+      border-radius: 0px;
+    }
+  }
 }
