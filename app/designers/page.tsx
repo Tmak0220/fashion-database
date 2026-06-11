@@ -40,8 +40,17 @@ export default async function DesignersPage() {
     }))
     .sort((a, b) => a.order - b.order)
 
+  const breadcrumbs = [
+    { label: "ファッションデータベース", href: "/" },
+    { label: "デザイナー" },
+  ]
+
   return (
-    <PageLayout title="Designers" subtitle="デザイナー">
+    <PageLayout 
+      title="Designers" 
+      subtitle="デザイナー"
+      breadcrumbs={breadcrumbs}
+    >
       <HistoryAccordion items={history} />
       <CardSection
         title="Regions"

@@ -1,9 +1,11 @@
+export const dynamic = "force-dynamic"
+
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import DesignerButton from "@/components/DesignerButton"
-import SectionHeading from "@/components/SectionHeading"
-import Breadcrumb from "@/components/Breadcrumb"
+import PageLayout from "@/components/PageLayout"
+import HistoryAccordion from "@/components/HistoryAccordion"
+import CardSection from "@/components/CardSection"
 
 type Props = {
   params: Promise<{
@@ -14,16 +16,13 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, country } = await params
-
-  const { data: designer } = await supabase
-    .from("designers")
-    .select("country_name_ja")
-    .eq("region_slug", region)
-    .eq("country_slug", country)
-    .limit(1)
+  const { data: countryData } = await supabase
+    .from("countries")
+    .select("name, name_ja")
+    .eq("slug", country)
     .single()
 
-  const countryName = designer?.country_name_ja || "国"
+  const countryName = countryData ? (countryData.name_ja || countryData.name) : "国"
 
   return {
     title: `${countryName}のデザイナー一覧 | Fashion Database`,
@@ -37,55 +36,74 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CountryPage({ params }: Props) {
   const { region, country } = await params
 
-  const { data: designers } = await supabase
-    .from("designers")
-    .select("*")
-    .eq("region_slug", region)
-    .eq("country_slug", country)
-    .order("name", { ascending: true })
+  const [countryResult, regionResult] = await Promise.all([
+    supabase
+      .from("countries")
+      .select("*")
+      .eq("slug", country)
+      .single(),
+    supabase
+      .from("regions")
+      .select("name, name_ja")
+      .eq("slug", region)
+      .single()
+  ])
 
-  if (!designers || designers.length === 0) {
-    notFound()
-  }
+  const countryData = countryResult.data
+  const regionData = regionResult.data
 
-  const countryData = designers[0]
+  if (!countryData || !regionData) notFound()
+
+  const [historyResult, designersResult] = await Promise.all([
+    supabase
+      .from("country_histories")
+      .select("title, content, order") 
+      .eq("country_id", countryData.id)
+      .eq("key", "designer")
+      .eq("lang", "ja")
+      .eq("is_visible", true)
+      .order("order", { ascending: true }),
+    supabase
+      .from("designers")
+      .select("id, name, name_ja, slug")
+      .eq("region_slug", region)
+      .eq("country_slug", country)
+      .order("name", { ascending: true }),
+  ])
+
+  const history = (historyResult.data ?? []).map((item) => ({
+    title: item.title ?? "",
+    content: item.content,
+    order: item.order ?? 0,
+    type: 'markdown' as const,
+  }))
+
+  const breadcrumbs = [
+    { label: "ファッションデータベース", href: "/" },
+    { label: "デザイナー", href: "/designers" },
+    { label: regionData.name_ja || regionData.name, href: `/designers/${region}` },
+    { label: countryData.name_ja || countryData.name },
+  ]
 
   return (
-    <main className="p-6 sm:p-10 md:p-14 lg:p-16">
-      <Breadcrumb
-        items={[
-          { label: "ファッションデータベース", href: "/" },
-          { label: "デザイナー", href: "/designers" },
-          {
-            label: countryData.region_name_ja,
-            href: `/designers/${countryData.region_slug}`,
-          },
-          { label: countryData.country_name_ja },
-        ]}
+    <PageLayout 
+      title={countryData.name} 
+      subtitle={countryData.name_ja}
+      breadcrumbs={breadcrumbs}
+    >
+      {history.length > 0 && (
+        <div className="mb-12">
+          <HistoryAccordion items={history} />
+        </div>
+      )}
+      
+      <CardSection
+        title="Designers"
+        titleJa="デザイナー"
+        items={designersResult.data}
+        basePath={`/designers/${region}/${country}`}
+        uppercase={true}
       />
-
-      <div className="mt-8 sm:mt-10">
-        <h1 className="type-brand text-4xl sm:text-5xl md:text-6xl tracking-[0.18em] pr-[0.18em]">
-          {countryData.country_name_ja}
-        </h1>
-
-        <section className="mt-12 sm:mt-16">
-          <SectionHeading
-            title="Designers"
-            titleJa="デザイナー"
-            className="mb-6"
-          />
-
-          <div className="flex flex-wrap gap-3 sm:gap-4">
-            {designers.map((designer) => (
-              <DesignerButton
-                key={designer.id}
-                designer={designer}
-              />
-            ))}
-          </div>
-        </section>
-      </div>
-    </main>
+    </PageLayout>
   )
 }

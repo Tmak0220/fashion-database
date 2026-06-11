@@ -40,8 +40,17 @@ export default async function BrandsPage() {
     }))
     .sort((a, b) => a.order - b.order)
 
+  const breadcrumbs = [
+    { label: "ファッションデータベース", href: "/" },
+    { label: "ブランド" },
+  ]
+
   return (
-    <PageLayout title="Brands" subtitle="ブランド">
+    <PageLayout 
+      title="Brands" 
+      subtitle="ブランド"
+      breadcrumbs={breadcrumbs}
+    >
       <HistoryAccordion items={history} />
       <CardSection
         title="Regions"

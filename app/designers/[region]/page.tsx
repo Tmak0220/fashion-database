@@ -46,7 +46,7 @@ export default async function DesignersRegionPage({ params }: Props) {
       .from("region_histories")
       .select("title, content, order") 
       .eq("region_id", regionData.id)
-      .eq("key", "designer") // keyをdesignerに変更
+      .eq("key", "designer")
       .eq("lang", "ja")
       .eq("is_visible", true)
       .order("order", { ascending: true }),
@@ -64,8 +64,18 @@ export default async function DesignersRegionPage({ params }: Props) {
     type: 'markdown' as const,
   }))
 
+  const breadcrumbs = [
+    { label: "ファッションデータベース", href: "/" },
+    { label: "デザイナー", href: "/designers" },
+    { label: regionData.name_ja || regionData.name },
+  ]
+
   return (
-    <PageLayout title={regionData.name} subtitle={regionData.name_ja}>
+    <PageLayout 
+      title={regionData.name} 
+      subtitle={regionData.name_ja}
+      breadcrumbs={breadcrumbs}
+    >
       {history.length > 0 && (
         <div className="mb-12">
           <HistoryAccordion items={history} />
@@ -76,7 +86,7 @@ export default async function DesignersRegionPage({ params }: Props) {
         title="Countries"
         titleJa="国"
         items={countriesResult.data ?? []}
-        basePath={`/designers/${region}`} // パスをdesignersに変更
+        basePath={`/designers/${region}`}
       />
     </PageLayout>
   )
