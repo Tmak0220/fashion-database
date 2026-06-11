@@ -23,8 +23,6 @@
   --color-surface: var(--surface);
   --font-bodoni: var(--font-bodoni);
   --font-serif-jp: var(--font-serif-jp);
-
-  /* Tailwind Typography 用のカラーマッピング */
   --color-prose-body: var(--foreground);
   --color-prose-headings: var(--foreground);
   --color-prose-lead: var(--muted);
@@ -53,10 +51,6 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-
-/* =========================================
-   Typography Base Classes
-========================================= */
 
 .type-brand {
   font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
@@ -104,29 +98,22 @@ body {
   font-synthesis: none;
 }
 
-/* =========================================
-   Markdown (.prose) Editorial Styling
-========================================= */
-
 @layer components {
   .prose {
-    /* 全体のベース設定 */
     font-size: 0.95rem;
     line-height: 1.8;
     letter-spacing: 0.03em;
-    max-width: 65ch; /* 読みやすい最適な文字長 */
-    margin-inline: auto; /* 中央揃え */
+    max-width: 65ch;
+    margin-inline: auto;
 
-    /* 見出し全体の共通設定 */
     & h1, & h2, & h3, & h4 {
       font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
       font-weight: 500;
       color: var(--foreground);
-      font-feature-settings: normal; /* 英字見出しはpaltをリセット */
+      font-feature-settings: normal; 
       text-transform: uppercase;
     }
 
-    /* h1: 記事タイトルとしての風格 */
     & h1 {
       font-size: 2.25rem;
       letter-spacing: var(--track-display);
@@ -136,7 +123,6 @@ body {
       text-align: center;
     }
 
-    /* h2: セクションの区切り */
     & h2 {
       font-size: 1.5rem;
       letter-spacing: var(--track-display);
@@ -146,7 +132,6 @@ body {
       border-bottom: 1px solid var(--border);
     }
 
-    /* h3: 小見出し */
     & h3 {
       font-size: 1.1rem;
       letter-spacing: var(--track-label);
@@ -155,13 +140,11 @@ body {
       color: var(--muted);
     }
 
-    /* 段落 */
     & p {
       margin-top: 1.5em;
       margin-bottom: 1.5em;
     }
 
-    /* リンクの洗練されたホバー効果 */
     & a {
       color: var(--foreground);
       text-decoration-color: var(--border);
@@ -176,7 +159,6 @@ body {
       }
     }
 
-    /* 引用 (Blockquote) */
     & blockquote {
       font-style: italic;
       color: var(--muted);
@@ -187,7 +169,6 @@ body {
       margin-bottom: 2.5rem;
     }
 
-    /* リスト */
     & ul, & ol {
       margin-top: 1.5rem;
       margin-bottom: 1.5rem;
@@ -203,14 +184,12 @@ body {
       color: var(--subtle);
     }
 
-    /* 水平線 */
     & hr {
       border-color: var(--border);
       margin-top: 3.5rem;
       margin-bottom: 3.5rem;
     }
 
-    /* インラインコード */
     & code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.85em;
@@ -221,18 +200,16 @@ body {
       font-weight: normal;
     }
 
-    /* デフォルトのバッククォートを非表示 */
     & code::before,
     & code::after {
       content: none;
     }
 
-    /* コードブロック (Pre) */
     & pre {
       background-color: var(--foreground);
       color: var(--background);
       padding: 1.5rem;
-      border-radius: 0px; /* エディトリアルらしくシャープに */
+      border-radius: 0px;
       overflow-x: auto;
       margin-top: 2rem;
       margin-bottom: 2rem;
@@ -246,7 +223,6 @@ body {
       }
     }
     
-    /* 画像 */
     & img {
       margin-top: 2.5rem;
       margin-bottom: 2.5rem;
