@@ -36,15 +36,20 @@ export async function POST(req: NextRequest) {
     const imageUrls: string[] = post.image_urls || []
 
     for (const imageUrl of imageUrls) {
-      const urlParts = imageUrl.split("/")
-      const key = urlParts[urlParts.length - 1]
+      let key = ""
+      if (imageUrl.includes(".r2.dev/")) {
+        key = imageUrl.split(".r2.dev/")[1]
+      } else {
+        const urlParts = imageUrl.split("/")
+        key = urlParts[urlParts.length - 1]
+      }
 
       if (!key) continue
 
       await s3.send(
         new DeleteObjectCommand({
           Bucket: process.env.R2_BUCKET_NAME!,
-          Key: key,
+          Key: decodeURIComponent(key),
         })
       )
     }

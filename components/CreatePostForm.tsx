@@ -95,7 +95,9 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       setSelectedTags([])
       setFileName("選択されていません")
 
-      onPostCreated?.()
+      if (onPostCreated) {
+        await onPostCreated()
+      }
     } catch (e: any) {
       alert("投稿に失敗しました: " + e.message)
     } finally {
