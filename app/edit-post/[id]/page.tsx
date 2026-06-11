@@ -248,32 +248,34 @@ export default function EditPostPage() {
     router.push("/mypage")
   }
 
-  if (loading || !post) {
-    return (
-      <main className="p-6 sm:p-10 md:p-14 lg:p-16 text-[14px] text-muted font-medium">
-        読み込み中...
-      </main>
-    )
-  }
-
   const handleDelete = async () => {
-    if (!window.confirm("この投稿を削除しますか？")) return
+    if (!window.confirm("この投稿を削除しますか？\n（画像も同時に完全に削除されます）")) return
     
     setDeleting(true)
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId)
-      
-    if (error) {
-      console.error(error)
-      alert("削除に失敗しました。")
+
+    try {
+      const res = await fetch("/api/delete-post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ postId }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "削除に失敗しました。")
+      }
+
+      alert("投稿と画像を削除しました")
+      router.push("/mypage")
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || "削除に失敗しました。")
+    } finally {
       setDeleting(false)
-      return
     }
-    
-    alert("投稿を削除しました")
-    router.push("/mypage")
   }
 
   return (

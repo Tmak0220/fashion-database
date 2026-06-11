@@ -98,6 +98,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       if (onPostCreated) {
         await onPostCreated()
       }
+
     } catch (e: any) {
       alert("投稿に失敗しました: " + e.message)
     } finally {
