@@ -79,8 +79,22 @@ export default function CreatePostForm({ onPostCreated }: Props) {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("ログインしてください")
+      
       await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags }, user.id)
+      
       alert("ポストが作成されました")
+
+      setTitle("")
+      setDescription("")
+      setBrandSlug("")
+      setYear("")
+      setYearError("")
+      setSeasonType("")
+      setDesignerSlug("")
+      setImageUrls([])
+      setSelectedTags([])
+      setFileName("選択されていません")
+
       onPostCreated?.()
     } catch (e: any) {
       alert("投稿に失敗しました: " + e.message)
@@ -89,7 +103,6 @@ export default function CreatePostForm({ onPostCreated }: Props) {
     }
   }
 
-  // (※toggleTag, handleSeasonSelect, handleYearChange, removeImage もここに記載してください)
   const toggleTag = (id: string) => setSelectedTags(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
   const handleSeasonSelect = (s: "ss" | "fw") => setSeasonType(p => p === s ? "" : s);
   const handleYearChange = (v: string) => { setYear(v); setYearError(/^[0-9]*$/.test(v) ? "" : "半角数字で入力"); };

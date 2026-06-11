@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-
-import {
-  S3Client,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3"
-
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { createClient } from "@supabase/supabase-js"
 
 const s3 = new S3Client({
   region: "auto",
-
   endpoint: process.env.R2_ENDPOINT,
-
   credentials: {
-    accessKeyId:
-      process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey:
-      process.env.R2_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 })
 
@@ -25,17 +16,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(
-  req: NextRequest
-) {
+export async function POST(req: NextRequest) {
   try {
     const { postId } = await req.json()
 
-    // post取得
-    const {
-      data: post,
-      error: postFetchError,
-    } = await supabase
+    const { data: post, error: postFetchError } = await supabase
       .from("posts")
       .select("*")
       .eq("id", postId)
@@ -48,42 +33,35 @@ export async function POST(
       )
     }
 
-    // R2画像削除
-    const imageUrls: string[] =
-      post.image_urls || []
+    const imageUrls: string[] = post.image_urls || []
 
     for (const imageUrl of imageUrls) {
-      const key =
-        imageUrl.split(".r2.dev/")[1]
+      const urlParts = imageUrl.split("/")
+      const key = urlParts[urlParts.length - 1]
 
       if (!key) continue
 
       await s3.send(
         new DeleteObjectCommand({
-          Bucket:
-            process.env.R2_BUCKET_NAME!,
+          Bucket: process.env.R2_BUCKET_NAME!,
           Key: key,
         })
       )
     }
 
-    // tag削除
-    const { error: tagError } =
-      await supabase
-        .from("post_tags")
-        .delete()
-        .eq("post_id", postId)
+    const { error: tagError } = await supabase
+      .from("post_tags")
+      .delete()
+      .eq("post_id", postId)
 
     if (tagError) {
       throw tagError
     }
 
-    // post削除
-    const { error: deletePostError } =
-      await supabase
-        .from("posts")
-        .delete()
-        .eq("id", postId)
+    const { error: deletePostError } = await supabase
+      .from("posts")
+      .delete()
+      .eq("id", postId)
 
     if (deletePostError) {
       throw deletePostError
@@ -94,15 +72,9 @@ export async function POST(
     })
 
   } catch (err) {
-    console.error(
-      "Delete post error:",
-      err
-    )
-
+    console.error("Delete post error:", err)
     return NextResponse.json(
-      {
-        error: "Delete failed",
-      },
+      { error: "Delete failed" },
       { status: 500 }
     )
   }
