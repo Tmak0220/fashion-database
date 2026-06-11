@@ -1,13 +1,7 @@
 "use client"
 
 import Link from "next/link"
-
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
-
+import { useEffect, useMemo, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
 type Tag = {
@@ -37,421 +31,235 @@ type GroupedPosts = {
 }
 
 type Props = {
-  slug: string
+  slug?: string
 }
 
-export default function TagPageClient({
-  slug,
-}: Props) {
+const PREFERRED_ORDER = [
+  "mens",
+  "womens",
+  "coat",
+  "jacket",
+  "blouson",
+  "suits",
+  "sweater",
+  "shirts",
+  "t-shirts",
+  "pants",
+  "shoes",
+  "bag",
+  "accessories",
+  "leather",
+  "denim",
+  "fur",
+  "down"
+]
 
-  const [tag, setTag] =
-    useState<Tag | null>(null)
+export default function TagPageClient({ slug = "" }: Props) {
+  const [tag, setTag] = useState<Tag | null>(null)
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const [posts, setPosts] =
-    useState<Post[]>([])
-
-  const [loading, setLoading] =
-    useState(true)
+  const isAllTagsMode = !slug
 
   useEffect(() => {
-
     const fetchTagPage = async () => {
+      let postIds: string[] = []
 
-      // current tag
+      if (isAllTagsMode) {
+        const { data: postTagsData, error: postTagsError } = await supabase
+          .from("post_tags")
+          .select("post_id")
 
-      const {
-        data: currentTag,
-        error: tagError,
-      } = await supabase
-        .from("tags")
-        .select(`
-          id,
-          name,
-          name_ja,
-          slug
-        `)
-        .eq("slug", slug)
-        .single()
+        if (postTagsError) {
+          console.error(postTagsError)
+          setLoading(false)
+          return
+        }
+        postIds = Array.from(new Set(postTagsData?.map((item) => item.post_id).filter(Boolean))) || []
+      } else {
+        const { data: currentTag, error: tagError } = await supabase
+          .from("tags")
+          .select(`id, name, name_ja, slug`)
+          .eq("slug", slug)
+          .single()
 
-      if (tagError || !currentTag) {
+        if (tagError || !currentTag) {
+          console.error(tagError)
+          setLoading(false)
+          return
+        }
+        setTag(currentTag)
 
-        console.log(tagError)
+        const { data: postTagsData, error: postTagsError } = await supabase
+          .from("post_tags")
+          .select("post_id")
+          .eq("tag_id", currentTag.id)
 
-        setLoading(false)
-
-        return
+        if (postTagsError) {
+          console.error(postTagsError)
+          setLoading(false)
+          return
+        }
+        postIds = postTagsData?.map((item) => item.post_id).filter(Boolean) || []
       }
-
-      setTag(currentTag)
-
-      // posts with current tag
-
-      const {
-        data: postTagsData,
-        error: postTagsError,
-      } = await supabase
-        .from("post_tags")
-        .select(`
-          posts (
-            id,
-            title,
-            image_urls
-          )
-        `)
-        .eq("tag_id", currentTag.id)
-
-      if (postTagsError) {
-
-        console.log(postTagsError)
-
-        setLoading(false)
-
-        return
-      }
-
-      const postIds =
-        postTagsData
-          ?.map((item: any) => item.posts?.id)
-          .filter(Boolean) || []
 
       if (postIds.length === 0) {
-
         setPosts([])
-
         setLoading(false)
-
         return
       }
 
-      // all tags for those posts
+      const [postsResult, allRelatedTagsResult] = await Promise.all([
+        supabase
+          .from("posts")
+          .select("id, title, image_urls")
+          .in("id", postIds),
+        supabase
+          .from("post_tags")
+          .select(`
+            post_id,
+            tags (
+              id,
+              name,
+              name_ja,
+              slug
+            )
+          `)
+          .in("post_id", postIds)
+      ])
 
-      const {
-        data: relatedData,
-        error: relatedError,
-      } = await supabase
-        .from("post_tags")
-        .select(`
-          post_id,
-          tags (
-            id,
-            name,
-            name_ja,
-            slug
-          )
-        `)
-        .in("post_id", postIds)
-
-      if (relatedError) {
-
-        console.log(relatedError)
-
+      if (postsResult.error || allRelatedTagsResult.error) {
+        console.error(postsResult.error || allRelatedTagsResult.error)
         setLoading(false)
-
         return
       }
 
-      // build post map
+      const postMap = new Map<string, Post>()
 
-      const postMap = new Map<
-        string,
-        Post
-      >()
-
-      postTagsData.forEach((item: any) => {
-
-        const post = item.posts
-
-        if (!post) return
-
-        postMap.set(post.id, {
-          id: post.id,
-          title: post.title,
-          image_urls:
-            post.image_urls || [],
-          tags: [],
+      postsResult.data?.forEach((p) => {
+        postMap.set(p.id, {
+          id: p.id,
+          title: p.title,
+          image_urls: p.image_urls || [],
+          tags: []
         })
       })
 
-      relatedData?.forEach((item: any) => {
-
-        const existingPost =
-          postMap.get(item.post_id)
-
-        if (
-          !existingPost ||
-          !item.tags
-        ) return
-
-        existingPost.tags.push(item.tags)
+      allRelatedTagsResult.data?.forEach((item: any) => {
+        const existingPost = postMap.get(item.post_id)
+        const tagData = item.tags
+        if (!existingPost || !tagData) return
+        existingPost.tags.push(tagData)
       })
 
-      setPosts(
-        Array.from(postMap.values())
-      )
-
+      setPosts(Array.from(postMap.values()))
       setLoading(false)
     }
 
     fetchTagPage()
+  }, [slug, isAllTagsMode])
 
-  }, [slug])
+  const groupedPosts = useMemo<GroupedPosts[]>(() => {
+    const groups = new Map<string, GroupedPosts>()
 
-  // group by related tag
+    posts.forEach((post) => {
+      const availableTags = isAllTagsMode 
+        ? post.tags 
+        : post.tags.filter((t) => t.slug !== tag?.slug)
+        
+      if (availableTags.length === 0) return
 
-  const groupedPosts =
-    useMemo<GroupedPosts[]>(() => {
+      const stringToNumber = (str: string) => {
+        let hash = 0
+        for (let i = 0; i < str.length; i++) {
+          hash = str.charCodeAt(i) + ((hash << 5) - hash)
+        }
+        return Math.abs(hash)
+      }
 
-      if (!tag) return []
+      const randomIndex = stringToNumber(post.id) % availableTags.length
+      const assignedTag = availableTags[randomIndex]
 
-      const groups = new Map<
-        string,
-        GroupedPosts
-      >()
-
-      posts.forEach((post) => {
-
-        post.tags.forEach((relatedTag) => {
-
-          // skip current tag
-
-          if (
-            relatedTag.slug === tag.slug
-          ) return
-
-          const existing =
-            groups.get(
-              relatedTag.slug
-            )
-
-          if (existing) {
-
-            existing.posts.push(post)
-
-          } else {
-
-            groups.set(
-              relatedTag.slug,
-              {
-                tag: relatedTag,
-                posts: [post],
-              }
-            )
-          }
+      const existing = groups.get(assignedTag.slug)
+      if (existing) {
+        existing.posts.push(post)
+      } else {
+        groups.set(assignedTag.slug, {
+          tag: assignedTag,
+          posts: [post],
         })
+      }
+    })
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        posts: group.posts.slice(0, 30),
+      }))
+      .sort((a, b) => {
+        let indexA = PREFERRED_ORDER.indexOf(a.tag.slug.toLowerCase())
+        let indexB = PREFERRED_ORDER.indexOf(b.tag.slug.toLowerCase())
+        if (indexA === -1) indexA = Infinity
+        if (indexB === -1) indexB = Infinity
+        return indexA - indexB
       })
-
-      return Array.from(
-        groups.values()
-      ).sort((a, b) =>
-        a.tag.name.localeCompare(
-          b.tag.name
-        )
-      )
-
-    }, [posts, tag])
+  }, [posts, tag, isAllTagsMode])
 
   if (loading) {
-
-    return (
-      <main className="p-10 md:p-14 lg:p-16">
-        Loading...
-      </main>
-    )
+    return <main className="p-10 md:p-14 lg:p-16">LOADING...</main>
   }
 
-  if (!tag) {
-
-    return (
-      <main className="p-10 md:p-14 lg:p-16">
-        Tag not found
-      </main>
-    )
+  if (!isAllTagsMode && !tag) {
+    return <main className="p-10 md:p-14 lg:p-16">TAG NOT FOUND</main>
   }
 
   return (
+    <main className={isAllTagsMode ? "" : "p-10 md:p-14 lg:p-16"}>
+      {!isAllTagsMode && tag && (
+        <section className="max-w-4xl">
+          <p className="type-label text-[11px] tracking-[0.12em] text-subtle">TAG</p>
+          <h1 className="mt-8 type-brand text-5xl md:text-6xl tracking-[0.1em]">
+            {tag.name.toUpperCase()}
+          </h1>
+          {tag.name_ja && (
+            <p className="mt-4 text-base tracking-[0.08em] text-muted">{tag.name_ja}</p>
+          )}
+        </section>
+      )}
 
-    <main className="p-10 md:p-14 lg:p-16">
-
-      {/* header */}
-
-      <section className="max-w-4xl">
-
-        <p
-          className="
-            type-label
-            text-[11px]
-            tracking-[0.12em]
-            text-subtle
-          "
-        >
-          TAG
-        </p>
-
-        <h1
-          className="
-            mt-8
-            type-brand
-            text-5xl
-            md:text-6xl
-            tracking-[0.1em]
-          "
-        >
-          {tag.name.toUpperCase()}
-        </h1>
-
-        {tag.name_ja && (
-
-          <p
-            className="
-              mt-4
-              text-base
-              tracking-[0.08em]
-              text-muted
-            "
-          >
-            {tag.name_ja}
-          </p>
-
-        )}
-
-      </section>
-
-      {/* grouped related tags */}
-
-      <section className="mt-20 space-y-24">
-
+      <section className={isAllTagsMode ? "space-y-24" : "mt-20 space-y-24"}>
         {groupedPosts.length === 0 && (
-
-          <p className="text-sm text-muted">
-            関連投稿はありません
-          </p>
-
+          <p className="text-sm text-muted">関連投稿はありません</p>
         )}
 
         {groupedPosts.map((group) => (
-
-          <section
-            key={group.tag.slug}
-            className="space-y-8"
-          >
-
-            {/* related tag heading */}
-
+          <section key={group.tag.slug} className="space-y-8">
             <div>
-
-              <Link
-                href={`/tags/${group.tag.slug}`}
-                className="
-                  inline-block
-                  hover:opacity-60
-                  transition-opacity
-                "
-              >
-
-                <h2
-                  className="
-                    type-brand
-                    text-3xl
-                    tracking-[0.08em]
-                  "
-                >
-                  {group.tag.name}
-                </h2>
-
-                {group.tag.name_ja && (
-
-                  <p
-                    className="
-                      mt-2
-                      text-sm
-                      text-muted
-                    "
-                  >
-                    {group.tag.name_ja}
-                  </p>
-
-                )}
-
+              <Link href={`/tags/${group.tag.slug}`} className="inline-block hover:opacity-60 transition-opacity">
+                <h2 className="type-brand text-3xl tracking-[0.08em]">{group.tag.name.toUpperCase()}</h2>
+                {group.tag.name_ja && <p className="mt-2 text-sm text-muted">{group.tag.name_ja}</p>}
               </Link>
-
             </div>
 
-            {/* posts */}
-
-            <div
-              className="
-                grid
-                grid-cols-2
-                md:grid-cols-3
-                lg:grid-cols-4
-                gap-6
-              "
-            >
-
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {group.posts.map((post) => (
-
-                <Link
-                  key={`${group.tag.slug}-${post.id}`}
-                  href={`/posts/${post.id}`}
-                  className="block group"
-                >
-
+                <Link key={`${group.tag.slug}-${post.id}`} href={`/posts/${post.id}`} className="block group">
                   <article className="space-y-3">
-
-                    <div
-                      className="
-                        overflow-hidden
-                        rounded-2xl
-                        border
-                        border-border
-                        bg-surface
-                      "
-                    >
-
+                    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
                       <img
-                        src={
-                          post.image_urls?.[0]
-                        }
+                        src={post.image_urls?.[0]}
                         alt=""
-                        className="
-                          w-full
-                          aspect-[4/5]
-                          object-cover
-                          transition-transform
-                          duration-500
-                          group-hover:scale-[1.02]
-                        "
+                        className="w-full aspect-[4/5] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                       />
-
                     </div>
-
-                    {post.title && (
-
-                      <p
-                        className="
-                          text-sm
-                          leading-relaxed
-                        "
-                      >
-                        {post.title}
-                      </p>
-
-                    )}
-
+                    {post.title && <p className="text-sm leading-relaxed">{post.title}</p>}
                   </article>
-
                 </Link>
-
               ))}
-
             </div>
-
           </section>
-
         ))}
-
       </section>
-
     </main>
   )
 }
