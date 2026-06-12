@@ -6,15 +6,11 @@ const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY!
 )
 
-// 👇 1. 引数に「req: Request」を追加
 export async function POST(req: Request) {
 
   try {
-
-    // 👇 2. リクエストのURLから動的に「origin」を取得するこの一文を追加
     const { origin } = new URL(req.url)
 
-    // supabase user取得
     const supabase = await createClient()
 
     const {
@@ -23,16 +19,11 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        {
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
+        { error: "Unauthorized" },
+        { status: 401 }
       )
     }
 
-    // checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -42,6 +33,13 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
+
+      billing_address_collection: "required",
+
+      invoice_creation: {
+        enabled: true,
+      },
+      
       success_url: `${origin}/members/success`,
       cancel_url: `${origin}/members`,
       metadata: {
@@ -61,12 +59,8 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error(error)
     return NextResponse.json(
-      {
-        error: "Stripe Error",
-      },
-      {
-        status: 500,
-      }
+      { error: "Stripe Error" },
+      { status: 500 }
     )
   }
 }
