@@ -1,5 +1,7 @@
+"use client"
+
 import Link from "next/link"
-import CollapsibleDescription from "@/components/CollapsibleDescription"
+import { useState, useEffect } from "react"
 import SectionHeading from "@/components/SectionHeading"
 
 export type DesignerLine = "mens" | "womens" | "both"
@@ -26,19 +28,8 @@ type Props = {
 
 const PX_PER_YEAR_OFFSET = 24
 
-type BothRow = {
-  kind: "both"
-  designer: Designer
-  anchorYear: number
-}
-
-type SplitRow = {
-  kind: "split"
-  mens?: Designer
-  womens?: Designer
-  anchorYear: number
-}
-
+type BothRow = { kind: "both"; designer: Designer; anchorYear: number }
+type SplitRow = { kind: "split"; mens?: Designer; womens?: Designer; anchorYear: number }
 type TimelineRow = BothRow | SplitRow
 
 function sortedDesigners(designers: Designer[]): Designer[] {
@@ -64,9 +55,7 @@ function buildTimelineRows(designers: Designer[]): TimelineRow[] {
 
   for (const m of mens) {
     const match =
-      womens.find(
-        (w) => !usedWomens.has(w.id) && w.start_year === m.start_year,
-      ) ??
+      womens.find((w) => !usedWomens.has(w.id) && w.start_year === m.start_year) ??
       womens.find((w) => !usedWomens.has(w.id) && periodsOverlap(m, w))
 
     if (match) {
@@ -83,21 +72,13 @@ function buildTimelineRows(designers: Designer[]): TimelineRow[] {
 
   for (const m of mens) {
     if (!usedMens.has(m.id)) {
-      splitRows.push({
-        kind: "split",
-        mens: m,
-        anchorYear: m.start_year,
-      })
+      splitRows.push({ kind: "split", mens: m, anchorYear: m.start_year })
     }
   }
 
   for (const w of womens) {
     if (!usedWomens.has(w.id)) {
-      splitRows.push({
-        kind: "split",
-        womens: w,
-        anchorYear: w.start_year,
-      })
+      splitRows.push({ kind: "split", womens: w, anchorYear: w.start_year })
     }
   }
 
@@ -114,20 +95,18 @@ function buildTimelineRows(designers: Designer[]): TimelineRow[] {
 
 function DesignerEntry({
   designer,
-  showBothLabel = false,
   centered = false,
+  onOpenDrawer,
 }: {
   designer: Designer
-  showBothLabel?: boolean
   centered?: boolean
+  onOpenDrawer: (designer: Designer) => void
 }) {
-  const align = centered ? "text-center" : ""
+  const align = centered ? "text-center flex flex-col items-center" : "flex flex-col items-start"
 
   return (
     <div className={align}>
-      <p
-        className={`type-label text-[11px] tabular-nums ${align}`}
-      >
+      <p className="type-label text-[11px] tabular-nums text-subtle">
         {designer.start_year}
         {" — "}
         {designer.end_year}
@@ -135,59 +114,142 @@ function DesignerEntry({
 
       <Link
         href={`/designers/${designer.designers.region_slug}/${designer.designers.country_slug}/${designer.designer_slug}`}
-        className="group mt-3 block"
+        className="group mt-2 block"
       >
-        <h3 className="type-display text-[1.75rem] text-foreground transition-colors group-hover:text-muted">
+        <h3 className="type-display text-2xl sm:text-[1.75rem] text-foreground transition-colors group-hover:text-muted">
           {designer.designers.name}
         </h3>
-        <p className="mt-1.5 text-sm tracking-[0.04em] text-muted">
+        <p className="mt-1 text-[13px] tracking-[0.04em] text-muted">
           {designer.designers.name_ja}
         </p>
       </Link>
 
+      {designer.description && (
+        <button
+          onClick={() => onOpenDrawer(designer)}
+          className="mt-4 group flex items-center gap-2 pb-0.5 border-b border-border/40 hover:border-foreground transition-colors duration-300"
+        >
+          <span className="text-[10px] uppercase tracking-[0.1em] text-muted group-hover:text-foreground transition-colors">
+            経歴を読む
+          </span>
+          <svg className="w-3 h-3 text-muted group-hover:text-foreground transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
 
-function ColumnDesignerEntry({ designer }: { designer: Designer }) {
+function DesignerDrawer({
+  designer,
+  isOpen,
+  onClose,
+}: {
+  designer: Designer | null
+  isOpen: boolean
+  onClose: () => void
+}) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [onClose])
+
+  if (!designer) return null
+
   return (
-    <div className="text-center">
-      <DesignerEntry designer={designer} centered />
-      <CollapsibleDescription
-        description={designer.description}
-        centered
+    <div
+      className={`fixed inset-0 z-50 transition-all duration-500 ${
+        isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+      }`}
+    >
+      <div
+        className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={onClose}
       />
-    </div>
-  )
-}
-
-function SplitRowView({ row }: { row: SplitRow }) {
-  return (
-    <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2 md:gap-24">
-      <div
-        style={{
-          paddingTop: row.mens
-            ? yearOffset(row.mens.start_year, row.anchorYear)
-            : 0,
-        }}
-      >
-        {row.mens ? <ColumnDesignerEntry designer={row.mens} /> : null}
-      </div>
 
       <div
-        style={{
-          paddingTop: row.womens
-            ? yearOffset(row.womens.start_year, row.anchorYear)
-            : 0,
-        }}
+        className={`absolute right-0 top-0 bottom-0 w-full sm:w-[440px] md:w-[500px] bg-surface shadow-2xl border-l border-border transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        {row.womens ? <ColumnDesignerEntry designer={row.womens} /> : null}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border/40">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-subtle font-medium">
+            Designer Biography
+          </span>
+          <button
+            onClick={onClose}
+            className="p-2 -mr-2 text-muted hover:text-foreground transition-transform hover:rotate-90 duration-300"
+            aria-label="Close panel"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-8 md:px-10 md:py-12 custom-scrollbar">
+          <p className="text-xs tabular-nums text-muted mb-4 tracking-widest">
+            {designer.start_year} — {designer.end_year}
+          </p>
+          <h2 className="text-3xl md:text-4xl font-light text-foreground leading-tight">
+            {designer.designers.name}
+          </h2>
+          <p className="mt-2 text-sm tracking-[0.04em] text-muted">
+            {designer.designers.name_ja}
+          </p>
+
+          <div className="mt-12 w-8 h-px bg-border/80" />
+
+          <div className="mt-10 text-[13px] md:text-sm leading-[2] tracking-[0.02em] text-foreground/80 whitespace-pre-wrap">
+            {designer.description}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-border/40 bg-surface/50">
+          <Link
+            href={`/designers/${designer.designers.region_slug}/${designer.designers.country_slug}/${designer.designer_slug}`}
+            onClick={onClose}
+            className="block w-full text-center py-3.5 bg-foreground text-background text-xs tracking-[0.08em] uppercase font-medium hover:bg-muted transition-colors duration-300"
+          >
+            View Full Profile
+          </Link>
+        </div>
       </div>
     </div>
   )
 }
 
 export default function DesignerTimeline({ designers }: Props) {
+  const [selectedDesigner, setSelectedDesigner] = useState<Designer | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+  const handleOpenDrawer = (designer: Designer) => {
+    setSelectedDesigner(designer)
+    setIsDrawerOpen(true)
+  }
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false)
+    setTimeout(() => setSelectedDesigner(null), 500)
+  }
+
   const withLine = designers.filter((d) => d.line != null)
   const hasLineData = withLine.length > 0
 
@@ -195,16 +257,20 @@ export default function DesignerTimeline({ designers }: Props) {
     return (
       <section className="mt-20">
         <SectionHeading title="Designers" titleJa="デザイナー" />
-        <div className="mt-10 space-y-10">
+        <div className="mt-10 space-y-12">
           {sortedDesigners(designers).map((designer) => (
-            <div key={designer.id}>
-              <DesignerEntry designer={designer} />
-              <CollapsibleDescription
-                description={designer.description}
-              />
-            </div>
+            <DesignerEntry
+              key={designer.id}
+              designer={designer}
+              onOpenDrawer={handleOpenDrawer}
+            />
           ))}
         </div>
+        <DesignerDrawer
+          designer={selectedDesigner}
+          isOpen={isDrawerOpen}
+          onClose={handleCloseDrawer}
+        />
       </section>
     )
   }
@@ -216,40 +282,61 @@ export default function DesignerTimeline({ designers }: Props) {
       <SectionHeading title="Designers" titleJa="デザイナー" />
 
       <div className="mt-10 grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-24">
-        <h3 className="text-center text-xs tracking-[0.08em] text-muted">
-          メンズ
+        <h3 className="text-center text-[10px] tracking-[0.15em] uppercase text-muted font-medium border-b border-border/40 pb-3">
+          Menswear
         </h3>
-        <h3 className="text-center text-xs tracking-[0.08em] text-muted">
-          ウィメンズ
+        <h3 className="text-center text-[10px] tracking-[0.15em] uppercase text-muted font-medium border-b border-border/40 pb-3">
+          Womenswear
         </h3>
       </div>
 
-      <div className="mt-6 flex flex-col gap-10">
+      <div className="mt-8 flex flex-col gap-12">
         {rows.map((row) => {
           if (row.kind === "both") {
             return (
               <div key={`both-${row.designer.id}`} className="text-center">
                 <DesignerEntry
                   designer={row.designer}
-                  showBothLabel
                   centered
-                />
-                <CollapsibleDescription
-                  description={row.designer.description}
-                  centered
+                  onOpenDrawer={handleOpenDrawer}
                 />
               </div>
             )
           }
 
           return (
-            <SplitRowView
+            <div
               key={`split-${row.mens?.id ?? "m"}-${row.womens?.id ?? "w"}`}
-              row={row}
-            />
+              className="grid grid-cols-1 items-start gap-12 md:grid-cols-2 md:gap-24"
+            >
+              <div style={{ paddingTop: row.mens ? yearOffset(row.mens.start_year, row.anchorYear) : 0 }}>
+                {row.mens && (
+                  <DesignerEntry
+                    designer={row.mens}
+                    centered
+                    onOpenDrawer={handleOpenDrawer}
+                  />
+                )}
+              </div>
+              <div style={{ paddingTop: row.womens ? yearOffset(row.womens.start_year, row.anchorYear) : 0 }}>
+                {row.womens && (
+                  <DesignerEntry
+                    designer={row.womens}
+                    centered
+                    onOpenDrawer={handleOpenDrawer}
+                  />
+                )}
+              </div>
+            </div>
           )
         })}
       </div>
+
+      <DesignerDrawer
+        designer={selectedDesigner}
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+      />
     </section>
   )
 }

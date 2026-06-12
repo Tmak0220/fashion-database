@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
-import HistoryAccordion from "@/components/HistoryAccordion"
+import HistoryAccordion from "@/components/Drawer"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

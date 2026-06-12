@@ -4,8 +4,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
-import HistoryAccordion from "@/components/HistoryAccordion"
 import CardSection from "@/components/CardSection"
+import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 
 type Props = {
   params: Promise<{
@@ -71,12 +71,7 @@ export default async function CountryPage({ params }: Props) {
       .order("name", { ascending: true }),
   ])
 
-  const history = (historyResult.data ?? []).map((item) => ({
-    title: item.title ?? "",
-    content: item.content,
-    order: item.order ?? 0,
-    type: 'markdown' as const,
-  }))
+  const history = (historyResult.data ?? []).sort((a, b) => a.order - b.order)
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
@@ -91,16 +86,23 @@ export default async function CountryPage({ params }: Props) {
       subtitle={countryData.name_ja}
       breadcrumbs={breadcrumbs}
     >
+      {/* 共通のデザイン規則に基づき max-w-2xl mx-auto で幅制限と中央寄せを適用 */}
       {history.length > 0 && (
-        <div className="mb-12">
-          <HistoryAccordion items={history} />
+        <div className="mb-16 space-y-4 max-w-2xl mx-auto">
+          {history.map((item, index) => (
+            <HistoryDrawerItem 
+              key={index} 
+              title={item.title ?? "詳細"} 
+              content={item.content ?? ""} 
+            />
+          ))}
         </div>
       )}
       
       <CardSection
         title="Brands"
         titleJa="ブランド"
-        items={brandsResult.data}
+        items={brandsResult.data ?? []}
         basePath={`/brands/${region}/${country}`}
         uppercase={true}
       />

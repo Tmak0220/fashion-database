@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
-import HistoryAccordion from "@/components/HistoryAccordion"
+import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -51,7 +51,17 @@ export default async function BrandsPage() {
       subtitle="ブランド"
       breadcrumbs={breadcrumbs}
     >
-      <HistoryAccordion items={history} />
+      {/* 以下の div に max-w-2xl と mx-auto を追加して中央寄せ・幅制限をかけます */}
+      <div className="space-y-4 mb-16 max-w-2xl mx-auto"> 
+        {history.map((item, index) => (
+          <HistoryDrawerItem 
+            key={index} 
+            title={item.title} 
+            content={item.content} 
+          />
+        ))}
+      </div>
+
       <CardSection
         title="Regions"
         titleJa="地域"

@@ -1,6 +1,9 @@
+export const dynamic = "force-dynamic"
+
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import PageLayout from "@/components/PageLayout"
 import BrandPageClient from "./BrandPageClient"
 
 type Props = {
@@ -15,38 +18,49 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, country, slug } = await params
   const { data: brand } = await supabase
     .from("brands")
-    .select("name, name_ja, history, country_name_ja")
+    .select(`
+      name, name_ja, country_name_ja,
+      brand_histories (content)
+    `)
     .eq("slug", slug)
+    .eq("brand_histories.key", "brand")
+    .eq("brand_histories.is_visible", true)
     .single()
 
-  if (!brand) {
-    return {
-      title: "Brand Not Found",
-    }
-  }
+  if (!brand) return { title: "Brand Not Found" }
 
+  const historyContent = (brand.brand_histories as any)?.[0]?.content
   const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) | Fashion Database` : `${brand.name} | Fashion Database`
-  const description = brand.history ? brand.history.slice(0, 120) : `${brand.country_name_ja}のブランド。コレクションやランウェイのアーカイブを閲覧できます。`
+  const description = historyContent ? historyContent.slice(0, 120) : `${brand.country_name_ja || "不明"}のブランド。`
 
   return {
     title,
     description,
-    alternates: {
-      canonical: `https://fashdb.com/brands/${region}/${country}/${slug}`,
-    },
+    alternates: { canonical: `https://fashdb.com/brands/${region}/${country}/${slug}` },
   }
 }
 
 export default async function Page({ params }: Props) {
-  const { slug } = await params
+  const { region, country, slug } = await params
+
   const { data: brand } = await supabase
     .from("brands")
-    .select("*")
+    .select(`
+      id, name, name_ja, slug, region_slug, country_slug, 
+      region_name, country_name_ja, country_name,
+      brand_histories (title, content, order)
+    `)
     .eq("slug", slug)
+    .eq("brand_histories.key", "brand")
+    .eq("brand_histories.lang", "ja")
+    .eq("brand_histories.is_visible", true)
     .single()
 
-  if (!brand) {
-    notFound()
+  if (!brand) notFound()
+
+  const brandWithHistories = {
+    ...brand,
+    brand_histories: (brand.brand_histories as any[] || []).sort((a, b) => a.order - b.order)
   }
 
   const { data: relatedBrands } = await supabase
@@ -55,18 +69,36 @@ export default async function Page({ params }: Props) {
     .eq("country_slug", brand.country_slug)
     .neq("slug", brand.slug)
 
-  const shuffled = (relatedBrands || []).sort(() => 0.5 - Math.random())
-  const selectedBrands = shuffled.slice(0, 4)
+  const sanitizedRelatedBrands = (relatedBrands || [])
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 4)
+    .map((b) => ({ ...b, image_url: null }))
 
-  const sanitizedRelatedBrands = selectedBrands.map((b) => ({
-    ...b,
-    image_url: null
-  }))
+    const breadcrumbs = [
+      { label: "ファッションデータベース", href: "/" },
+      { label: "ブランド", href: "/brands" },
+      // 修正：region_name_ja があればそちらを、なければ region_name を表示するように変更
+      { 
+        label: brand.region_name_ja || brand.region_name || region, 
+        href: `/brands/${region}` 
+      },
+      { 
+        label: brand.country_name_ja || brand.country_name || country, 
+        href: `/brands/${region}/${country}` 
+      },
+      { label: brand.name_ja || brand.name },
+    ]
 
   return (
-    <BrandPageClient 
-      brand={brand} 
-      relatedBrands={sanitizedRelatedBrands} 
-    />
+    <PageLayout
+      title={brand.name}
+      subtitle={brand.name_ja}
+      breadcrumbs={breadcrumbs}
+    >
+      <BrandPageClient 
+        brand={brandWithHistories as any} 
+        relatedBrands={sanitizedRelatedBrands} 
+      />
+    </PageLayout>
   )
 }

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
-import HistoryAccordion from "@/components/HistoryAccordion"
+import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 
 type Props = {
   params: Promise<{ region: string }>
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${regionName}のブランド一覧 | Fashion Database`,
-    description: `ファッションデータベースに登録されているブランドの中から、${regionName}に属する国別のアーカイブを閲覧できます。`,
+    description: `${regionName}に属するブランドや国別のアーカイブを閲覧できます。`,
     alternates: {
       canonical: `https://fashdb.com/brands/${region}`,
     },
@@ -57,12 +57,7 @@ export default async function RegionPage({ params }: Props) {
       .order("name", { ascending: true }),
   ])
 
-  const history = (historyResult.data ?? []).map((item) => ({
-    title: item.title ?? "",
-    content: item.content,
-    order: item.order ?? 0,
-    type: 'markdown' as const,
-  }))
+  const history = (historyResult.data ?? []).sort((a, b) => a.order - b.order)
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
@@ -76,9 +71,16 @@ export default async function RegionPage({ params }: Props) {
       subtitle={regionData.name_ja}
       breadcrumbs={breadcrumbs}
     >
+
       {history.length > 0 && (
-        <div className="mb-12">
-          <HistoryAccordion items={history} />
+        <div className="mb-16 space-y-4 max-w-2xl mx-auto">
+          {history.map((item, index) => (
+            <HistoryDrawerItem 
+              key={index} 
+              title={item.title ?? "詳細"} 
+              content={item.content ?? ""} 
+            />
+          ))}
         </div>
       )}
       

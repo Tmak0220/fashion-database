@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
-import HistoryAccordion from "@/components/HistoryAccordion"
+import HistoryAccordion from "@/components/Drawer"
 
 type Props = {
   params: Promise<{ region: string }>

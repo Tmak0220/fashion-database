@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
-import HistoryAccordion from "@/components/HistoryAccordion"
+import HistoryAccordion from "@/components/Drawer"
 import CardSection from "@/components/CardSection"
 
 type Props = {
