@@ -1,13 +1,50 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+
 import PostFeed from "@/components/PostFeed"
+import CardSection from "@/components/CardSection"
+import SectionHeading from "@/components/SectionHeading"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Fashion Database",
-    description: "ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。",
+    description:
+      "ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。",
   }
 }
+
+const navigationItems = [
+  {
+    id: "brands",
+    name: "BRANDS",
+    name_ja: "ブランド一覧",
+    slug: "brands",
+  },
+  {
+    id: "designers",
+    name: "DESIGNERS",
+    name_ja: "デザイナー一覧",
+    slug: "designers",
+  },
+  {
+    id: "collections",
+    name: "COLLECTIONS",
+    name_ja: "コレクション一覧",
+    slug: "collections",
+  },
+  {
+    id: "tags",
+    name: "TAGS",
+    name_ja: "タグ検索",
+    slug: "tags",
+  },
+  {
+    id: "groups",
+    name: "GROUPS",
+    name_ja: "ブランドグループ",
+    slug: "groups",
+  },
+]
 
 export default function Home() {
   return (
@@ -15,98 +52,61 @@ export default function Home() {
       <section className="p-6 sm:p-10 md:p-14 lg:p-16">
         <div className="flex items-center justify-between gap-4 min-h-[40px]">
           <p className="type-label mt-0 text-[11px] text-subtle whitespace-nowrap">
-            Archive Project
+            Fashion Archive
           </p>
+
           <Link
             href="/members"
-            className="type-ui border border-border bg-surface px-4 sm:px-5 py-2 text-[11px] tracking-[0.12em] transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background whitespace-nowrap"
+            className="
+              type-ui
+              border
+              border-border
+              rounded-xl
+              bg-surface
+              px-4
+              sm:px-5
+              py-2
+              text-[11px]
+              transition-all
+              duration-300
+              hover:border-foreground/30
+              hover:bg-foreground/[0.02]
+              hover:-translate-y-[1px]
+            "
           >
-            PLUS MEMBERS
+            Members
           </Link>
         </div>
 
-        <div className="mt-10 sm:mt-8 flex flex-col">
+        <div className="mt-8 sm:mt-10 flex flex-col">
           <h1 className="type-display text-4xl sm:text-5xl md:text-6xl text-foreground break-words leading-tight">
             Fashion Database
           </h1>
-          <p className="mt-2 text-sm sm:text-base md:text-lg tracking-[0.14em] text-muted font-medium">
+
+          <p className="mt-2 text-sm sm:text-base md:text-lg tracking-[0.08em] text-muted">
             ファッションデータベース
           </p>
         </div>
 
-        <p className="mt-8 max-w-2xl text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted">
-          ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。
+        <p className="mt-8 max-w-xl text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted">
+          ファッションコレクション、ブランド、デザイナー、歴史資料を記録するアーカイブプロジェクトです。
         </p>
 
-        <nav className="mt-12 sm:mt-14 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          <Link
-            href="/brands"
-            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
-          >
-            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
-              BRANDS
-            </p>
-            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
-              ブランド一覧
-            </p>
-          </Link>
+        <CardSection
+          items={navigationItems}
+          basePath=""
+          variant="navigation"
+          showHeading={false}
+        />
+      </section>
 
-          <Link
-            href="/designers"
-            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
-          >
-            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
-              DESIGNERS
-            </p>
-            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
-              デザイナー一覧
-            </p>
-          </Link>
+      <section className="px-6 pb-20 pt-6 sm:px-10 md:px-14 lg:px-16">
+        <SectionHeading
+          title="Latest Posts"
+          titleJa="最新投稿"
+          className="mb-8"
+        />
 
-          <Link
-            href="/collections"
-            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
-          >
-            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
-              COLLECTIONS
-            </p>
-            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
-              コレクション一覧
-            </p>
-          </Link>
-
-          <Link
-            href="/tags"
-            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
-          >
-            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
-              TAGS
-            </p>
-            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
-              タグ検索
-            </p>
-          </Link>
-
-          <Link
-            href="/groups"
-            className="group min-w-[180px] text-center border border-border bg-surface px-5 md:px-8 py-3.5 transition-colors duration-300 hover:border-foreground hover:bg-foreground hover:text-background"
-          >
-            <p className="type-label text-sm tracking-[0.08em] font-semibold uppercase group-hover:text-inherit">
-              GROUPS
-            </p>
-            <p className="mt-1 text-xs text-muted group-hover:text-inherit opacity-80">
-              ブランドグループ
-            </p>
-          </Link>
-        </nav>
-       </section>
-
-      <section className="px-6 pb-20 sm:px-10 md:px-14 lg:px-16">
-        <div className="mb-8 sm:mb-12">
-          <p className="type-label text-[11px] text-subtle tracking-[0.12em] pr-[0.12em]">
-            Latest Posts
-          </p>
-        </div>
         <PostFeed />
       </section>
     </main>

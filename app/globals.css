@@ -84,7 +84,7 @@ body {
 }
 
 .type-label-ja {
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   display: block;
   text-align: center;
 }
@@ -100,18 +100,19 @@ body {
 
 @layer components {
   .prose {
-    font-size: 0.95rem;
     line-height: 1.8;
     letter-spacing: 0.03em;
     max-width: 65ch;
     margin-inline: auto;
 
-    & h1, & h2, & h3, & h4 {
+    & h1,
+    & h2,
+    & h3,
+    & h4 {
       font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
       font-weight: 500;
       color: var(--foreground);
-      font-feature-settings: normal; 
-      text-transform: uppercase;
+      font-feature-settings: normal;
     }
 
     & h1 {
@@ -126,23 +127,31 @@ body {
     & h2 {
       font-size: 1.5rem;
       letter-spacing: var(--track-display);
-      margin-top: 4rem;
+      margin-top: 3.5rem;
       margin-bottom: 1.5rem;
       padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--border);
     }
 
     & h3 {
-      font-size: 1.1rem;
-      letter-spacing: var(--track-label);
+      font-size: 1rem;
+      letter-spacing: 0.05em;
       margin-top: 2.5rem;
       margin-bottom: 1rem;
+      color: var(--foreground);
+    }
+
+    & h4 {
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
       color: var(--muted);
     }
 
     & p {
-      margin-top: 1.5em;
-      margin-bottom: 1.5em;
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
     }
 
     & a {
@@ -169,9 +178,10 @@ body {
       margin-bottom: 2.5rem;
     }
 
-    & ul, & ol {
-      margin-top: 1.5rem;
-      margin-bottom: 1.5rem;
+    & ul,
+    & ol {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
       padding-left: 1.5rem;
     }
 
@@ -185,9 +195,28 @@ body {
     }
 
     & hr {
+      width: 4rem;
+      margin: 4rem auto;
       border-color: var(--border);
-      margin-top: 3.5rem;
-      margin-bottom: 3.5rem;
+    }
+
+    & table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    & th {
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    & td {
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem;
     }
 
     & code {
@@ -209,11 +238,11 @@ body {
       background-color: var(--foreground);
       color: var(--background);
       padding: 1.5rem;
-      border-radius: 0px;
+      border-radius: 0;
       overflow-x: auto;
       margin-top: 2rem;
       margin-bottom: 2rem;
-      
+
       & code {
         background-color: transparent;
         border: none;
@@ -222,11 +251,12 @@ body {
         font-size: 0.9em;
       }
     }
-    
+
     & img {
-      margin-top: 2.5rem;
-      margin-bottom: 2.5rem;
-      border-radius: 0px;
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+      border-radius: 0;
+      border: 1px solid var(--border);
     }
   }
 }
