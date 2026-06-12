@@ -1,5 +1,6 @@
-import Link from "next/link"
 import SectionHeading from "@/components/SectionHeading"
+import NavigationCard from "@/components/cards/NavigationCard"
+import DirectoryCard from "@/components/cards/DirectoryCard"
 
 type CardItem = {
   id: string | number
@@ -9,11 +10,13 @@ type CardItem = {
 }
 
 type Props = {
-  title: string
-  titleJa: string
+  title?: string
+  titleJa?: string
   items: CardItem[] | null
   basePath: string
   uppercase?: boolean
+  variant?: "directory" | "navigation"
+  showHeading?: boolean
 }
 
 export default function CardSection({
@@ -22,49 +25,52 @@ export default function CardSection({
   items,
   basePath,
   uppercase = false,
+  variant = "directory",
+  showHeading = true,
 }: Props) {
   if (!items || items.length === 0) return null
 
+  const isNavigation = variant === "navigation"
+
   return (
-    <section className="mt-12 sm:mt-16">
-      <SectionHeading title={title} titleJa={titleJa} className="mb-6" />
+    <section className={showHeading ? "mt-12 sm:mt-16" : "mt-12 sm:mt-14"}>
+      {showHeading && title && titleJa && (
+        <SectionHeading
+          title={title}
+          titleJa={titleJa}
+          className="mb-6"
+        />
+      )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 max-w-7xl">
-        {items.map((item) => (
-          <Link
-            key={item.id}
-            href={`${basePath}/${item.slug}`}
-            className="
-              group
-              flex
-              flex-col
-              items-center
-              justify-center
-              text-center
-              border
-              border-border
-              rounded-xl
-              px-4
-              py-5
-              bg-surface
-              transition-all
-              duration-300
-              hover:bg-foreground
-              hover:border-foreground
-              active:scale-[0.98]
-            "
-          >
-            <p className="type-label group-hover:text-background transition-colors text-xs font-medium tracking-[0.12em]">
-              {uppercase ? item.name.toUpperCase() : item.name}
-            </p>
+      <div
+        className={
+          isNavigation
+            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"
+            : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 max-w-7xl"
+        }
+      >
+        {items.map((item) => {
+          const href = basePath
+            ? `${basePath}/${item.slug}`
+            : `/${item.slug}`
 
-            {item.name_ja && (
-              <p className="type-label-ja mt-1 text-xs text-muted group-hover:text-background/80 transition-colors">
-                {item.name_ja}
-              </p>
-            )}
-          </Link>
-        ))}
+          return isNavigation ? (
+            <NavigationCard
+              key={item.id}
+              href={href}
+              name={item.name}
+              nameJa={item.name_ja}
+            />
+          ) : (
+            <DirectoryCard
+              key={item.id}
+              href={href}
+              name={item.name}
+              nameJa={item.name_ja}
+              uppercase={uppercase}
+            />
+          )
+        })}
       </div>
     </section>
   )

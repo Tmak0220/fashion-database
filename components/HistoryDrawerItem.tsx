@@ -15,16 +15,57 @@ export default function HistoryDrawerItem({ title, content }: Props) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full flex items-center justify-between p-6 border border-border rounded-xl hover:bg-surface transition-colors"
+        className="
+          group
+          w-full
+          min-h-[130px]
+          flex
+          flex-col
+          items-center
+          justify-center
+          px-8
+          py-7
+          bg-surface
+          border
+          border-border
+          rounded-xl
+          transition-all
+          duration-300
+          hover:border-foreground/20
+          hover:-translate-y-[1px]
+        "
       >
-        <span className="text-sm font-medium text-foreground">{title}</span>
-        <span className="text-[10px] uppercase text-muted tracking-widest underline">詳細を読む</span>
+        <span
+          className="
+            text-sm
+            md:text-[15px]
+            font-medium
+            tracking-[0.02em]
+            text-foreground
+            text-center
+            leading-relaxed
+          "
+        >
+          {title}
+        </span>
+  
+        <div
+          className="
+            w-8
+            h-px
+            mt-5
+            bg-border
+            transition-colors
+            duration-300
+            group-hover:bg-foreground/30
+          "
+        />
       </button>
-
+  
       <Drawer
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        title="歴史と背景"
+        title="HISTORY"
         subtitle={title}
       >
         {content}
