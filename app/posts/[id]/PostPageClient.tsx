@@ -65,13 +65,24 @@ export default function PostPageClient({ id }: Props) {
 
       if (user) {
         setCurrentUserId(user.id)
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("plus_member")
-          .eq("id", user.id)
-          .single()
+        
+        const isAdmin = 
+          user?.user_metadata?.role === "admin" || 
+          user?.role === "admin" ||
+          user?.app_metadata?.role === "admin"
 
-        setIsPlusMember(!!profile?.plus_member)
+        const { data: memberData } = await supabase
+          .from("users")
+          .select("plus_member, plus_members, is_active")
+          .eq("id", user.id)
+          .maybeSingle()
+
+        const hasValidFlag = 
+          memberData?.plus_member === true || 
+          memberData?.plus_members === true || 
+          memberData?.is_active === true
+
+        setIsPlusMember(isAdmin || hasValidFlag)
       }
 
       const { data, error } = await supabase
@@ -139,8 +150,13 @@ export default function PostPageClient({ id }: Props) {
   }, [id])
 
   const requirePlus = () => {
+    if (!currentUserId) {
+      alert("MEMBER限定機能です。ログインまたは会員登録が必要です。")
+      window.location.href = "/members"
+      return false
+    }
     if (!isPlusMember) {
-      alert("PLUS MEMBER限定機能です")
+      alert("MEMBER限定機能です。")
       return false
     }
     return true
@@ -163,7 +179,7 @@ export default function PostPageClient({ id }: Props) {
   }
 
   const handleFollow = async () => {
-    if (!requirePlus() || !currentUserId || !post?.users?.id || currentUserId === post.users.id || followLoading) return
+    if (!requirePlus() || !currentUserId || !post?.users?.id || followLoading) return
     setFollowLoading(true)
 
     if (following) {
@@ -198,6 +214,8 @@ export default function PostPageClient({ id }: Props) {
     return <main className="p-6 sm:p-10 text-sm text-muted">投稿が見つかりませんでした</main>
   }
 
+  const isOwnPost = currentUserId === post.user_id
+
   return (
     <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -213,13 +231,13 @@ export default function PostPageClient({ id }: Props) {
               <div className="max-w-sm p-6 border border-border bg-surface rounded-2xl shadow-xl">
                 <h2 className="text-lg font-semibold text-foreground">詳細データは限定コンテンツです</h2>
                 <p className="mt-3 text-xs text-muted leading-relaxed">
-                  このアイテムのブランド、デザイナー、関連タグ、アーカイブ解説の閲覧や、お気に入り・保存機能を利用するには、PLUS MEMBERへの登録が必要です。
+                  このアイテムのブランド、デザイナー、関連タグ、アーカイブ解説の閲覧や、お気に入り・保存機能を利用するには、MEMBERへの登録が必要です。
                 </p>
                 <Link
                   href="/members"
                   className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition hover:opacity-90"
                 >
-                  PLUS MEMBERに登録する
+                  MEMBERに登録する
                 </Link>
                 <Link href="/" className="mt-4 block text-[11px] text-subtle hover:text-foreground transition">
                   トップページに戻る
@@ -288,15 +306,44 @@ export default function PostPageClient({ id }: Props) {
             </div>
 
             <div className="mt-8 sm:mt-12 flex flex-wrap items-center gap-3 sm:gap-4">
-              <button disabled className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium opacity-60">
-                ♡ お気に入り ({likeCount})
+              <button
+                onClick={handleLike}
+                disabled={likeLoading}
+                className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
+                  liked ? "text-red-500 border-red-200 bg-red-50/10" : "hover:bg-neutral-50"
+                }`}
+              >
+                {liked ? `♥ お気に入り中 (${likeCount})` : `♡ お気に入り (${likeCount})`}
               </button>
-              <button disabled className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium opacity-60">
-                保存
+              
+              <button
+                onClick={handleBookmark}
+                disabled={bookmarkLoading}
+                className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
+                  bookmarked ? "text-yellow-600 border-yellow-200 bg-yellow-50/10" : "hover:bg-neutral-50"
+                }`}
+              >
+                {bookmarked ? "★ 保存済み" : "☆ 保存"}
               </button>
-              <button disabled className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium opacity-60">
-                フォロー
-              </button>
+              
+              {!isOwnPost ? (
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
+                    following ? "text-blue-500 border-blue-200 bg-blue-50/10" : "hover:bg-neutral-50"
+                  }`}
+                >
+                  {following ? "✓ フォロー中" : "+ フォローする"}
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="border border-border bg-neutral-50/50 text-neutral-400 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium cursor-not-allowed opacity-50"
+                >
+                  自らをフォローすることはできません
+                </button>
+              )}
             </div>
           </div>
         </div>
