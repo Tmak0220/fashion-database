@@ -62,7 +62,7 @@ export default function MembersPage() {
           MEMBERSHIP
         </p>
         <h1 className="mt-8 type-display text-5xl md:text-6xl text-foreground">
-          PLUS MEMBERS
+          MEMBERSHIP
         </h1>
         <p className="mt-4 text-base tracking-[0.12em] text-muted font-medium">
           メンバーシップ

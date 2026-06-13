@@ -65,20 +65,20 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
   const [followLoading, setFollowLoading] = useState(false)
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!isMounted) return;
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!isMounted) return
 
       if (user) {
-        setCurrentUserId(user.id);
+        setCurrentUserId(user.id)
         const { data: memberData } = await supabase
           .from("users")
           .select("plus_member")
           .eq("id", user.id)
-          .single();
-        setIsPlusMember(memberData?.plus_member || false);
+          .single()
+        setIsPlusMember(memberData?.plus_member || false)
       }
 
       if (brand.brand_histories && brand.brand_histories.length > 0) {
@@ -89,14 +89,14 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
             order: Number(item.order) || 0,
             type: 'markdown' as const
           }))
-        );
+        )
       } else if (brand.history) {
         setHistoryItems([{
           title: `${brand.name_ja || brand.name} について`,
           content: brand.history,
           order: 1,
           type: 'text' as const
-        }]);
+        }])
       }
 
       const [designersRes, collectionsRes, postsRes, followCountRes, followStatusRes] = await Promise.all([
@@ -105,22 +105,21 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         supabase.from("posts").select("id, image_urls, title").eq("brand_slug", slug).order("created_at", { ascending: false }),
         supabase.from("brand_follows").select("*", { count: "exact", head: true }).eq("brand_slug", slug),
         user ? supabase.from("brand_follows").select("id").eq("user_id", user.id).eq("brand_slug", slug).maybeSingle() : Promise.resolve({ data: null })
-      ]);
+      ])
 
       if (isMounted) {
-        setDesigners(designersRes.data || []);
-        setCollections(collectionsRes.data || []);
-        setPosts(postsRes.data || []);
-        setFollowersCount(followCountRes.count || 0);
-        setFollowing(!!followStatusRes.data);
-        setLoading(false);
+        setDesigners(designersRes.data || [])
+        setCollections(collectionsRes.data || [])
+        setPosts(postsRes.data || [])
+        setFollowersCount(followCountRes.count || 0)
+        setFollowing(!!followStatusRes.data)
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-
-    return () => { isMounted = false; };
-  }, [slug, brand]);
+    fetchData()
+    return () => { isMounted = false }
+  }, [slug, brand])
 
   const handleFollow = async () => {
     if (!currentUserId) { alert("Login required"); return }
@@ -168,35 +167,20 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       <DesignerTimeline designers={designers} />
 
       <section className="mt-12 sm:mt-16">
-        <SectionHeading
-          title="Collections"
-          titleJa="コレクション"
-          className="mb-6"
-        />
+        <SectionHeading title="Collections" titleJa="コレクション" className="mb-6" />
         <div className="flex flex-wrap gap-2.5 sm:gap-4">
           {collections.map((collection) => (
-            <CollectionButton
-              key={collection.id}
-              collection={collection}
-            />
+            <CollectionButton key={collection.id} collection={collection} />
           ))}
         </div>
       </section>
 
       {relatedBrands.length > 0 && (
         <section className="mt-16 sm:mt-24">
-          <SectionHeading
-            title="Related Brands"
-            titleJa="関連するブランド"
-            className="mb-8"
-          />
+          <SectionHeading title="Related Brands" titleJa="関連するブランド" className="mb-8" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
             {relatedBrands.map((rb) => (
-              <Link
-                key={rb.id}
-                href={`/brands/${rb.region_slug}/${rb.country_slug}/${rb.slug}`}
-                className="group block"
-              >
+              <Link key={rb.id} href={`/brands/${rb.region_slug}/${rb.country_slug}/${rb.slug}`} className="group block">
                 <div className="w-full aspect-[4/3] border border-border bg-surface rounded-xl flex flex-col items-center justify-center p-3 sm:p-4 text-center transition-all duration-300 md:group-hover:bg-black md:group-hover:text-white md:group-hover:border-black active:bg-neutral-100">
                   <p className="text-xs sm:text-sm md:text-base font-semibold tracking-[0.06em] uppercase truncate w-full text-foreground group-hover:text-inherit">
                     {rb.name}
@@ -214,26 +198,14 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       )}
 
       <section className="mt-16 sm:mt-24 pb-14">
-        <SectionHeading
-          title="Posts"
-          titleJa="投稿"
-          className="mb-8"
-        />
+        <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {posts.map((post) => (
-            <Link
-              key={post.id}
-              href={`/posts/${post.id}`}
-              className="block"
-            >
+            <Link key={post.id} href={`/posts/${post.id}`} className="block">
               <article className="space-y-3">
-                <img
-                  src={post.image_urls?.[0]}
-                  alt=""
-                  className="w-full aspect-[4/5] object-cover rounded-2xl border border-border"
-                />
+                <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
                 {post.title && (
-                  <p className="text-sm tracking-[0.02em] text-foreground truncate">
+                  <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
                     {post.title}
                   </p>
                 )}

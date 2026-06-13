@@ -40,8 +40,8 @@ export async function POST(req: Request) {
         enabled: true,
       },
       
-      success_url: `${origin}/members/success`,
-      cancel_url: `${origin}/members`,
+      success_url: `${origin}//success`,
+      cancel_url: `${origin}/`,
       metadata: {
         user_id: user.id,
       },
