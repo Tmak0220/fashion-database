@@ -47,7 +47,7 @@ export default async function Page({ params }: Props) {
     .from("brands")
     .select(`
       id, name, name_ja, slug, region_slug, country_slug, 
-      region_name, country_name_ja, country_name,
+      region_name, region_name_ja, country_name_ja, country_name,
       brand_histories (title, content, order)
     `)
     .eq("slug", slug)
@@ -77,13 +77,12 @@ export default async function Page({ params }: Props) {
     const breadcrumbs = [
       { label: "ファッションデータベース", href: "/" },
       { label: "ブランド", href: "/brands" },
-      // 修正：region_name_ja があればそちらを、なければ region_name を表示するように変更
       { 
-        label: brand.region_name_ja || brand.region_name || region, 
+        label: (brand as any).region_name_ja || (brand as any).region_name || region, 
         href: `/brands/${region}` 
       },
       { 
-        label: brand.country_name_ja || brand.country_name || country, 
+        label: (brand as any).country_name_ja || (brand as any).country_name || country, 
         href: `/brands/${region}/${country}` 
       },
       { label: brand.name_ja || brand.name },

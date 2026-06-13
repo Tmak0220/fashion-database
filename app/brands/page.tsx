@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
+import SectionHeading from "@/components/SectionHeading"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -18,7 +19,7 @@ type HistoryItem = {
   title: string
   content: string
   order: number
-  type?: 'text' | 'markdown' | 'html'
+  type?: "text" | "markdown" | "html"
 }
 
 export default async function BrandsPage() {
@@ -46,21 +47,28 @@ export default async function BrandsPage() {
   ]
 
   return (
-    <PageLayout 
-      title="Brands" 
+    <PageLayout
+      title="Brands"
       subtitle="ブランド"
       breadcrumbs={breadcrumbs}
     >
-      {/* 以下の div に max-w-2xl と mx-auto を追加して中央寄せ・幅制限をかけます */}
-      <div className="space-y-4 mb-16 max-w-2xl mx-auto"> 
-        {history.map((item, index) => (
-          <HistoryDrawerItem 
-            key={index} 
-            title={item.title} 
-            content={item.content} 
-          />
-        ))}
-      </div>
+      <section className="mb-24">
+        <SectionHeading
+          title="History"
+          titleJa="歴史"
+          className="mb-6"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          {history.map((item, index) => (
+            <HistoryDrawerItem
+              key={index}
+              title={item.title}
+              content={item.content}
+            />
+          ))}
+        </div>
+      </section>
 
       <CardSection
         title="Regions"

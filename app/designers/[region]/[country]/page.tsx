@@ -4,8 +4,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
-import HistoryAccordion from "@/components/Drawer"
 import CardSection from "@/components/CardSection"
+import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 
 type Props = {
   params: Promise<{
@@ -16,13 +16,16 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, country } = await params
+
   const { data: countryData } = await supabase
     .from("countries")
     .select("name, name_ja")
     .eq("slug", country)
     .single()
 
-  const countryName = countryData ? (countryData.name_ja || countryData.name) : "国"
+  const countryName = countryData
+    ? (countryData.name_ja || countryData.name)
+    : "国"
 
   return {
     title: `${countryName}のデザイナー一覧 | Fashion Database`,
@@ -42,11 +45,12 @@ export default async function CountryPage({ params }: Props) {
       .select("*")
       .eq("slug", country)
       .single(),
+
     supabase
       .from("regions")
       .select("name, name_ja")
       .eq("slug", region)
-      .single()
+      .single(),
   ])
 
   const countryData = countryResult.data
@@ -57,12 +61,13 @@ export default async function CountryPage({ params }: Props) {
   const [historyResult, designersResult] = await Promise.all([
     supabase
       .from("country_histories")
-      .select("title, content, order") 
+      .select("title, content, order")
       .eq("country_id", countryData.id)
       .eq("key", "designer")
       .eq("lang", "ja")
       .eq("is_visible", true)
       .order("order", { ascending: true }),
+
     supabase
       .from("designers")
       .select("id, name, name_ja, slug")
@@ -71,36 +76,44 @@ export default async function CountryPage({ params }: Props) {
       .order("name", { ascending: true }),
   ])
 
-  const history = (historyResult.data ?? []).map((item) => ({
-    title: item.title ?? "",
-    content: item.content,
-    order: item.order ?? 0,
-    type: 'markdown' as const,
-  }))
+  const history = (historyResult.data ?? []).sort(
+    (a, b) => a.order - b.order
+  )
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
     { label: "デザイナー", href: "/designers" },
-    { label: regionData.name_ja || regionData.name, href: `/designers/${region}` },
-    { label: countryData.name_ja || countryData.name },
+    {
+      label: regionData.name_ja || regionData.name,
+      href: `/designers/${region}`,
+    },
+    {
+      label: countryData.name_ja || countryData.name,
+    },
   ]
 
   return (
-    <PageLayout 
-      title={countryData.name} 
+    <PageLayout
+      title={countryData.name}
       subtitle={countryData.name_ja}
       breadcrumbs={breadcrumbs}
     >
       {history.length > 0 && (
-        <div className="mb-12">
-          <HistoryAccordion items={history} />
+        <div className="mb-16 space-y-4 max-w-2xl mx-auto">
+          {history.map((item, index) => (
+            <HistoryDrawerItem
+              key={index}
+              title={item.title ?? "詳細"}
+              content={item.content ?? ""}
+            />
+          ))}
         </div>
       )}
-      
+
       <CardSection
         title="Designers"
         titleJa="デザイナー"
-        items={designersResult.data}
+        items={designersResult.data ?? []}
         basePath={`/designers/${region}/${country}`}
         uppercase={true}
       />

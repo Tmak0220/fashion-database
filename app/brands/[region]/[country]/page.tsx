@@ -86,7 +86,7 @@ export default async function CountryPage({ params }: Props) {
       subtitle={countryData.name_ja}
       breadcrumbs={breadcrumbs}
     >
-      {/* 共通のデザイン規則に基づき max-w-2xl mx-auto で幅制限と中央寄せを適用 */}
+    
       {history.length > 0 && (
         <div className="mb-16 space-y-4 max-w-2xl mx-auto">
           {history.map((item, index) => (

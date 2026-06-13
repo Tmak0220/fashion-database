@@ -89,7 +89,7 @@ export default function Home() {
         </div>
 
         <p className="mt-8 max-w-xl text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted">
-          ファッションコレクション、ブランド、デザイナー、歴史資料を記録するアーカイブプロジェクトです。
+          ファッションコレクション、ブランド、デザイナー、歴史資料を記録するアーカイブプロジェクト。
         </p>
 
         <CardSection
