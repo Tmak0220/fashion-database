@@ -25,6 +25,7 @@ type Post = {
   id: string
   image_urls: string[]
   title: string | null
+  brand_slug: string | null
 }
 
 type Props = {
@@ -90,7 +91,7 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
 
       const { data: postsData } = await supabase
         .from("posts")
-        .select(`id, image_urls, title`)
+        .select(`id, image_urls, title, brand_slug`)
         .eq("designer_slug", slug)
         .order("created_at", { ascending: false })
       setPosts(postsData || [])
@@ -197,18 +198,22 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
         <section className="mt-16 sm:mt-24">
           <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {posts.map((post) => (
-              <Link key={post.id} href={`/posts/${post.id}`} className="block">
-                <article className="space-y-3">
-                  <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
-                  {post.title && (
-                    <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
-                      {post.title}
-                    </p>
-                  )}
-                </article>
-              </Link>
-            ))}
+            {posts.map((post) => {
+              const urlSlug = `${post.brand_slug || "archive"}-${post.id}`
+
+              return (
+                <Link key={post.id} href={`/posts/${urlSlug}`} className="block">
+                  <article className="space-y-3">
+                    <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
+                    {post.title && (
+                      <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
+                        {post.title}
+                      </p>
+                    )}
+                  </article>
+                </Link>
+              )
+            })}
           </div>
         </section>
       </div>

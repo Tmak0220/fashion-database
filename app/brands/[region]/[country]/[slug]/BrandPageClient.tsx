@@ -200,18 +200,22 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       <section className="mt-16 sm:mt-24 pb-14">
         <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-          {posts.map((post) => (
-            <Link key={post.id} href={`/posts/${post.id}`} className="block">
-              <article className="space-y-3">
-                <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
-                {post.title && (
-                  <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
-                    {post.title}
-                  </p>
-                )}
-              </article>
-            </Link>
-          ))}
+          {posts.map((post) => {
+            const urlSlug = `${slug || "archive"}-${post.id}`
+
+            return (
+              <Link key={post.id} href={`/posts/${urlSlug}`} className="block">
+                <article className="space-y-3">
+                  <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
+                  {post.title && (
+                    <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
+                      {post.title}
+                    </p>
+                  )}
+                </article>
+              </Link>
+            )
+          })}
         </div>
       </section>
     </div>

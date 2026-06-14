@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
-type BookmarkPost = {
+type LikedPost = {
   posts: {
     id: string
     title: string | null
@@ -18,14 +18,14 @@ type BookmarkPost = {
   } | null
 }
 
-export default function BookmarksPage() {
-  const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
+export default function LikesPage() {
+  const [likes, setLikes] = useState<LikedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [selectedBrand, setSelectedBrand] = useState<string>("すべて")
+  const [isAscending, setIsAscending] = useState(false)
 
   useEffect(() => {
-    const fetchBookmarks = async () => {
+    const fetchLikes = async () => {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
@@ -36,7 +36,7 @@ export default function BookmarksPage() {
       setIsLoggedIn(true)
 
       const { data, error } = await supabase
-        .from("bookmarks")
+        .from("likes")
         .select(`
           posts (
             id,
@@ -60,7 +60,8 @@ export default function BookmarksPage() {
       }
 
       if (data) {
-        const formattedData: BookmarkPost[] = data.map((item: any) => {
+        // 配列形式で返ってくるpostsとbrandsを、LikedPost型に合わせて成形
+        const formattedData: LikedPost[] = data.map((item: any) => {
           const rawPost = Array.isArray(item.posts) ? item.posts[0] : item.posts
           
           if (!rawPost) {
@@ -82,15 +83,15 @@ export default function BookmarksPage() {
           }
         })
 
-        setBookmarks(formattedData)
+        setLikes(formattedData)
       } else {
-        setBookmarks([])
+        setLikes([])
       }
       
       setLoading(false)
     }
 
-    fetchBookmarks()
+    fetchLikes()
   }, [])
 
   if (loading) {
@@ -101,68 +102,59 @@ export default function BookmarksPage() {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[60vh]">
         <div className="max-w-md p-8 border border-border bg-surface rounded-2xl shadow-xl">
-          <h1 className="text-xl font-semibold tracking-wide text-foreground">MY ARCHIVE CLOSET</h1>
+          <h1 className="text-xl font-semibold tracking-wide text-foreground">MY FAVORITES</h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            選択したアーカイブを保存し、ブランドごとに一覧で管理できるコレクション機能です。本機能の利用にはMEMBER登録が必要です。
+            選択したアーカイブを保存し、一覧で管理できるコレクション機能です。本機能の利用にはMEMBER登録が必要です。
           </p>
           <Link
             href="/members"
             className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition hover:opacity-90"
           >
-            MEMBERに登録してクローゼットを作る
+            MEMBERに登録してお気に入りを使う
           </Link>
         </div>
       </main>
     )
   }
 
-  const availableBrands = ["すべて", ...Array.from(new Set(
-    bookmarks
-      .map(item => item.posts?.brands?.name)
-      .filter((name): name is string => !!name)
-  ))]
-
-  const filteredBookmarks = bookmarks.filter(item => {
-    if (selectedBrand === "すべて") return true
-    return item.posts?.brands?.name === selectedBrand
+  const sortedLikes = [...likes].sort((a, b) => {
+    const yearA = a.posts?.year ?? 9999
+    const yearB = b.posts?.year ?? 9999
+    return isAscending ? yearA - yearB : yearB - yearA
   })
 
   return (
     <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-border pb-6">
         <h1 className="text-3xl tracking-[0.08em] uppercase font-light">
-          ブックマーク
+          お気に入り
         </h1>
         <p className="text-xs text-subtle">
-          計 {bookmarks.length} 個のアーカイブ
+          計 {likes.length} 個のアイテム
         </p>
       </div>
 
-      {availableBrands.length > 1 && (
-        <div className="mt-8 flex flex-wrap gap-2">
-          {availableBrands.map(brand => (
-            <button
-              key={brand}
-              onClick={() => setSelectedBrand(brand)}
-              className={`px-4 py-1.5 rounded-full text-xs transition font-medium border ${
-                selectedBrand === brand
-                  ? "bg-black text-white border-black"
-                  : "bg-surface text-muted border-border hover:bg-neutral-50"
-              }`}
-            >
-              {brand}
-            </button>
-          ))}
+      {likes.length > 1 && (
+        <div className="mt-8 flex justify-end">
+          <button
+            onClick={() => setIsAscending(!isAscending)}
+            className="px-4 py-1.5 rounded-full text-xs transition font-medium border bg-surface text-muted border-border hover:bg-neutral-50 flex items-center gap-1.5"
+          >
+            <span>年代順:</span>
+            <span className="text-foreground font-semibold">
+              {isAscending ? "古い順 ↑" : "新しい順 ↓"}
+            </span>
+          </button>
         </div>
       )}
 
-      {filteredBookmarks.length === 0 ? (
+      {sortedLikes.length === 0 ? (
         <div className="mt-20 text-center text-xs text-subtle">
-          ブックマークされたアイテムがありません。
+          お気に入りされたアイテムがありません。
         </div>
       ) : (
         <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredBookmarks.map((item, index) => {
+          {sortedLikes.map((item, index) => {
             const post = item.posts
             if (!post) return null
 

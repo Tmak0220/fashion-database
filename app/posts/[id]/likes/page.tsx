@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("id", id)
     .single()
 
-  const title = post?.title ? `「${post.title}」をお気に入りにしたユーザー | Fashion Database` : "Likes | Fashion Database"
+  const title = post?.title ? `「${post.title}」をお気に入りにしたユーザー | MEMBER` : "Likes | MEMBER"
   return {
     title,
     description: "この投稿をお気に入りにしたユーザーの一覧です。",

@@ -73,6 +73,16 @@ export default function PostFeed() {
     }
 
     fetchPosts()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        window.location.reload()
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   if (loading) {

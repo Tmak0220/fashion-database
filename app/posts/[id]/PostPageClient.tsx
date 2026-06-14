@@ -105,6 +105,12 @@ export default function PostPageClient({ id }: Props) {
 
       setPost(data)
 
+      const slugPrefix = data.brand_slug || "archive"
+      const expectedPath = `/posts/${slugPrefix}-${id}`
+      if (window.location.pathname !== expectedPath) {
+        window.history.replaceState(null, "", expectedPath)
+      }
+
       const { count } = await supabase
         .from("likes")
         .select("*", { count: "exact", head: true })
@@ -151,12 +157,12 @@ export default function PostPageClient({ id }: Props) {
 
   const requirePlus = () => {
     if (!currentUserId) {
-      alert("MEMBER限定機能です。ログインまたは会員登録が必要です。")
+      alert("本機能の利用にはMEMBER登録が必要です。")
       window.location.href = "/members"
       return false
     }
     if (!isPlusMember) {
-      alert("MEMBER限定機能です。")
+      alert("本機能の利用にはMEMBER登録が必要です。")
       return false
     }
     return true
@@ -229,9 +235,9 @@ export default function PostPageClient({ id }: Props) {
           {!isPlusMember && (
             <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] flex flex-col items-center justify-center text-center px-4 pt-32">
               <div className="max-w-sm p-6 border border-border bg-surface rounded-2xl shadow-xl">
-                <h2 className="text-lg font-semibold text-foreground">詳細データは限定コンテンツです</h2>
+                <h2 className="text-lg font-semibold text-foreground">こちらは限定コンテンツです</h2>
                 <p className="mt-3 text-xs text-muted leading-relaxed">
-                  このアイテムのブランド、デザイナー、関連タグ、アーカイブ解説の閲覧や、お気に入り・保存機能を利用するには、MEMBERへの登録が必要です。
+                  アーカイブの詳細データ、解説の閲覧、およびインタラクション機能の利用にはMEMBER登録が必要です。
                 </p>
                 <Link
                   href="/members"
@@ -270,30 +276,46 @@ export default function PostPageClient({ id }: Props) {
 
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 {post.brands && (
-                  <span className="bg-neutral-100 px-3 py-1 rounded-full text-xs">
+                  <Link
+                    href={`/brands/${post.brands.region_slug}/${post.brands.country_slug}/${post.brands.slug}`}
+                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
+                  >
                     {post.brands.name}
-                  </span>
+                  </Link>
                 )}
                 {post.designers && (
-                  <span className="bg-neutral-100 px-3 py-1 rounded-full text-xs">
+                  <Link
+                    href={`/designers/${post.designers.region_slug}/${post.designers.country_slug}/${post.designers.slug}`}
+                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
+                  >
                     {post.designers.name}
-                  </span>
+                  </Link>
                 )}
                 {post.collection_slug && (
-                  <span className="bg-neutral-100 px-3 py-1 rounded-full text-xs">
-                    {post.brand_slug} {post.year} {post.season}
-                  </span>
+                  <Link
+                    href={`/collections/${post.collection_slug}`}
+                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
+                  >
+                    {post.brands?.name || post.brand_slug} {post.year} {post.season}
+                  </Link>
                 )}
-                {post.year && post.season && (
-                  <span className="bg-neutral-100 px-3 py-1 rounded-full text-xs">
+                {!post.collection_slug && post.year && post.season && (
+                  <Link
+                    href={`/search?year=${post.year}&season=${post.season}`}
+                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
+                  >
                     {post.year} {post.season}
-                  </span>
+                  </Link>
                 )}
                 {post.post_tags?.map((pt: any) => (
                   pt.tags?.slug && pt.tags?.name ? (
-                    <span key={pt.tags.slug} className="text-neutral-400 text-xs">
+                    <Link
+                      key={pt.tags.slug}
+                      href={`/tags/${pt.tags.slug}`}
+                      className="text-neutral-400 text-xs hover:text-neutral-600 transition"
+                    >
                       #{pt.tags.name}
-                    </span>
+                    </Link>
                   ) : null
                 ))}
               </div>

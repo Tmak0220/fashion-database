@@ -27,7 +27,7 @@ export default function Home() {
       <section className="p-6 sm:p-10 md:p-14 lg:p-16 pb-0 sm:pb-0 md:pb-0 lg:pb-0">
         <div className="flex items-center justify-between gap-4 min-h-[40px]">
           <p className="type-label mt-0 text-[11px] text-subtle whitespace-nowrap">
-            Fashion Archive
+            Archive Project
           </p>
           <Link
             href="/members"
