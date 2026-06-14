@@ -132,7 +132,7 @@ export default function LikesPageClient({ id }: Props) {
           return (
             <Link
               key={`${user.id}-${index}`}
-              href={`/users/${user.id}`}
+              href={`/users/@${user.username}`}
               className="flex items-center gap-4 p-2 rounded-xl hover:bg-neutral-50 transition group"
             >
               {user.avatar_url ? (

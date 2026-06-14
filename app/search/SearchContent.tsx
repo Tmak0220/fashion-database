@@ -294,7 +294,7 @@ export default function SearchPage() {
 
                   <Link
                     key={user.id}
-                    href={`/users/${user.id}`}
+                    href={`/users/@${user.username}`}
                     className="
                       flex
                       items-center

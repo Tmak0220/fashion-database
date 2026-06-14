@@ -253,21 +253,36 @@ export default function PostPageClient({ id }: Props) {
           )}
 
           <div className={!isPlusMember ? "select-none pointer-events-none filter blur-[2px]" : ""}>
-            <div className="flex items-center gap-4">
-              <div className="shrink-0">
-                {post.users?.avatar_url ? (
-                  <img src={post.users.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" />
-                ) : (
+            {post.users?.id ? (
+              <Link 
+                href={`/users/${post.users.username}`}
+                className="inline-flex items-center gap-4 hover:opacity-80 transition group"
+              >
+                <div className="shrink-0">
+                  {post.users?.avatar_url ? (
+                    <img src={post.users.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover border border-border" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-subtle">投稿者</p>
+                  <span className="text-sm sm:text-base font-medium group-hover:text-neutral-600 transition">
+                    {post.users?.username || "名称非公開"}
+                  </span>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="shrink-0">
                   <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
-                )}
+                </div>
+                <div>
+                  <p className="text-xs text-subtle">投稿者</p>
+                  <span className="text-sm sm:text-base font-medium">名称非公開</span>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-subtle">投稿者</p>
-                <span className="text-sm sm:text-base font-medium">
-                  {post.users?.username || "名称非公開"}
-                </span>
-              </div>
-            </div>
+            )}
 
             <div className="mt-8 sm:mt-10">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug">

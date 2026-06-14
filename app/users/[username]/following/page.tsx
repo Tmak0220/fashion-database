@@ -8,41 +8,41 @@ import { useParams } from "next/navigation"
 
 import { supabase } from "@/lib/supabase"
 
-type FollowerUser = {
-  follower: {
+type FollowingUser = {
+  following: {
     id: string
     username: string | null
     avatar_url: string | null
   }[] | null
 }
 
-export default function FollowersPage() {
+export default function FollowingPage() {
 
   const params = useParams()
 
   const userId = params.id as string
 
-  const [followers, setFollowers] =
-    useState<FollowerUser[]>([])
+  const [followingUsers, setFollowingUsers] =
+    useState<FollowingUser[]>([])
 
   const [loading, setLoading] =
     useState(true)
 
   useEffect(() => {
 
-    const fetchFollowers = async () => {
+    const fetchFollowing = async () => {
 
       const { data, error } =
         await supabase
           .from("follows")
           .select(`
-            follower:follower_id (
+            following:following_id (
               id,
               username,
               avatar_url
             )
           `)
-          .eq("following_id", userId)
+          .eq("follower_id", userId)
 
       if (error) {
 
@@ -53,12 +53,12 @@ export default function FollowersPage() {
         return
       }
 
-      setFollowers(data || [])
+      setFollowingUsers(data || [])
 
       setLoading(false)
     }
 
-    fetchFollowers()
+    fetchFollowing()
 
   }, [userId])
 
@@ -81,14 +81,14 @@ export default function FollowersPage() {
           uppercase
         "
       >
-        フォロワー
+        フォロー中
       </h1>
 
       <div className="mt-12 space-y-6">
 
-        {followers.map((item) => {
+        {followingUsers.map((item) => {
 
-          const user = item.follower?.[0]
+          const user = item.following?.[0]
 
           if (!user) return null
 
@@ -96,7 +96,7 @@ export default function FollowersPage() {
 
             <Link
               key={user.id}
-              href={`/users/${user.id}`}
+              href={`/users/@${user.username}`}
               className="
                 flex
                 items-center
