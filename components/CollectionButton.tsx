@@ -9,32 +9,13 @@ type Props = {
   }
 }
 
-export default function CollectionButton({
-  collection,
-}: Props) {
-
+export default function CollectionButton({ collection }: Props) {
   return (
     <Link
       href={`/collections/${collection.id}`}
-      className="
-        type-ui
-        border
-        border-border
-        bg-surface
-        px-5
-        py-2.5
-        text-xs
-        text-foreground
-        transition-colors
-        duration-300
-        hover:border-foreground
-        hover:bg-foreground
-        hover:text-background
-      "
+      className="flex items-center justify-center w-full type-ui border border-border/80 bg-surface rounded-xl h-11 text-xs font-medium tracking-[0.02em] text-foreground transition-all duration-300 hover:bg-foreground hover:text-background active:scale-[0.98]"
     >
-
       {collection.label || `${collection.year} ${collection.season}`}
-
     </Link>
   )
 }

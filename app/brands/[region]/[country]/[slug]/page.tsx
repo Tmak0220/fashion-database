@@ -20,16 +20,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from("brands")
     .select(`
       name, name_ja, country_name_ja,
-      brand_histories (content)
+      brand_histories (content, order)
     `)
     .eq("slug", slug)
     .eq("brand_histories.key", "brand")
+    .eq("brand_histories.lang", "ja")
     .eq("brand_histories.is_visible", true)
     .single()
 
   if (!brand) return { title: "Brand Not Found" }
 
-  const historyContent = (brand.brand_histories as any)?.[0]?.content
+  const sortedHistories = (brand.brand_histories as any[] || []).sort((a, b) => a.order - b.order)
+  const historyContent = sortedHistories[0]?.content
+  
   const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) | Fashion Database` : `${brand.name} | Fashion Database`
   const description = historyContent ? historyContent.slice(0, 120) : `${brand.country_name_ja || "不明"}のブランド。`
 
@@ -74,19 +77,19 @@ export default async function Page({ params }: Props) {
     .slice(0, 4)
     .map((b) => ({ ...b, image_url: null }))
 
-    const breadcrumbs = [
-      { label: "ファッションデータベース", href: "/" },
-      { label: "ブランド", href: "/brands" },
-      { 
-        label: (brand as any).region_name_ja || (brand as any).region_name || region, 
-        href: `/brands/${region}` 
-      },
-      { 
-        label: (brand as any).country_name_ja || (brand as any).country_name || country, 
-        href: `/brands/${region}/${country}` 
-      },
-      { label: brand.name_ja || brand.name },
-    ]
+  const breadcrumbs = [
+    { label: "ファッションデータベース", href: "/" },
+    { label: "ブランド", href: "/brands" },
+    { 
+      label: (brand as any).region_name_ja || (brand as any).region_name || region, 
+      href: `/brands/${region}` 
+    },
+    { 
+      label: (brand as any).country_name_ja || (brand as any).country_name || country, 
+      href: `/brands/${region}/${country}` 
+    },
+    { label: brand.name_ja || brand.name },
+  ]
 
   return (
     <PageLayout

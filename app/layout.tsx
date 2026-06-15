@@ -4,6 +4,8 @@ import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import Script from "next/script"
+import { AuthModalProvider } from "@/context/AuthModalContext"
+import AuthModal from "@/components/AuthModal"
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni",
@@ -83,11 +85,14 @@ export default function RootLayout({
           bg-background
         "
       >
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <AuthModalProvider>
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <AuthModal />
+        </AuthModalProvider>
       </body>
     </html>
   )

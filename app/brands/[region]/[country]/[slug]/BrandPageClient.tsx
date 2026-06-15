@@ -7,13 +7,13 @@ import { supabase } from "@/lib/supabase"
 import CollectionButton from "@/components/CollectionButton"
 import DesignerTimeline from "@/components/DesignerTimeline"
 import SectionHeading from "@/components/SectionHeading"
-import HistoryDrawerItem from "@/components/HistoryDrawerItem"
+import RelatedBrandCard from "@/components/RelatedBrandCard"
+import { useAuthModal } from "@/context/AuthModalContext"
 
 type Brand = {
   id: string
   name: string
   name_ja: string | null
-  history: string | null
   slug: string
   region_slug: string
   country_slug: string
@@ -53,6 +53,7 @@ type Props = {
 export default function BrandPageClient({ brand, relatedBrands }: Props) {
   const params = useParams()
   const slug = params.slug as string
+  const { openAuthModal } = useAuthModal()
   const [designers, setDesigners] = useState<any[]>([])
   const [collections, setCollections] = useState<any[]>([])
   const [posts, setPosts] = useState<Post[]>([])
@@ -90,13 +91,8 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
             type: 'markdown' as const
           }))
         )
-      } else if (brand.history) {
-        setHistoryItems([{
-          title: `${brand.name_ja || brand.name} について`,
-          content: brand.history,
-          order: 1,
-          type: 'text' as const
-        }])
+      } else {
+        setHistoryItems([])
       }
 
       const [designersRes, collectionsRes, postsRes, followCountRes, followStatusRes] = await Promise.all([
@@ -119,11 +115,13 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
 
     fetchData()
     return () => { isMounted = false }
-  }, [slug, brand])
+  }, [slug, brand.id])
 
   const handleFollow = async () => {
-    if (!currentUserId) { alert("Login required"); return }
-    if (!isPlusMember) { alert("PLUS MEMBER限定機能です"); return }
+    if (!currentUserId || !isPlusMember) {
+      openAuthModal()
+      return
+    }
     if (followLoading) return
     setFollowLoading(true)
     if (following) {
@@ -138,37 +136,58 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
     setFollowLoading(false)
   }
 
-  if (loading) return <div className="text-sm text-muted font-medium">読み込み中...</div>
+  if (loading) return <div className="text-sm text-subtle font-medium p-6">読み込み中...</div>
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-6 pb-8 border-b border-border/60 mb-10">
-        <div>
-          <p className="text-[11px] tracking-[0.12em] text-subtle uppercase font-medium">Followers</p>
-          <p className="mt-1 text-xl sm:text-2xl font-semibold leading-none">{followersCount}</p>
+      <div className="flex items-end justify-between gap-6 pb-6 border-b border-border/30 mb-20 sm:mb-24">
+        <div className="space-y-1">
+          <span className="text-[9px] tracking-[0.14em] text-subtle font-medium block leading-none">FOLLOWERS</span>
+          <span className="text-xl sm:text-2xl font-light text-foreground mt-2 block leading-none tracking-wider tabular-nums">{followersCount}</span>
         </div>
+        
         <button
           onClick={handleFollow}
           disabled={followLoading}
-          className="border border-border bg-surface rounded-xl px-5 py-3 text-xs sm:text-sm font-medium tracking-[0.04em] hover:bg-black hover:text-white transition-colors duration-300"
+          className="border border-border/80 bg-surface rounded-xl px-5 py-2.5 text-xs sm:text-sm font-medium tracking-[0.02em] hover:bg-foreground hover:text-background transition-all duration-300 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed mb-[1px]"
         >
           {following ? "フォロー中" : "ブランドをフォロー"}
         </button>
       </div>
 
       {historyItems.length > 0 && (
-        <div className="mb-16 space-y-4 max-w-2xl mx-auto">
-          {historyItems.map((item, index) => (
-            <HistoryDrawerItem key={index} title={item.title} content={item.content} />
-          ))}
-        </div>
+        <section className="mb-28 sm:mb-36 max-w-2xl mx-auto px-4 sm:px-0">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="type-brand text-lg sm:text-xl tracking-[0.2em] text-foreground uppercase leading-none font-medium">
+              History
+            </h2>
+            <p className="text-[10px] tracking-[0.08em] text-subtle font-medium mt-2.5 leading-none">
+              歴史
+            </p>
+          </div>
+          
+          <div className="space-y-10">
+            {historyItems.map((item, index) => (
+              <div key={index} className="space-y-4">
+                {historyItems.length > 1 && (
+                  <h3 className="text-center text-xs font-semibold tracking-[0.06em] text-foreground opacity-80 uppercase">
+                    {item.title}
+                  </h3>
+                )}
+                <p className="text-sm sm:text-[15px] text-foreground/80 leading-[2.2] tracking-wide font-normal text-justify whitespace-pre-wrap">
+                  {item.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       <DesignerTimeline designers={designers} />
 
-      <section className="mt-12 sm:mt-16">
-        <SectionHeading title="Collections" titleJa="コレクション" className="mb-6" />
-        <div className="flex flex-wrap gap-2.5 sm:gap-4">
+      <section className="mt-28 sm:mt-36">
+        <SectionHeading title="Collections" titleJa="コレクション" className="mb-8" />
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
           {collections.map((collection) => (
             <CollectionButton key={collection.id} collection={collection} />
           ))}
@@ -176,37 +195,34 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       </section>
 
       {relatedBrands.length > 0 && (
-        <section className="mt-16 sm:mt-24">
+        <section className="mt-32 sm:mt-40">
           <SectionHeading title="Related Brands" titleJa="関連するブランド" className="mb-8" />
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
             {relatedBrands.map((rb) => (
-              <Link key={rb.id} href={`/brands/${rb.region_slug}/${rb.country_slug}/${rb.slug}`} className="group block">
-                <div className="w-full aspect-[4/3] border border-border bg-surface rounded-xl flex flex-col items-center justify-center p-3 sm:p-4 text-center transition-all duration-300 md:group-hover:bg-black md:group-hover:text-white md:group-hover:border-black active:bg-neutral-100">
-                  <p className="text-xs sm:text-sm md:text-base font-semibold tracking-[0.06em] uppercase truncate w-full text-foreground group-hover:text-inherit">
-                    {rb.name}
-                  </p>
-                  {rb.name_ja && (
-                    <p className="text-[10px] sm:text-xs tracking-[0.02em] mt-1 sm:mt-1.5 text-muted group-hover:text-inherit opacity-80 truncate w-full">
-                      {rb.name_ja}
-                    </p>
-                  )}
-                </div>
-              </Link>
+              <RelatedBrandCard key={rb.id} brand={rb} />
             ))}
           </div>
         </section>
       )}
 
-      <section className="mt-16 sm:mt-24 pb-14">
+      <section className="mt-32 sm:mt-40 pb-16">
         <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
           {posts.map((post) => {
             const urlSlug = `${slug || "archive"}-${post.id}`
 
             return (
-              <Link key={post.id} href={`/posts/${urlSlug}`} className="block">
-                <article className="space-y-3">
-                  <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
+              <Link key={post.id} href={`/posts/${urlSlug}`} className="block group">
+                <article className="space-y-4">
+                  <div className="overflow-hidden rounded-2xl border border-border">
+                    <img 
+                      src={post.image_urls?.[0]} 
+                      alt="" 
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-105" 
+                    />
+                  </div>
                   {post.title && (
                     <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
                       {post.title}
