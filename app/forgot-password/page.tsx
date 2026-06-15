@@ -1,108 +1,81 @@
 "use client"
 
 import { useState } from "react"
-
 import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 
 export default function ForgotPasswordPage() {
-
-  const [email, setEmail] =
-    useState("")
-
-  const [loading, setLoading] =
-    useState(false)
-
-  const [sent, setSent] =
-    useState(false)
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const handleReset = async () => {
-
-    if (!email) return
+    if (!email || loading) return
 
     setLoading(true)
-
-    const { error } =
-      await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo:
-            "http://localhost:3000/reset-password",
-        }
-      )
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
 
     if (error) {
-
       alert(error.message)
-
     } else {
-
       setSent(true)
     }
-
     setLoading(false)
   }
 
   return (
-    <main className="max-w-md p-10">
-
-      <h1 className="text-3xl">
-        Forgot Password
-      </h1>
-
-      <p className="mt-4 text-sm text-subtle">
-        登録メールアドレスに
-        パスワード再設定リンクを送信します。
-      </p>
-
-      {sent ? (
-
-        <p className="mt-8">
-          Reset email sent.
-        </p>
-
-      ) : (
-
-        <div className="mt-8 space-y-4">
-
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            className="
-              w-full
-              border
-              border-border
-              rounded-xl
-              px-4
-              py-3
-            "
-          />
-
-          <button
-            onClick={handleReset}
-            disabled={loading}
-            className="
-              w-full
-              border
-              border-border
-              rounded-xl
-              px-4
-              py-3
-              hover:bg-black
-              hover:text-white
-              transition
-            "
-          >
-            Send Reset Link
-          </button>
-
+    <main className="min-h-screen flex items-center justify-center p-8">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col gap-2">
+          <h1 className="type-brand tracking-[0.14em] pr-[0.14em]">
+            <span className="text-3xl md:text-4xl block md:inline">FORGOT</span>
+            <span className="text-3xl md:text-4xl block md:inline md:ml-[0.2em] ">PASSWORD</span>
+          </h1>
+          <p className="text-xs tracking-[0.12em] text-muted font-medium uppercase">
+            {sent ? "EMAIL SENT" : "パスワードの再設定"}
+          </p>
         </div>
 
-      )}
+        <div className="mt-12">
+          {sent ? (
+            <p className="text-sm text-foreground leading-relaxed">
+              再設定用のリンクを登録メールアドレスに送信しました。<br />
+              受信トレイを確認してください。
+            </p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-subtle mb-4">
+                登録時のメールアドレスを入力してください。パスワード再設定用のリンクをお送りします。
+              </p>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-border bg-surface rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
+              />
+              <button
+                onClick={handleReset}
+                disabled={loading}
+                className="w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
+              >
+                {loading ? "SENDING..." : "再設定リンクを送信"}
+              </button>
+            </div>
+          )}
 
+          <div className="mt-8 text-center">
+            <Link 
+              href="/auth" 
+              className="text-xs tracking-[0.06em] text-subtle hover:text-foreground transition-colors"
+            >
+              ログイン画面に戻る
+            </Link>
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
