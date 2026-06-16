@@ -17,7 +17,7 @@ export default function MembersSuccessPage() {
         </p>
 
         <p className="mt-10 text-[15px] leading-8 text-muted">
-          PLUS MEMBERへの登録ありがとうございます。
+          MEMBERへの登録ありがとうございます。
           <br />
           サブスクリプションが有効化されました。
         </p>

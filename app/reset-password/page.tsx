@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
             disabled={loading}
             className="w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
           >
-            {loading ? "UPDATING..." : "パスワードを更新"}
+            {loading ? "アップデート中..." : "パスワードを更新"}
           </button>
         </form>
       </div>
