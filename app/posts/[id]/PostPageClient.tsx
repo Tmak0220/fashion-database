@@ -241,7 +241,7 @@ export default function PostPageClient({ id }: Props) {
               <div className="max-w-sm p-6 border border-border bg-surface rounded-2xl shadow-xl">
                 <h2 className="text-lg font-semibold text-foreground">こちらは限定コンテンツです</h2>
                 <p className="mt-3 text-xs text-muted leading-relaxed">
-                  アーカイブの詳細データ、解説の閲覧、およびインタラクション機能の利用にはMEMBER登録が必要です。
+                  アーカイブの詳細 data、解説の閲覧、およびインタラクション機能の利用にはMEMBER登録が必要です。
                 </p>
                 <Link
                   href="/members"
@@ -347,43 +347,42 @@ export default function PostPageClient({ id }: Props) {
             </div>
 
             <div className="mt-8 sm:mt-12 flex flex-col gap-4">
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center gap-3">
                 <button
                   onClick={handleLike}
                   disabled={likeLoading}
-                  className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
-                    liked ? "text-red-500 border-red-200 bg-red-50/10" : "hover:bg-neutral-50"
-                  }`}
+                  className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] ${
+                    liked 
+                      ? "bg-black text-white border-black" 
+                      : "bg-surface text-foreground border-border hover:bg-neutral-50"
+                  } ${isOwnPost ? "flex-1" : ""}`}
                 >
-                  {liked ? `♥ お気に入り中 (${likeCount})` : `♡ お気に入り (${likeCount})`}
+                  {liked ? `お気に入りを解除 (${likeCount})` : `お気に入りに追加 (${likeCount})`}
                 </button>
                 
                 <button
                   onClick={handleBookmark}
                   disabled={bookmarkLoading}
-                  className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
-                    bookmarked ? "text-yellow-600 border-yellow-200 bg-yellow-50/10" : "hover:bg-neutral-50"
-                  }`}
+                  className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] ${
+                    bookmarked 
+                      ? "bg-neutral-100 text-muted border-neutral-200" 
+                      : "bg-surface text-foreground border-border hover:bg-neutral-50"
+                  } ${isOwnPost ? "flex-1" : ""}`}
                 >
-                  {bookmarked ? "★ 保存済み" : "☆ 保存"}
+                  {bookmarked ? "保存済み" : "保存する"}
                 </button>
                 
-                {!isOwnPost ? (
+                {!isOwnPost && (
                   <button
                     onClick={handleFollow}
                     disabled={followLoading}
-                    className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
-                      following ? "text-blue-500 border-blue-200 bg-blue-50/10" : "hover:bg-neutral-50"
+                    className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] ${
+                      following 
+                        ? "bg-neutral-50 text-subtle border-border" 
+                        : "bg-surface text-foreground border-border hover:bg-neutral-50"
                     }`}
                   >
-                    {following ? "✓ フォロー中" : "+ フォローする"}
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    className="border border-border bg-neutral-50/50 text-neutral-400 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium cursor-not-allowed opacity-50"
-                  >
-                    自らをフォローすることはできません
+                    {following ? "フォロー中" : "フォローする"}
                   </button>
                 )}
               </div>

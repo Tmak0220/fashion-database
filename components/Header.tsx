@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { User, Heart, FileEdit } from "lucide-react"
+import { User, Star, Folder } from "lucide-react"
 
 export default function Header() {
   const router = useRouter()
@@ -47,7 +47,7 @@ export default function Header() {
   return (
     <header className="border-b border-border px-10 py-6 flex items-center justify-between gap-8 bg-background">
       <div className="flex items-center gap-8">
-        <Link href="/" className="type-brand text-2xl text-foreground">
+        <Link href="/" className="type-brand text-2xl text-foreground tracking-wide font-medium">
           FASHION DATABASE
         </Link>
 
@@ -57,11 +57,11 @@ export default function Header() {
             placeholder="ブランド名、デザイナー名など"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-64 border border-border rounded-xl px-4 py-2 text-sm bg-background text-foreground"
+            className="w-64 border border-border rounded-xl px-4 py-2 text-sm bg-background text-foreground focus:outline-none focus:border-neutral-400 transition"
           />
           <button
             type="submit"
-            className="border border-border rounded-xl px-5 py-2 text-xs tracking-[0.1em] font-medium bg-surface text-foreground hover:bg-foreground hover:text-background transition"
+            className="border border-border rounded-xl px-5 py-2 text-xs tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white hover:border-black transition"
           >
             検索
           </button>
@@ -72,23 +72,23 @@ export default function Header() {
         {email ? (
           <>
             <Link href="/mypage" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-              <User size={24} strokeWidth={1.5} />
+              <User size={22} strokeWidth={1.5} />
               <span className="font-medium tracking-wider">マイページ</span>
             </Link>
 
             <Link href="/likes" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-              <Heart size={24} strokeWidth={1.5} />
+              <Star size={22} strokeWidth={1.5} />
               <span className="font-medium tracking-wider">お気に入り</span>
             </Link>
 
             <Link href="/bookmarks" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-              <FileEdit size={24} strokeWidth={1.5} />
+              <Folder size={22} strokeWidth={1.5} />
               <span className="font-medium tracking-wider">ブックマーク</span>
             </Link>
 
             <button
               onClick={handleLogout}
-              className="ml-2 border border-border rounded-xl px-4 py-2 text-sm bg-surface text-foreground hover:bg-foreground hover:text-background transition"
+              className="ml-2 border border-border rounded-xl px-4 py-2 text-xs tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white hover:border-black transition"
             >
               ログアウト
             </button>

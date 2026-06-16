@@ -84,8 +84,7 @@ export default function MembersPage() {
           メンバーシップ
         </p>
         <p className="mt-8 max-w-2xl text-[15px] leading-8 text-muted">
-          ファッションデータベースをより深く利用するための
-          メンバーシッププランです。
+          ファッションデータベースをより深く利用するためのメンバーシッププランです。
         </p>
       </div>
 
