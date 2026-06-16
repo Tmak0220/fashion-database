@@ -43,11 +43,17 @@ type FollowDesigner = {
   }[] | null
 }
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function MyPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
+  
   const fetchPosts = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -69,15 +75,19 @@ export default function MyPage() {
   const [followBrands, setFollowBrands] = useState<FollowBrand[]>([])
   const [followDesigners, setFollowDesigners] = useState<FollowDesigner[]>([])
   const [processingAccount, setProcessingAccount] = useState(false)
+  
+  const [confirmType, setConfirmType] = useState<"deactivate" | "delete" | null>(null)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   const handleDeactivate = async () => {
-    const confirmed = window.confirm("アカウントを停止しますか？\n\n再ログインで復帰できます。")
-    if (!confirmed) return
     setProcessingAccount(true)
+    setStatusMessage(null)
+    
     const { error } = await supabase.from("users").update({ is_active: false }).eq("id", profile?.id)
     setProcessingAccount(false)
+    
     if (error) {
-      alert(error.message)
+      setStatusMessage({ text: error.message, type: "error" })
       return
     }
     await supabase.auth.signOut()
@@ -85,14 +95,15 @@ export default function MyPage() {
   }
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm("アカウントを完全削除します。\n\n投稿データ等はすべて削除され、取り消せません。")
-    if (!confirmed) return
     setProcessingAccount(true)
+    setStatusMessage(null)
+    
     const res = await fetch("/api/delete-account", { method: "POST" })
     const data = await res.json()
     setProcessingAccount(false)
+    
     if (!res.ok) {
-      alert(data.error || "Delete failed")
+      setStatusMessage({ text: data.error || "アカウント削除に失敗しました", type: "error" })
       return
     }
     await supabase.auth.signOut()
@@ -197,22 +208,65 @@ export default function MyPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleDeactivate}
-                disabled={processingAccount}
-                className="px-4 py-2 text-sm border border-border rounded-full hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
-              >
-                {processingAccount ? "処理中..." : "アカウント停止"}
-              </button>
+            <div className="flex flex-col items-end gap-3">
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => { setConfirmType("deactivate"); setStatusMessage(null); }}
+                  disabled={processingAccount}
+                  className={`px-4 py-2 text-sm border rounded-full transition-colors disabled:opacity-50 ${
+                    confirmType === "deactivate" ? "bg-foreground text-background border-foreground" : "border-border hover:bg-foreground hover:text-background"
+                  }`}
+                >
+                  アカウント停止
+                </button>
 
-              <button
-                onClick={handleDeleteAccount}
-                disabled={processingAccount}
-                className="px-4 py-2 text-sm border border-red-500 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
-              >
-                {processingAccount ? "処理中..." : "アカウント削除"}
-              </button>
+                <button
+                  onClick={() => { setConfirmType("delete"); setStatusMessage(null); }}
+                  disabled={processingAccount}
+                  className={`px-4 py-2 text-sm border rounded-full transition-colors disabled:opacity-50 ${
+                    confirmType === "delete" ? "bg-red-600 text-white border-red-600" : "border-red-500 text-red-600 hover:bg-red-600 hover:text-white"
+                  }`}
+                >
+                  アカウント削除
+                </button>
+              </div>
+
+              {confirmType && (
+                <div className="w-full max-w-xs p-4 rounded-xl border border-border bg-surface text-xs space-y-3 animate-in fade-in duration-200">
+                  <p className="text-muted leading-relaxed whitespace-pre-line">
+                    {confirmType === "deactivate" 
+                      ? "アカウントを停止しますか？\n再ログインでいつでも復帰できます。"
+                      : "アカウントを完全に削除します。\n投稿データ等はすべて消去され、復元できません。"}
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button 
+                      onClick={() => setConfirmType(null)}
+                      className="px-3 py-1.5 border border-border rounded-lg hover:bg-neutral-50"
+                    >
+                      キャンセル
+                    </button>
+                    <button 
+                      onClick={confirmType === "deactivate" ? handleDeactivate : handleDeleteAccount}
+                      disabled={processingAccount}
+                      className={`px-3 py-1.5 text-white rounded-lg disabled:opacity-50 ${
+                        confirmType === "deactivate" ? "bg-black" : "bg-red-600"
+                      }`}
+                    >
+                      {processingAccount ? "処理中..." : "実行する"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {statusMessage && (
+                <div className={`text-xs p-3 rounded-xl border w-full max-w-xs ${
+                  statusMessage.type === "error" 
+                    ? "text-red-500 bg-red-50/50 border-red-200" 
+                    : "text-foreground bg-neutral-50 border-border"
+                }`}>
+                  {statusMessage.text}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -269,22 +323,19 @@ export default function MyPage() {
             <p className="text-[14px] text-muted leading-7">フォロー中のブランドはありません</p>
           ) : (
             <div className="flex flex-wrap gap-3">
-          {followBrands.map((item) => {
-
-           const brand = item.brands?.[0]
-
-           if (!brand) return null
-
-           return (
-            <Link
-             key={item.brand_slug}
-             href={`/brands/${brand.region_slug}/${brand.country_slug}/${item.brand_slug}`}
-             className="px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 bg-white border-border hover:border-foreground hover:bg-foreground hover:text-background"
-            >
-             {brand.name}
-            </Link>
-           )
-         })}
+              {followBrands.map((item) => {
+                const brand = item.brands?.[0]
+                if (!brand) return null
+                return (
+                  <Link
+                    key={item.brand_slug}
+                    href={`/brands/${brand.region_slug}/${brand.country_slug}/${item.brand_slug}`}
+                    className="px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 bg-white border-border hover:border-foreground hover:bg-foreground hover:text-background"
+                  >
+                    {brand.name}
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
@@ -303,27 +354,24 @@ export default function MyPage() {
             <p className="text-[14px] text-muted leading-7">フォロー中のデザイナーはいません</p>
           ) : (
             <div className="flex flex-wrap gap-3">
-          {followDesigners.map((item) => {
-
-            const designer = item.designers?.[0]
-
-            if (!designer) return null
-
-            return (
-             <Link
-               key={item.designer_slug}
-               href={`/designers/${designer.region_slug}/${designer.country_slug}/${item.designer_slug}`}
-               className="px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 bg-white border-border hover:border-foreground hover:bg-foreground hover:text-background"
-             >
-              {designer.name}
-             </Link>
-            )
-           })}
+              {followDesigners.map((item) => {
+                const designer = item.designers?.[0]
+                if (!designer) return null
+                return (
+                  <Link
+                    key={item.designer_slug}
+                    href={`/designers/${designer.region_slug}/${designer.country_slug}/${item.designer_slug}`}
+                    className="px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 bg-white border-border hover:border-foreground hover:bg-foreground hover:text-background"
+                  >
+                    {designer.name}
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
 
-    <div className="border-t border-border pt-14">
+        <div className="border-t border-border pt-14">
           <div className="flex flex-col mb-10">
             <h2 className="type-display text-xl sm:text-2xl md:text-3xl text-foreground break-words leading-tight">
               Create Post

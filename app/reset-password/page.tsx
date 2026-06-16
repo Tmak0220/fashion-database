@@ -4,27 +4,35 @@ import { useState, FormEvent } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function ResetPasswordPage() {
   const router = useRouter()
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   const handleUpdate = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setStatusMessage(null)
 
     const { error } = await supabase.auth.updateUser({
       password,
     })
 
     if (error) {
-      alert(`エラーが発生しました: ${error.message}`)
+      setStatusMessage({ text: `エラーが発生しました: ${error.message}`, type: "error" })
+      setLoading(false)
     } else {
-      alert("パスワードが正常に更新されました。")
-      router.push("/auth")
+      setStatusMessage({ text: "パスワードが正常に更新されました。画面を切り替えています...", type: "success" })
+      setTimeout(() => {
+        router.push("/auth")
+      }, 2000)
     }
-
-    setLoading(false)
   }
 
   return (
@@ -49,6 +57,16 @@ export default function ResetPasswordPage() {
             required
             className="w-full border border-border bg-surface rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
           />
+
+          {statusMessage && (
+            <div className={`text-xs p-4 rounded-xl border ${
+              statusMessage.type === "error" 
+                ? "text-red-500 bg-red-50/50 border-red-200" 
+                : "text-foreground bg-neutral-50 border-border"
+            }`}>
+              {statusMessage.text}
+            </div>
+          )}
 
           <button
             type="submit"

@@ -16,6 +16,11 @@ type Props = {
   onPostCreated?: () => Promise<void> | void
 }
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function CreatePostForm({ onPostCreated }: Props) {
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -32,6 +37,8 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   const [fileName, setFileName] = useState("選択されていません")
   const [isPlusMember, setIsPlusMember] = useState(false)
   const [checkingPlan, setCheckingPlan] = useState(true)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
+  const [uploadMessage, setUploadMessage] = useState<StatusMessage | null>(null)
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -55,6 +62,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
     const file = e.target.files?.[0]
     if (!file) return;
     setUploading(true)
+    setUploadMessage(null)
     try {
       const compressed = await compressImage(file);
       const formData = new FormData()
@@ -65,16 +73,28 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       setImageUrls((prev) => [...prev, data.url])
       setFileName(file.name)
     } catch (err: any) {
-      alert(err.message || "アップロード失敗")
+      setUploadMessage({ text: err.message || "アップロード失敗", type: "error" })
     } finally {
       setUploading(false)
     }
   }
 
   const handleCreatePost = async () => {
-    if (!isPlusMember) return alert("PLUS MEMBER限定機能です")
-    if (yearError) return alert("YEARの入力内容を確認してください。")
-    if (imageUrls.length === 0) return alert("画像をアップロードしてください。")
+    setStatusMessage(null)
+
+    if (!isPlusMember) {
+      setStatusMessage({ text: "PLUS MEMBER限定機能です。", type: "error" })
+      return
+    }
+    if (yearError) {
+      setStatusMessage({ text: "YEARの入力内容を確認してください。", type: "error" })
+      return
+    }
+    if (imageUrls.length === 0) {
+      setStatusMessage({ text: "画像をアップロードしてください。", type: "error" })
+      return
+    }
+
     setCreating(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -82,7 +102,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       
       await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags }, user.id)
       
-      alert("ポストが作成されました")
+      setStatusMessage({ text: "ポストが正常に作成されました。", type: "success" })
 
       setTitle("")
       setDescription("")
@@ -100,7 +120,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       }
 
     } catch (e: any) {
-      alert("投稿に失敗しました: " + e.message)
+      setStatusMessage({ text: "投稿に失敗しました: " + e.message, type: "error" })
     } finally {
       setCreating(false)
     }
@@ -149,6 +169,12 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
         </label>
         {uploading && <p className="mt-4 text-sm text-muted">アップロード中...</p>}
+        
+        {uploadMessage && (
+          <div className="mt-4 text-xs p-3 rounded-xl border text-red-500 bg-red-50/50 border-red-200 max-w-md">
+            {uploadMessage.text}
+          </div>
+        )}
       </div>
 
       {imageUrls.length > 0 && (
@@ -240,7 +266,17 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         </div>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-4 space-y-4">
+        {statusMessage && (
+          <div className={`text-xs p-4 rounded-xl border max-w-md ${
+            statusMessage.type === "error" 
+              ? "text-red-500 bg-red-50/50 border-red-200" 
+              : "text-foreground bg-neutral-50 border-border"
+          }`}>
+            {statusMessage.text}
+          </div>
+        )}
+
         <button onClick={handleCreatePost} disabled={creating} className="border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white font-medium text-[14px]">
           {creating ? "作成中..." : "作成する"}
         </button>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import { useAuthModal } from "@/context/AuthModalContext"
 
 type UserProfile = {
   id: string
@@ -20,14 +21,15 @@ type Post = {
 
 export default function UserPage() {
   const params = useParams()
-  // URLの @username から @ を取り除いた純粋なユーザー名を取得
   const rawUsername = params.username as string
   const username = rawUsername ? decodeURIComponent(rawUsername).replace(/^@/, "") : ""
 
+  const { openAuthModal } = useAuthModal()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isPlusMember, setIsPlusMember] = useState(false)
   const [following, setFollowing] = useState(false)
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
@@ -44,9 +46,14 @@ export default function UserPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setCurrentUserId(user.id)
+        const { data: memberData } = await supabase
+          .from("users")
+          .select("plus_member")
+          .eq("id", user.id)
+          .single()
+        setIsPlusMember(memberData?.plus_member || false)
       }
 
-      // 1. username をキーにプロフィールを取得
       const { data: profileData } = await supabase
         .from("users")
         .select("id, username, bio, avatar_url")
@@ -60,9 +67,8 @@ export default function UserPage() {
       }
 
       setProfile(profileData)
-      const targetUserId = profileData.id // 以降のクエリで使用するUUID
+      const targetUserId = profileData.id
 
-      // 2. 投稿一覧の取得
       const { data: postsData } = await supabase
         .from("posts")
         .select("id, image_urls, title")
@@ -72,7 +78,6 @@ export default function UserPage() {
       setPosts(postsData || [])
       setPostsCount(postsData?.length || 0)
 
-      // 3. フォロワー数の取得
       const { count: followers } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -80,7 +85,6 @@ export default function UserPage() {
 
       setFollowersCount(followers || 0)
 
-      // 4. フォロー数の取得
       const { count: followingTotal } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
@@ -88,7 +92,6 @@ export default function UserPage() {
 
       setFollowingCount(followingTotal || 0)
 
-      // 5. ログインユーザーがこの人をフォローしているかチェック
       if (user) {
         const { data: followData } = await supabase
           .from("follows")
@@ -107,8 +110,8 @@ export default function UserPage() {
   }, [username])
 
   const handleFollow = async () => {
-    if (!currentUserId) {
-      alert("ログインが必要です")
+    if (!currentUserId || !isPlusMember) {
+      openAuthModal()
       return
     }
     if (!profile || currentUserId === profile.id) return
@@ -148,12 +151,10 @@ export default function UserPage() {
     return <main className="p-10 text-sm text-muted">ユーザーが見つかりませんでした</main>
   }
 
-  // URLに付与する用に @付きの文字列を定義
   const displayUsername = `@${profile.username}`
 
   return (
     <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16">
-      {/* profile */}
       <section>
         <div className="flex items-start gap-6">
           {profile.avatar_url ? (
@@ -171,7 +172,6 @@ export default function UserPage() {
               {profile.username ? displayUsername : "名称非公開"}
             </h1>
 
-            {/* stats */}
             <div className="mt-6 flex gap-8">
               <div>
                 <p className="text-2xl font-medium">{postsCount}</p>
@@ -208,7 +208,6 @@ export default function UserPage() {
         </div>
       </section>
 
-      {/* posts */}
       <section className="mt-20 border-t border-border pt-10">
         <h2 className="text-xl tracking-[0.08em] uppercase font-medium">
           ARCHIVE CLOSET

@@ -4,21 +4,29 @@ import { useState } from "react"
 import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   const handleReset = async () => {
     if (!email || loading) return
 
     setLoading(true)
+    setStatusMessage(null)
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
 
     if (error) {
-      alert(error.message)
+      setStatusMessage({ text: error.message, type: "error" })
     } else {
       setSent(true)
     }
@@ -57,6 +65,17 @@ export default function ForgotPasswordPage() {
                 inputMode="email"
                 className="w-full border border-border bg-surface rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
               />
+
+              {statusMessage && (
+                <div className={`text-xs p-4 rounded-xl border ${
+                  statusMessage.type === "error" 
+                    ? "text-red-500 bg-red-50/50 border-red-200" 
+                    : "text-foreground bg-neutral-50 border-border"
+                }`}>
+                  {statusMessage.text}
+                </div>
+              )}
+
               <button
                 onClick={handleReset}
                 disabled={loading}

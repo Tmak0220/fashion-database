@@ -5,10 +5,17 @@ import { useState, FormEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function LoginPageClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get("redirectTo") || "/"
+
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   const [loginEmail, setLoginEmail] = useState("")
   const [loginPassword, setLoginPassword] = useState("")
@@ -21,6 +28,7 @@ export default function LoginPageClient() {
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
     setLoginLoading(true)
+    setStatusMessage(null)
 
     const { error } = await supabase.auth.signInWithPassword({
       email: loginEmail,
@@ -29,7 +37,7 @@ export default function LoginPageClient() {
 
     if (error) {
       setLoginLoading(false)
-      alert(error.message)
+      setStatusMessage({ text: error.message, type: "error" })
       return
     }
 
@@ -37,7 +45,7 @@ export default function LoginPageClient() {
 
     if (!user) {
       setLoginLoading(false)
-      alert("ログインに失敗しました")
+      setStatusMessage({ text: "ログインに失敗しました", type: "error" })
       return
     }
 
@@ -60,6 +68,7 @@ export default function LoginPageClient() {
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault()
     setSignupLoading(true)
+    setStatusMessage(null)
 
     const { error } = await supabase.auth.signUp({
       email: signupEmail,
@@ -69,15 +78,15 @@ export default function LoginPageClient() {
     setSignupLoading(false)
 
     if (error) {
-      alert(error.message)
+      setStatusMessage({ text: error.message, type: "error" })
       return
     }
 
-    alert("確認メールを送信しました")
+    setStatusMessage({ text: "確認メールを送信しました", type: "success" })
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-8 md:p-14 lg:p-16">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-8 md:p-14 lg:p-16">
       <div className="w-full max-w-5xl flex flex-col md:flex-row items-stretch gap-16 md:gap-0">
         
         <form onSubmit={handleLogin} className="flex-1 md:pr-16 flex flex-col justify-between">
@@ -169,11 +178,21 @@ export default function LoginPageClient() {
             disabled={signupLoading}
             className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
           >
-            {signupLoading ? "LOADING..." : "新規登録"}
+            {signupLoading ? "読み込み中..." : "新規登録"}
           </button>
         </form>
 
       </div>
+
+      {statusMessage && (
+        <div className={`mt-12 w-full max-w-5xl text-xs p-4 rounded-xl border ${
+          statusMessage.type === "error" 
+            ? "text-red-500 bg-red-50/50 border-red-200" 
+            : "text-foreground bg-neutral-50 border-border"
+        }`}>
+          {statusMessage.text}
+        </div>
+      )}
     </main>
   )
 }

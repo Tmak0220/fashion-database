@@ -46,6 +46,11 @@ type Props = {
   id: string
 }
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function PostPageClient({ id }: Props) {
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
@@ -58,6 +63,7 @@ export default function PostPageClient({ id }: Props) {
   const [followLoading, setFollowLoading] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -156,19 +162,15 @@ export default function PostPageClient({ id }: Props) {
   }, [id])
 
   const requirePlus = () => {
-    if (!currentUserId) {
-      alert("本機能の利用にはMEMBER登録が必要です。")
-      window.location.href = "/members"
-      return false
-    }
-    if (!isPlusMember) {
-      alert("本機能の利用にはMEMBER登録が必要です。")
+    if (!currentUserId || !isPlusMember) {
+      setStatusMessage({ text: "本機能の利用にはMEMBER登録が必要です。", type: "error" })
       return false
     }
     return true
   }
 
   const handleLike = async () => {
+    setStatusMessage(null)
     if (!requirePlus() || !currentUserId || likeLoading) return
     setLikeLoading(true)
 
@@ -185,6 +187,7 @@ export default function PostPageClient({ id }: Props) {
   }
 
   const handleFollow = async () => {
+    setStatusMessage(null)
     if (!requirePlus() || !currentUserId || !post?.users?.id || followLoading) return
     setFollowLoading(true)
 
@@ -199,6 +202,7 @@ export default function PostPageClient({ id }: Props) {
   }
 
   const handleBookmark = async () => {
+    setStatusMessage(null)
     if (!requirePlus() || !currentUserId || bookmarkLoading) return
     setBookmarkLoading(true)
 
@@ -342,44 +346,59 @@ export default function PostPageClient({ id }: Props) {
               )}
             </div>
 
-            <div className="mt-8 sm:mt-12 flex flex-wrap items-center gap-3 sm:gap-4">
-              <button
-                onClick={handleLike}
-                disabled={likeLoading}
-                className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
-                  liked ? "text-red-500 border-red-200 bg-red-50/10" : "hover:bg-neutral-50"
-                }`}
-              >
-                {liked ? `♥ お気に入り中 (${likeCount})` : `♡ お気に入り (${likeCount})`}
-              </button>
-              
-              <button
-                onClick={handleBookmark}
-                disabled={bookmarkLoading}
-                className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
-                  bookmarked ? "text-yellow-600 border-yellow-200 bg-yellow-50/10" : "hover:bg-neutral-50"
-                }`}
-              >
-                {bookmarked ? "★ 保存済み" : "☆ 保存"}
-              </button>
-              
-              {!isOwnPost ? (
+            <div className="mt-8 sm:mt-12 flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <button
-                  onClick={handleFollow}
-                  disabled={followLoading}
+                  onClick={handleLike}
+                  disabled={likeLoading}
                   className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
-                    following ? "text-blue-500 border-blue-200 bg-blue-50/10" : "hover:bg-neutral-50"
+                    liked ? "text-red-500 border-red-200 bg-red-50/10" : "hover:bg-neutral-50"
                   }`}
                 >
-                  {following ? "✓ フォロー中" : "+ フォローする"}
+                  {liked ? `♥ お気に入り中 (${likeCount})` : `♡ お気に入り (${likeCount})`}
                 </button>
-              ) : (
+                
                 <button
-                  disabled
-                  className="border border-border bg-neutral-50/50 text-neutral-400 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium cursor-not-allowed opacity-50"
+                  onClick={handleBookmark}
+                  disabled={bookmarkLoading}
+                  className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
+                    bookmarked ? "text-yellow-600 border-yellow-200 bg-yellow-50/10" : "hover:bg-neutral-50"
+                  }`}
                 >
-                  自らをフォローすることはできません
+                  {bookmarked ? "★ 保存済み" : "☆ 保存"}
                 </button>
+                
+                {!isOwnPost ? (
+                  <button
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    className={`border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition duration-200 active:scale-[0.98] ${
+                      following ? "text-blue-500 border-blue-200 bg-blue-50/10" : "hover:bg-neutral-50"
+                    }`}
+                  >
+                    {following ? "✓ フォロー中" : "+ フォローする"}
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="border border-border bg-neutral-50/50 text-neutral-400 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-medium cursor-not-allowed opacity-50"
+                  >
+                    自らをフォローすることはできません
+                  </button>
+                )}
+              </div>
+
+              {statusMessage && (
+                <div className={`text-xs p-4 rounded-xl border flex items-center justify-between gap-4 ${
+                  statusMessage.type === "error" 
+                    ? "text-red-500 bg-red-50/50 border-red-200" 
+                    : "text-foreground bg-neutral-50 border-border"
+                }`}>
+                  <span>{statusMessage.text}</span>
+                  <Link href="/members" className="underline font-semibold tracking-wider text-[11px] uppercase shrink-0 hover:opacity-80 transition">
+                    登録画面へ
+                  </Link>
+                </div>
               )}
             </div>
           </div>

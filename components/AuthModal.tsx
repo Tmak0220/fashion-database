@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuthModal } from "@/context/AuthModalContext"
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function AuthModal() {
   const router = useRouter()
   const { isOpen, closeAuthModal } = useAuthModal()
@@ -12,11 +17,13 @@ export default function AuthModal() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   if (!isOpen) return null
 
   const handleModalLogin = async () => {
     setLoading(true)
+    setStatusMessage(null)
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -25,7 +32,7 @@ export default function AuthModal() {
 
     if (error) {
       setLoading(false)
-      alert(error.message)
+      setStatusMessage({ text: error.message, type: "error" })
       return
     }
 
@@ -33,7 +40,7 @@ export default function AuthModal() {
 
     if (!user) {
       setLoading(false)
-      alert("ログインに失敗しました")
+      setStatusMessage({ text: "ログインに失敗しました", type: "error" })
       return
     }
 
@@ -95,10 +102,20 @@ export default function AuthModal() {
           />
         </div>
 
+        {statusMessage && (
+          <div className={`mt-4 text-xs p-3 rounded-xl border ${
+            statusMessage.type === "error" 
+              ? "text-red-500 bg-red-50/50 border-red-200" 
+              : "text-foreground bg-neutral-50 border-border"
+          }`}>
+            {statusMessage.text}
+          </div>
+        )}
+
         <button
           onClick={handleModalLogin}
           disabled={loading}
-          className="type-ui mt-8 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-background text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
+          className="type-ui mt-6 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-background text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
         >
           {loading ? "LOADING..." : "ログイン"}
         </button>

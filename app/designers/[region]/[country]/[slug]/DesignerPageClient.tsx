@@ -8,6 +8,7 @@ import CollectionButton from "@/components/CollectionButton"
 import SectionHeading from "@/components/SectionHeading"
 import Breadcrumb from "@/components/Breadcrumb"
 import DesignerBrandTimeline from "@/components/DesignerBrandTimeline"
+import { useAuthModal } from "@/context/AuthModalContext"
 
 type Designer = {
   id: string
@@ -43,6 +44,7 @@ type Props = {
 export default function DesignerPageClient({ designer: initialDesigner }: Props) {
   const params = useParams()
   const slug = params.slug as string
+  const { openAuthModal } = useAuthModal()
   const [designer, setDesigner] = useState<Designer | null>(initialDesigner)
   const [collections, setCollections] = useState<any[]>([])
   const [brands, setBrands] = useState<any[]>([]) 
@@ -118,8 +120,10 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
   }, [slug])
 
   const handleFollow = async () => {
-    if (!currentUserId) { alert("Login required"); return }
-    if (!isPlusMember) { alert("PLUS MEMBER限定機能です"); return }
+    if (!currentUserId || !isPlusMember) {
+      openAuthModal()
+      return
+    }
     if (followLoading) return
     setFollowLoading(true)
 

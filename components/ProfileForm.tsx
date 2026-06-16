@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 type Props = {
@@ -9,13 +10,22 @@ type Props = {
   initialBio: string | null
 }
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function ProfileForm({ userId, initialUsername, initialBio }: Props) {
+  const router = useRouter()
   const [username, setUsername] = useState(initialUsername || "")
   const [bio, setBio] = useState(initialBio || "")
   const [loading, setLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   const handleSave = async () => {
     setLoading(true)
+    setStatusMessage(null)
+    
     try {
       const { error } = await supabase
         .from("users")
@@ -23,14 +33,25 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
         .eq("id", userId)
 
       if (error) {
-        alert("プロフィールの保存に失敗しました。")
+        setStatusMessage({ text: "プロフィールの保存に失敗しました。", type: "error" })
+        setTimeout(() => {
+          setStatusMessage(null)
+        }, 3000)
         return
       }
 
-      alert("プロフィールを保存しました")
+      setStatusMessage({ text: "プロフィールを保存しました。", type: "success" })
+      router.refresh()
+      
+      setTimeout(() => {
+        setStatusMessage(null)
+      }, 3000)
     } catch (err) {
       console.error(err)
-      alert("予期せぬエラーが発生しました。")
+      setStatusMessage({ text: "予期せぬエラーが発生しました。", type: "error" })
+      setTimeout(() => {
+        setStatusMessage(null)
+      }, 3000)
     } finally {
       setLoading(false)
     }
@@ -48,7 +69,17 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
         <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={6} className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
       </div>
 
-      <div className="pt-4">
+      <div className="pt-4 space-y-4">
+        {statusMessage && (
+          <div className={`text-xs p-4 rounded-xl border max-w-md ${
+            statusMessage.type === "error" 
+              ? "text-red-500 bg-red-50/50 border-red-200" 
+              : "text-foreground bg-neutral-50 border-border"
+          }`}>
+            {statusMessage.text}
+          </div>
+        )}
+
         <button onClick={handleSave} disabled={loading} className="border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white font-medium text-[14px]">
           {loading ? "保存中..." : "保存する"}
         </button>

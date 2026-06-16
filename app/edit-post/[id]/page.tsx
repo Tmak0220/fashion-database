@@ -21,6 +21,11 @@ type Tag = {
   slug: string
 }
 
+type StatusMessage = {
+  text: string
+  type: "error" | "success"
+}
+
 export default function EditPostPage() {
   const params = useParams()
   const router = useRouter()
@@ -31,6 +36,8 @@ export default function EditPostPage() {
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [post, setPost] = useState<Post | null>(null)
+
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -144,8 +151,10 @@ export default function EditPostPage() {
     const files = e.target.files
     if (!files || files.length === 0) return
 
+    setStatusMessage(null)
+
     if (imageUrls.length + files.length > 2) {
-      alert("画像は最大2枚までアップロード可能です。")
+      setStatusMessage({ text: "画像は最大2枚までアップロード可能です。", type: "error" })
       return
     }
 
@@ -163,7 +172,7 @@ export default function EditPostPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        alert("画像のアップロードに失敗しました。")
+        setStatusMessage({ text: "画像のアップロードに失敗しました。", type: "error" })
         continue
       }
       uploadedUrls.push(data.url)
@@ -178,8 +187,16 @@ export default function EditPostPage() {
   }
 
   const handleUpdate = async () => {
-    if (yearError) return alert("YEARの入力内容を確認してください。")
-    if (imageUrls.length === 0) return alert("少なくとも1枚の画像が必要です。")
+    setStatusMessage(null)
+
+    if (yearError) {
+      setStatusMessage({ text: "YEARの入力内容を確認してください。", type: "error" })
+      return
+    }
+    if (imageUrls.length === 0) {
+      setStatusMessage({ text: "少なくとも1枚の画像が必要です。", type: "error" })
+      return
+    }
 
     setSaving(true)
     
@@ -224,7 +241,7 @@ export default function EditPostPage() {
     if (postError) {
       console.error(postError)
       setSaving(false)
-      alert("更新に失敗しました。")
+      setStatusMessage({ text: "更新に失敗しました。", type: "error" })
       return
     }
 
@@ -237,18 +254,22 @@ export default function EditPostPage() {
       
       if (insertError) {
         console.error("タグ保存エラー:", insertError)
-        alert("タグの保存に失敗しました。")
+        setStatusMessage({ text: "タグの保存に失敗しました。", type: "error" })
         setSaving(false)
         return
       }
     }
 
     setSaving(false)
-    alert("投稿を更新しました")
-    router.push("/mypage")
+    setStatusMessage({ text: "投稿を更新しました", type: "success" })
+    
+    setTimeout(() => {
+      router.push("/mypage")
+    }, 1000)
   }
 
   const handleDelete = async () => {
+    setStatusMessage(null)
     if (!window.confirm("この投稿を削除しますか？\n（画像も同時に完全に削除されます）")) return
     
     setDeleting(true)
@@ -268,14 +289,21 @@ export default function EditPostPage() {
         throw new Error(data.error || "削除に失敗しました。")
       }
 
-      alert("投稿と画像を削除しました")
-      router.push("/mypage")
+      setStatusMessage({ text: "投稿と画像を削除しました", type: "success" })
+      
+      setTimeout(() => {
+        router.push("/mypage")
+      }, 1000)
     } catch (err: any) {
       console.error(err)
-      alert(err.message || "削除に失敗しました。")
+      setStatusMessage({ text: err.message || "削除に失敗しました。", type: "error" })
     } finally {
       setDeleting(false)
     }
+  }
+
+  if (loading) {
+    return <main className="p-10 text-sm text-muted">読み込み中...</main>
   }
 
   return (
@@ -322,23 +350,23 @@ export default function EditPostPage() {
         <div className="mt-14 space-y-8 max-w-3xl">
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">TITLE</p>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
           </div>
 
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">DESCRIPTION</p>
-            <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
+            <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
           </div>
 
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">BRAND</p>
-            <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
-            <p className="mt-2 text-xs text-muted">マスタにキーワードが登録されていれば自動変換されます</p>
+            <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
+            <p className="mt-2 text-xs text-subtle">マスタにキーワードが登録されていれば自動変換されます</p>
           </div>
 
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">YEAR</p>
-            <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white"}`} />
+            <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-surface text-foreground"}`} />
             {yearError && <p className="mt-2 text-xs text-red-500 font-medium">{yearError}</p>}
           </div>
 
@@ -349,7 +377,7 @@ export default function EditPostPage() {
                 type="button"
                 onClick={() => handleSeasonSelect("ss")}
                 className={`px-5 py-3 rounded-xl border text-sm transition ${
-                  season === "ss" ? "bg-black text-white border-black" : "bg-white border-border"
+                  season === "ss" ? "bg-foreground text-background border-foreground" : "bg-surface border-border text-muted"
                 }`}
               >
                 SS
@@ -358,7 +386,7 @@ export default function EditPostPage() {
                 type="button"
                 onClick={() => handleSeasonSelect("fw")}
                 className={`px-5 py-3 rounded-xl border text-sm transition ${
-                  season === "fw" ? "bg-black text-white border-black" : "bg-white border-border"
+                  season === "fw" ? "bg-foreground text-background border-foreground" : "bg-surface border-border text-muted"
                 }`}
               >
                 FW
@@ -368,7 +396,7 @@ export default function EditPostPage() {
 
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
-            <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
+            <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
           </div>
 
           <div>
@@ -383,8 +411,8 @@ export default function EditPostPage() {
                     onClick={() => toggleTag(tag.id)}
                     className={`px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 ${
                       active
-                        ? "bg-black text-white border-black"
-                        : "bg-white border-border hover:border-foreground"
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-surface border-border text-muted hover:border-foreground"
                     }`}
                   >
                     {tag.name}
@@ -394,11 +422,21 @@ export default function EditPostPage() {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4">
-            <button onClick={handleUpdate} disabled={saving} className="border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white font-medium text-[14px]">
+          {statusMessage && (
+            <div className={`text-xs p-4 rounded-xl border ${
+              statusMessage.type === "error" 
+                ? "text-red-500 bg-red-50/50 border-red-200" 
+                : "text-foreground bg-neutral-50 border-border"
+            }`}>
+              {statusMessage.text}
+            </div>
+          )}
+
+          <div className="flex gap-4 pt-2">
+            <button onClick={handleUpdate} disabled={saving} className="border border-border rounded-xl px-6 py-4 hover:bg-foreground hover:text-background transition bg-surface font-medium text-[14px]">
               {saving ? "変更を保存中..." : "変更を保存する"}
             </button>
-            <button onClick={handleDelete} disabled={deleting} className="border border-red-500 text-red-500 rounded-xl px-6 py-4 hover:bg-red-500 hover:text-white transition bg-white font-medium text-[14px]">
+            <button onClick={handleDelete} disabled={deleting} className="border border-red-500 text-red-500 rounded-xl px-6 py-4 hover:bg-red-500 hover:text-white transition bg-surface font-medium text-[14px]">
               {deleting ? "削除中..." : "投稿を削除する"}
             </button>
           </div>
