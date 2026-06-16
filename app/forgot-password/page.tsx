@@ -29,9 +29,8 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-2">
-          <h1 className="type-brand tracking-[0.14em] pr-[0.14em]">
-            <span className="text-3xl md:text-4xl block md:inline">FORGOT</span>
-            <span className="text-3xl md:text-4xl block md:inline md:ml-[0.2em] ">PASSWORD</span>
+          <h1 className="type-brand text-[7.5vw] xs:text-3xl md:text-4xl tracking-[0.06em] md:tracking-[0.14em] uppercase whitespace-nowrap">
+            Forgot Password
           </h1>
           <p className="text-xs tracking-[0.12em] text-muted font-medium uppercase">
             {sent ? "EMAIL SENT" : "パスワードの再設定"}
@@ -54,6 +53,8 @@ export default function ForgotPasswordPage() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                inputMode="email"
                 className="w-full border border-border bg-surface rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
               />
               <button

@@ -66,6 +66,36 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
   const [followLoading, setFollowLoading] = useState(false)
 
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setCurrentUserId(session.user.id)
+        const { data: memberData } = await supabase
+          .from("users")
+          .select("plus_member")
+          .eq("id", session.user.id)
+          .single()
+        setIsPlusMember(memberData?.plus_member || false)
+
+        const { data: followStatus } = await supabase
+          .from("brand_follows")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("brand_slug", slug)
+          .maybeSingle()
+        setFollowing(!!followStatus)
+      } else {
+        setCurrentUserId(null)
+        setIsPlusMember(false)
+        setFollowing(false)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [slug])
+
+  useEffect(() => {
     let isMounted = true
 
     const fetchData = async () => {
@@ -151,7 +181,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
           disabled={followLoading}
           className="border border-border/80 bg-surface rounded-xl px-5 py-2.5 text-xs sm:text-sm font-medium tracking-[0.02em] hover:bg-foreground hover:text-background transition-all duration-300 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed mb-[1px]"
         >
-          {following ? "フォロー中" : "ブランドをフォロー"}
+          {following ? "フォロー中" : "フォロー"}
         </button>
       </div>
 

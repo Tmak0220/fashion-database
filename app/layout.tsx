@@ -6,6 +6,7 @@ import Footer from "@/components/Footer"
 import Script from "next/script"
 import { AuthModalProvider } from "@/context/AuthModalContext"
 import AuthModal from "@/components/AuthModal"
+import { Suspense } from "react"
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni",
@@ -86,7 +87,9 @@ export default function RootLayout({
         "
       >
         <AuthModalProvider>
-          <Header />
+          <Suspense fallback={<div className="h-[81px] bg-background border-b border-border" />}>
+            <Header />
+          </Suspense>
           <main className="flex-1">
             {children}
           </main>

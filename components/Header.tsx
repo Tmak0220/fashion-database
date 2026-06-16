@@ -2,12 +2,14 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { User, Heart, FileEdit } from "lucide-react"
 
 export default function Header() {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState<string | null>(null)
   const [search, setSearch] = useState("")
 
@@ -30,7 +32,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push("/")
+    router.refresh()
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -38,6 +40,9 @@ export default function Header() {
     if (!search.trim()) return
     router.push(`/search?q=${encodeURIComponent(search)}`)
   }
+
+  const currentQuery = searchParams.toString()
+  const returnTo = currentQuery ? `${pathname}?${currentQuery}` : pathname
 
   return (
     <header className="border-b border-border px-10 py-6 flex items-center justify-between gap-8 bg-background">
@@ -91,7 +96,7 @@ export default function Header() {
         ) : (
           <div className="flex items-center text-foreground">
             <Link 
-              href="/login" 
+              href={`/login?redirectTo=${encodeURIComponent(returnTo)}`} 
               className="type-ui text-[11px] tracking-[0.14em] hover:opacity-60 transition-opacity uppercase font-medium"
             >
               SIGN IN

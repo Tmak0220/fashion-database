@@ -7,7 +7,7 @@ export default function NotFound() {
         404 Error
       </p>
 
-      <h1 className="mt-6 type-brand text-4xl md:text-5xl tracking-[0.08em]">
+      <h1 className="mt-6 type-brand text-4xl md:text-5xl tracking-[0.08em] text-foreground">
         Page Not Found
       </h1>
 
@@ -19,7 +19,7 @@ export default function NotFound() {
 
       <Link
         href="/"
-        className="mt-10 border border-neutral-300 rounded-xl px-6 py-3.5 text-sm tracking-[0.08em] font-semibold uppercase bg-white transition-all duration-300 md:hover:bg-black md:hover:text-white md:hover:border-black active:bg-neutral-100"
+        className="mt-10 border border-border bg-surface rounded-xl px-6 py-3.5 text-xs font-medium tracking-[0.1em] uppercase transition-all duration-300 hover:bg-foreground hover:text-background hover:border-foreground active:scale-[0.98]"
       >
         Top Page
       </Link>
