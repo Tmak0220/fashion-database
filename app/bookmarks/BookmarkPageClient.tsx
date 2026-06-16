@@ -15,10 +15,10 @@ type BookmarkPost = {
     brands: {
       name: string
     } | null
-  } | null
+  }
 }
 
-export default function BookmarksClient() {
+export default function BookmarkPageClient() {
   const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
   const [loading, setLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -38,7 +38,7 @@ export default function BookmarksClient() {
       const { data, error } = await supabase
         .from("bookmarks")
         .select(`
-          posts (
+          posts:post_id (
             id,
             title,
             image_urls,
@@ -60,27 +60,24 @@ export default function BookmarksClient() {
       }
 
       if (data) {
-        const formattedData: BookmarkPost[] = data.map((item: any) => {
-          const rawPost = Array.isArray(item.posts) ? item.posts[0] : item.posts
-          
-          if (!rawPost) {
-            return { posts: null }
-          }
+        const formattedData: BookmarkPost[] = data
+          .filter((item: any) => item.posts)
+          .map((item: any) => {
+            const rawPost = item.posts
+            const rawBrand = Array.isArray(rawPost.brands) ? rawPost.brands[0] : rawPost.brands
 
-          const rawBrand = Array.isArray(rawPost.brands) ? rawPost.brands[0] : rawPost.brands
-
-          return {
-            posts: {
-              id: rawPost.id,
-              title: rawPost.title,
-              image_urls: rawPost.image_urls,
-              year: rawPost.year,
-              season: rawPost.season,
-              brand_slug: rawPost.brand_slug,
-              brands: rawBrand ? { name: rawBrand.name } : null
+            return {
+              posts: {
+                id: rawPost.id,
+                title: rawPost.title,
+                image_urls: rawPost.image_urls,
+                year: rawPost.year,
+                season: rawPost.season,
+                brand_slug: rawPost.brand_slug,
+                brands: rawBrand ? { name: rawBrand.name } : null
+              }
             }
-          }
-        })
+          })
 
         setBookmarks(formattedData)
       } else {
@@ -118,13 +115,13 @@ export default function BookmarksClient() {
 
   const availableBrands = ["すべて", ...Array.from(new Set(
     bookmarks
-      .map(item => item.posts?.brands?.name)
+      .map(item => item.posts.brands?.name)
       .filter((name): name is string => !!name)
   ))]
 
   const filteredBookmarks = bookmarks.filter(item => {
     if (selectedBrand === "すべて") return true
-    return item.posts?.brands?.name === selectedBrand
+    return item.posts.brands?.name === selectedBrand
   })
 
   return (
@@ -164,8 +161,6 @@ export default function BookmarksClient() {
         <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredBookmarks.map((item, index) => {
             const post = item.posts
-            if (!post) return null
-
             const urlSlug = `${post.brand_slug || "archive"}-${post.id}`
 
             return (

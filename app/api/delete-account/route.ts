@@ -22,15 +22,25 @@ export async function POST(req: Request) {
       .eq("user_id", userId);
 
     if (posts && posts.length > 0) {
+      const bucketDomain = `${process.env.R2_BUCKET_NAME!}.r2.dev`;
+
       const deletePromises = posts
         .flatMap((post) => post.image_urls || [])
         .map((url) => {
-          const key = url.split("/").pop();
+          let key = "";
+          if (url.includes(bucketDomain)) {
+            key = url.split(`${bucketDomain}/`)[1];
+          } else {
+            const urlObj = new URL(url);
+            key = urlObj.pathname.substring(1);
+          }
+
           if (!key) return null;
+
           return r2.send(
             new DeleteObjectCommand({
               Bucket: process.env.R2_BUCKET_NAME!,
-              Key: key,
+              Key: decodeURIComponent(key),
             })
           );
         })
@@ -39,16 +49,15 @@ export async function POST(req: Request) {
       await Promise.all(deletePromises);
     }
 
+    const { error: authError } = await admin.auth.admin.deleteUser(userId);
+    if (authError) throw authError;
+
     const { error: dbError } = await admin
       .from("users")
       .delete()
       .eq("id", userId);
 
     if (dbError) throw dbError;
-
-    const { error: authError } = await admin.auth.admin.deleteUser(userId);
-    
-    if (authError) throw authError;
 
     return NextResponse.json({ success: true });
   } catch (error) {

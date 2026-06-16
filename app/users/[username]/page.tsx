@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuthModal } from "@/context/AuthModalContext"
+import FollowList from "@/components/FollowList"
 
 type UserProfile = {
   id: string
@@ -18,6 +19,8 @@ type Post = {
   image_urls: string[]
   title: string | null
 }
+
+type TabType = "posts" | "followers" | "following"
 
 export default function UserPage() {
   const params = useParams()
@@ -35,6 +38,7 @@ export default function UserPage() {
   const [followingCount, setFollowingCount] = useState(0)
   const [postsCount, setPostsCount] = useState(0)
   const [followLoading, setFollowLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>("posts")
 
   useEffect(() => {
     if (!username) {
@@ -173,20 +177,29 @@ export default function UserPage() {
             </h1>
 
             <div className="mt-6 flex gap-8">
-              <div>
+              <button 
+                onClick={() => setActiveTab("posts")} 
+                className={`text-left hover:opacity-70 transition ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
+              >
                 <p className="text-2xl font-medium">{postsCount}</p>
-                <p className="text-sm text-subtle">投稿</p>
-              </div>
+                <p className="text-sm">投稿</p>
+              </button>
 
-              <Link href={`/users/${displayUsername}/followers`} className="block hover:opacity-70 transition">
+              <button 
+                onClick={() => setActiveTab("followers")} 
+                className={`text-left hover:opacity-70 transition ${activeTab === "followers" ? "text-foreground" : "text-subtle"}`}
+              >
                 <p className="text-2xl font-medium">{followersCount}</p>
-                <p className="text-sm text-subtle">フォロワー</p>
-              </Link>
+                <p className="text-sm">フォロワー</p>
+              </button>
 
-              <Link href={`/users/${displayUsername}/following`} className="block hover:opacity-70 transition">
+              <button 
+                onClick={() => setActiveTab("following")} 
+                className={`text-left hover:opacity-70 transition ${activeTab === "following" ? "text-foreground" : "text-subtle"}`}
+              >
                 <p className="text-2xl font-medium">{followingCount}</p>
-                <p className="text-sm text-subtle">フォロー中</p>
-              </Link>
+                <p className="text-sm">フォロー中</p>
+              </button>
             </div>
 
             {profile.bio && (
@@ -209,33 +222,45 @@ export default function UserPage() {
       </section>
 
       <section className="mt-20 border-t border-border pt-10">
-        <h2 className="text-xl tracking-[0.08em] uppercase font-medium">
-          ARCHIVE CLOSET
-        </h2>
+        {activeTab === "posts" && (
+          <>
+            <h2 className="text-xl tracking-[0.08em] uppercase font-medium">
+              ARCHIVE CLOSET
+            </h2>
 
-        {posts.length === 0 ? (
-          <p className="mt-8 text-xs text-subtle">まだ投稿されたアイテムはありません。</p>
-        ) : (
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {posts.map((post) => (
-              <Link key={post.id} href={`/posts/archive-${post.id}`} className="group block">
-                <article className="space-y-3">
-                  <div className="overflow-hidden rounded-2xl border border-border bg-neutral-50 aspect-[4/5] relative">
-                    <img
-                      src={post.image_urls?.[0]}
-                      alt=""
-                      className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
-                  </div>
-                  {post.title && (
-                    <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition px-1">
-                      {post.title}
-                    </p>
-                  )}
-                </article>
-              </Link>
-            ))}
-          </div>
+            {posts.length === 0 ? (
+              <p className="mt-8 text-xs text-subtle">まだ投稿されたアイテムはありません。</p>
+            ) : (
+              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {posts.map((post) => (
+                  <Link key={post.id} href={`/posts/archive-${post.id}`} className="group block">
+                    <article className="space-y-3">
+                      <div className="overflow-hidden rounded-2xl border border-border bg-neutral-50 aspect-[4/5] relative">
+                        <img
+                          src={post.image_urls?.[0]}
+                          alt=""
+                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                      </div>
+                      {post.title && (
+                        <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition px-1">
+                          {post.title}
+                        </p>
+                      )}
+                    </article>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === "followers" && (
+          <FollowList userId={profile.id} type="followers" />
+        )}
+
+        {activeTab === "following" && (
+          <FollowList userId={profile.id} type="following" />
         )}
       </section>
     </main>
