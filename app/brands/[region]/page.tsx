@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const regionName = regionData ? (regionData.name_ja || regionData.name) : "地域"
 
   return {
-    title: `${regionName}のブランド一覧 | Fashion Database`,
+    title: `${regionName}のブランド一覧 - FASHION DATABASE`,
     description: `${regionName}に属するブランドや国別のアーカイブを閲覧できます。`,
     alternates: {
       canonical: `https://fashdb.com/brands/${region}`,

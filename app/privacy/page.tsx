@@ -8,7 +8,7 @@ import ContentRenderer from "@/components/ContentRenderer"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "プライバシーポリシー | Fashion Database",
+    title: "プライバシーポリシー - FASHION DATABASE",
     description: "ファッションデータベースのプライバシーポリシーについてご確認いただけます。",
     alternates: { canonical: "https://fashdb.com/privacy" },
   }

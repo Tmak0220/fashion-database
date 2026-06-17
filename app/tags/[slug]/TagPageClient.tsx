@@ -30,6 +30,11 @@ type GroupedPosts = {
   posts: Post[]
 }
 
+type PostTagResponse = {
+  post_id: string
+  tags: Tag | null
+}
+
 type Props = {
   slug?: string
 }
@@ -79,7 +84,7 @@ export default function TagPageClient({ slug = "" }: Props) {
       } else {
         const { data: currentTag, error: tagError } = await supabase
           .from("tags")
-          .select(`id, name, name_ja, slug`)
+          .select("id, name, name_ja, slug")
           .eq("slug", slug)
           .single()
 
@@ -145,7 +150,8 @@ export default function TagPageClient({ slug = "" }: Props) {
         })
       })
 
-      allRelatedTagsResult.data?.forEach((item: any) => {
+      const rawTagsData = allRelatedTagsResult.data as unknown as PostTagResponse[]
+      rawTagsData?.forEach((item) => {
         const existingPost = postMap.get(item.post_id)
         const tagData = item.tags
         if (!existingPost || !tagData) return
@@ -206,23 +212,23 @@ export default function TagPageClient({ slug = "" }: Props) {
   }, [posts, tag, isAllTagsMode])
 
   if (loading) {
-    return <main className="p-10 md:p-14 lg:p-16">LOADING...</main>
+    return <main className="p-10 md:p-14 lg:p-16 text-sm text-muted">LOADING...</main>
   }
 
   if (!isAllTagsMode && !tag) {
-    return <main className="p-10 md:p-14 lg:p-16">TAG NOT FOUND</main>
+    return <main className="p-10 md:p-14 lg:p-16 text-sm text-muted">TAG NOT FOUND</main>
   }
 
   return (
-    <main className={isAllTagsMode ? "" : "p-10 md:p-14 lg:p-16"}>
+    <main className="max-w-7xl mx-auto p-10 md:p-14 lg:p-16">
       {!isAllTagsMode && tag && (
         <section className="max-w-4xl">
           <p className="type-label text-[11px] tracking-[0.12em] text-subtle">TAG</p>
-          <h1 className="mt-8 type-brand text-5xl md:text-6xl tracking-[0.1em]">
+          <h1 className="mt-6 type-brand text-5xl md:text-6xl tracking-[0.05em] text-foreground">
             {tag.name.toUpperCase()}
           </h1>
           {tag.name_ja && (
-            <p className="mt-4 text-base tracking-[0.08em] text-muted">{tag.name_ja}</p>
+            <p className="mt-4 text-sm sm:text-base tracking-wider text-muted font-medium">{tag.name_ja}</p>
           )}
         </section>
       )}
@@ -234,25 +240,31 @@ export default function TagPageClient({ slug = "" }: Props) {
 
         {groupedPosts.map((group) => (
           <section key={group.tag.slug} className="space-y-8">
-            <div>
-              <Link href={`/tags/${group.tag.slug}`} className="inline-block hover:opacity-60 transition-opacity">
-                <h2 className="type-brand text-3xl tracking-[0.08em]">{group.tag.name.toUpperCase()}</h2>
-                {group.tag.name_ja && <p className="mt-2 text-sm text-muted">{group.tag.name_ja}</p>}
+            <div className="border-b border-border pb-3">
+              <Link href={`/tags/${group.tag.slug}`} className="inline-block hover:opacity-60 transition duration-200">
+                <h2 className="type-brand text-2xl tracking-[0.08em] font-medium text-foreground">
+                  {group.tag.name.toUpperCase()}
+                </h2>
+                {group.tag.name_ja && <p className="mt-1 text-xs text-subtle">{group.tag.name_ja}</p>}
               </Link>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {group.posts.map((post) => (
-                <Link key={`${group.tag.slug}-${post.id}`} href={`/posts/${post.id}`} className="block group">
+                <Link key={`${group.tag.slug}-${post.id}`} href={`/posts/archive-${post.id}`} className="block group">
                   <article className="space-y-3">
-                    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+                    <div className="overflow-hidden rounded-xl border border-border bg-surface">
                       <img
                         src={post.image_urls?.[0]}
                         alt=""
-                        className="w-full aspect-[4/5] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        className="w-full aspect-[4/5] object-cover opacity-100 group-hover:opacity-90 transition duration-300 ease-out"
                       />
                     </div>
-                    {post.title && <p className="text-sm leading-relaxed">{post.title}</p>}
+                    {post.title && (
+                      <p className="text-xs sm:text-sm font-medium leading-snug text-foreground group-hover:text-neutral-600 transition duration-200">
+                        {post.title}
+                      </p>
+                    )}
                   </article>
                 </Link>
               ))}

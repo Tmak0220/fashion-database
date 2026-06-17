@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : "地域"
 
   return {
-    title: `${regionName}のデザイナー一覧 | Fashion Database`,
+    title: `${regionName}のデザイナー一覧 - FASHION DATABASE`,
     description: `${regionName}に属するデザイナーや国別のアーカイブを閲覧できます。`,
     alternates: {
       canonical: `https://fashdb.com/designers/${region}`,

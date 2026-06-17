@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sortedHistories = (brand.brand_histories as any[] || []).sort((a, b) => a.order - b.order)
   const historyContent = sortedHistories[0]?.content
   
-  const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) | Fashion Database` : `${brand.name} | Fashion Database`
+  const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) - FASHION DATABASE` : `${brand.name} - FASHION DATABASE`
   const description = historyContent ? historyContent.slice(0, 120) : `${brand.country_name_ja || "不明"}のブランド。`
 
   return {

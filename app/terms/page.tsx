@@ -8,7 +8,7 @@ import ContentRenderer from "@/components/ContentRenderer"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "利用規約 | Fashion Database",
+    title: "利用規約 - FASHION DATABASE",
     description: "ファッションデータベースの利用規約についてご確認いただけます。",
     alternates: { canonical: "https://fashdb.com/terms" },
   }

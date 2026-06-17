@@ -39,8 +39,8 @@ export async function generateMetadata({
   }
 
   const title = designer.name_ja
-    ? `${designer.name_ja} (${designer.name}) | Fashion Database`
-    : `${designer.name} | Fashion Database`
+    ? `${designer.name_ja} (${designer.name}) - FASHION DATABASE`
+    : `${designer.name} - FASHION DATABASE`
 
   const description =
     designer.description

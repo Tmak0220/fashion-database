@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const countryName = countryData ? (countryData.name_ja || countryData.name) : "国"
 
   return {
-    title: `${countryName}のブランド一覧 | Fashion Database`,
+    title: `${countryName}のブランド一覧 - FASHION DATABASE`,
     description: `ファッションデータベースに登録されているブランドの中から、${countryName}を拠点とするブランドのアーカイブを閲覧できます。`,
     alternates: {
       canonical: `https://fashdb.com/brands/${region}/${country}`,

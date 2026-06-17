@@ -8,7 +8,7 @@ import SectionHeading from "@/components/SectionHeading"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Fashion Database",
+    title: "FASHION DATABASE - ファッションデータベース",
     description: "ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。",
   }
 }

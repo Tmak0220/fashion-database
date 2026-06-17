@@ -8,7 +8,7 @@ import ContentRenderer from "@/components/ContentRenderer"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "使い方 | Fashion Database",
+    title: "使い方 - FASHION DATABASE",
     description: "ファッションデータベースの使い方や投稿ガイドライン、ルールについてご確認いただけます。",
     alternates: { canonical: "https://fashdb.com/guide" },
   }

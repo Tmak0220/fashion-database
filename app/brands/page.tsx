@@ -9,7 +9,7 @@ import SectionHeading from "@/components/SectionHeading"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "ブランド一覧 | Fashion Database",
+    title: "ブランド一覧 - FASHION DATABASE",
     description: "ファッションデータベースに登録されているブランドを、地域・国別に探すことができます。",
     alternates: { canonical: "https://fashdb.com/brands" },
   }
