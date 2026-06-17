@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from("brands")
     .select(`
       name, name_ja, country_name_ja,
-      brand_histories (content, order)
+      brand_histories (content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
     .eq("brand_histories.key", "brand")
@@ -51,7 +51,7 @@ export default async function Page({ params }: Props) {
     .select(`
       id, name, name_ja, slug, region_slug, country_slug, 
       region_name, region_name_ja, country_name_ja, country_name,
-      brand_histories (title, content, order)
+      brand_histories (title, content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
     .eq("brand_histories.key", "brand")
