@@ -21,25 +21,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from("brands")
     .select(`
       name, name_ja,
-      countries ( name_ja, name ),
-      brand_histories (content, order, key, lang, is_visible)
+      countries ( id, name, name_ja, slug ),
+      brand_histories!brand_id (content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
-    .eq("brand_histories.key", "brand")
-    .eq("brand_histories.lang", "ja")
-    .eq("brand_histories.is_visible", true)
-    .single()
+    .maybeSingle()
 
   if (!brand) return { title: "Brand Not Found" }
 
-  const sortedHistories = (brand.brand_histories as any[] || []).sort((a, b) => a.order - b.order)
+  const histories = brand.brand_histories as any[] || []
+  const jaHistories = histories.filter(h => h.key === "brand" && h.lang === "ja" && h.is_visible === true)
+  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
   const historyContent = sortedHistories[0]?.content
   
   const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) - FASHION DATABASE` : `${brand.name} - FASHION DATABASE`
   
   const countryObj = brand.countries as any
   const countryNameJa = countryObj ? (countryObj.name_ja || countryObj.name) : "不明"
-  const description = historyContent ? historyContent.slice(0, 120) : `${countryNameJa}のブランド。`
+  const description = historyContent 
+    ? historyContent.slice(0, 120) 
+    : `${countryNameJa}のブランド。コレクションやアーカイブを閲覧できます。`
 
   return {
     title,
@@ -55,21 +56,25 @@ export default async function Page({ params }: Props) {
     .from("brands")
     .select(`
       id, name, name_ja, slug, country_id,
-      countries ( id, name, name_ja ),
-      regions ( id, name, name_ja ),
-      brand_histories (title, content, order, key, lang, is_visible)
+      countries ( id, name, name_ja, slug ),
+      regions ( id, name, name_ja, slug ),
+      brand_histories!brand_id (title, content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
-    .eq("brand_histories.key", "brand")
-    .eq("brand_histories.lang", "ja")
-    .eq("brand_histories.is_visible", true)
-    .single()
+    .maybeSingle()
 
   if (!brand) notFound()
 
+  const histories = brand.brand_histories as any[] || []
+  const jaHistories = histories.filter(h => h.key === "brand" && h.lang === "ja" && h.is_visible === true)
+  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
+
   const brandWithHistories = {
-    ...brand,
-    brand_histories: (brand.brand_histories as any[] || []).sort((a, b) => a.order - b.order)
+    id: brand.id,
+    name: brand.name,
+    name_ja: brand.name_ja,
+    slug: brand.slug,
+    brand_histories: sortedHistories
   }
 
   const { data: relatedBrands } = await supabase

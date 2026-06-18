@@ -20,7 +20,7 @@ type GroupData = {
   id: number
   name: string
   name_ja: string | null
-  group_slug: string
+  slug: string 
   countries: Record<string, CountryGroup>
   gridClasses: string
 }
@@ -34,7 +34,7 @@ export default function GroupPageClient({ initialGroups }: Props) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 grid-flow-row-dense">
       {initialGroups.map((group) => {
         const hasBrands = Object.keys(group.countries).length > 0
-        const isLargeGroup = group.group_slug.toLowerCase() === "lvmh"
+        const isLargeGroup = group.slug.toLowerCase() === "lvmh"
 
         return (
           <div
@@ -43,7 +43,7 @@ export default function GroupPageClient({ initialGroups }: Props) {
           >
             <div>
               <div className="absolute right-6 top-4 text-[70px] md:text-[90px] font-bold text-foreground/[0.015] uppercase select-none pointer-events-none hidden md:block tracking-wider font-mono">
-                {group.group_slug}
+                {group.slug}
               </div>
 
               <div className="border-b border-border/60 pb-4 mb-6">

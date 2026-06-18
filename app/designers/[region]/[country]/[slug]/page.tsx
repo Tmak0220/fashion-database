@@ -1,6 +1,4 @@
 export const dynamic = "force-dynamic"
-export const revalidate = 0 // 💡 追加：完全にキャッシュを無効化し、常に最新のDBを参照させる
-export const dynamicParams = true // 💡 追加：ビルド時に存在しなかったスラッグでも、アクセス時に動的に生成する
 
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -22,19 +20,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: designer } = await supabase
     .from("designers")
     .select(`
-      name, name_ja, description,
-      countries ( name_ja, name ),
-      designer_histories (content, order, key, lang, is_visible)
+      name, name_ja,
+      countries ( id, name, name_ja, slug ),
+      designer_histories!designer_id (content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
-    .eq("designer_histories.key", "designer")
-    .eq("designer_histories.lang", "ja")
-    .eq("designer_histories.is_visible", true)
-    .single()
+    .maybeSingle()
 
   if (!designer) return { title: "Designer Not Found" }
 
-  const sortedHistories = (designer.designer_histories as any[] || []).sort((a, b) => a.order - b.order)
+  const histories = designer.designer_histories as any[] || []
+  const jaHistories = histories.filter(h => h.key === "designer" && h.lang === "ja" && h.is_visible === true)
+  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
   const historyContent = sortedHistories[0]?.content
   
   const title = designer.name_ja ? `${designer.name_ja} (${designer.name}) - FASHION DATABASE` : `${designer.name} - FASHION DATABASE`
@@ -43,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const countryNameJa = countryObj ? (countryObj.name_ja || countryObj.name) : "不明"
   const description = historyContent 
     ? historyContent.slice(0, 120) 
-    : (designer.description ? designer.description.slice(0, 120) : `${countryNameJa}を拠点とするデザイナー。`)
+    : `${countryNameJa}を拠点とするデザイナー。コレクションやアーカイブを閲覧できます。`
 
   return {
     title,
@@ -58,22 +55,26 @@ export default async function Page({ params }: Props) {
   const { data: designer } = await supabase
     .from("designers")
     .select(`
-      id, name, name_ja, slug, country_id, description,
-      countries ( id, name, name_ja ),
-      regions ( id, name, name_ja ),
-      designer_histories (title, content, order, key, lang, is_visible)
+      id, name, name_ja, slug, country_id,
+      countries ( id, name, name_ja, slug ),
+      regions ( id, name, name_ja, slug ),
+      designer_histories!designer_id (title, content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
-    .eq("designer_histories.key", "designer")
-    .eq("designer_histories.lang", "ja")
-    .eq("designer_histories.is_visible", true)
-    .single()
+    .maybeSingle()
 
   if (!designer) notFound()
 
+  const histories = designer.designer_histories as any[] || []
+  const jaHistories = histories.filter(h => h.key === "designer" && h.lang === "ja" && h.is_visible === true)
+  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
+
   const designerWithHistories = {
-    ...designer,
-    designer_histories: (designer.designer_histories as any[] || []).sort((a, b) => a.order - b.order)
+    id: designer.id,
+    name: designer.name,
+    name_ja: designer.name_ja,
+    slug: designer.slug,
+    designer_histories: sortedHistories
   }
 
   const { data: relatedDesigners } = await supabase

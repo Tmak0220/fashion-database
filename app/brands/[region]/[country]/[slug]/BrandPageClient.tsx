@@ -12,7 +12,7 @@ import RelatedBrandCard from "@/components/RelatedBrandCard"
 import { useAuthModal } from "@/context/AuthModalContext"
 
 type Brand = {
-  id: string
+  id: number
   name: string
   name_ja: string | null
   slug: string
@@ -63,31 +63,33 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
   const [followLoading, setFollowLoading] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
+        if (!isMounted) return
         setCurrentUserId(session.user.id)
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member")
-          .eq("id", session.user.id)
-          .single()
-        setIsPlusMember(memberData?.plus_member || false)
+        
+        const [memberData, followStatus] = await Promise.all([
+          supabase.from("users").select("plus_member").eq("id", session.user.id).single(),
+          supabase.from("brand_follows").select("id").eq("user_id", session.user.id).eq("brand_slug", slug).maybeSingle()
+        ])
 
-        const { data: followStatus } = await supabase
-          .from("brand_follows")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .eq("brand_slug", slug)
-          .maybeSingle()
-        setFollowing(!!followStatus)
+        if (isMounted) {
+          setIsPlusMember(memberData.data?.plus_member || false)
+          setFollowing(!!followStatus.data)
+        }
       } else {
-        setCurrentUserId(null)
-        setIsPlusMember(false)
-        setFollowing(false)
+        if (isMounted) {
+          setCurrentUserId(null)
+          setIsPlusMember(false)
+          setFollowing(false)
+        }
       }
     })
 
     return () => {
+      isMounted = false
       subscription.unsubscribe()
     }
   }, [slug])
@@ -96,22 +98,10 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
     let isMounted = true
 
     const fetchData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!isMounted) return
-
-      if (user) {
-        setCurrentUserId(user.id)
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member")
-          .eq("id", user.id)
-          .single()
-        setIsPlusMember(memberData?.plus_member || false)
-      }
-
-      if (brand.brand_histories && brand.brand_histories.length > 0) {
+      const histories = brand.brand_histories || []
+      if (histories.length > 0) {
         setHistoryItems(
-          brand.brand_histories.map((item: any) => ({
+          histories.map((item: any) => ({
             title: item.title || `${brand.name_ja || brand.name} について`,
             content: item.content || "",
             order: Number(item.order) || 0,
@@ -122,12 +112,11 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         setHistoryItems([])
       }
 
-      const [designersRes, collectionsRes, postsRes, followCountRes, followStatusRes] = await Promise.all([
+      const [designersRes, collectionsRes, postsRes, followCountRes] = await Promise.all([
         supabase.from("brand_designers").select("*, designers (*)").eq("brand_slug", slug).order("start_year", { ascending: true }),
         supabase.from("collections").select("*").eq("brand_slug", slug).order("year", { ascending: true }),
         supabase.from("posts").select("id, image_urls, title").eq("brand_slug", slug).order("created_at", { ascending: false }),
-        supabase.from("brand_follows").select("*", { count: "exact", head: true }).eq("brand_slug", slug),
-        user ? supabase.from("brand_follows").select("id").eq("user_id", user.id).eq("brand_slug", slug).maybeSingle() : Promise.resolve({ data: null })
+        supabase.from("brand_follows").select("*", { count: "exact", head: true }).eq("brand_slug", slug)
       ])
 
       if (isMounted) {
@@ -135,14 +124,13 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         setCollections(collectionsRes.data || [])
         setPosts(postsRes.data || [])
         setFollowersCount(followCountRes.count || 0)
-        setFollowing(!!followStatusRes.data)
         setLoading(false)
       }
     }
 
     fetchData()
     return () => { isMounted = false }
-  }, [slug, brand.id])
+  }, [slug, brand])
 
   const handleFollow = async () => {
     if (!currentUserId || !isPlusMember) {

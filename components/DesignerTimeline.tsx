@@ -102,7 +102,6 @@ function DesignerEntry({
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   
-  // 各列（Mens/Womens）の幅、または全体（both）の中で常に綺麗に中央揃えになるよう修正
   const align = "text-center flex flex-col items-center w-full"
 
   return (
@@ -113,7 +112,7 @@ function DesignerEntry({
 
       <Link
         href={`/designers/${designer.designers.region_slug}/${designer.designers.country_slug}/${designer.designer_slug}`}
-        className="group mt-2 block mx-auto" // mx-auto を追加し、リンク領域も中央配置に
+        className="group mt-2 block mx-auto"
       >
         <h3 className="type-display text-2xl sm:text-[1.75rem] text-foreground tracking-[0.06em] uppercase font-light transition-colors group-hover:text-muted">
           {designer.designers.name}
@@ -143,7 +142,6 @@ function DesignerEntry({
             }`}
           >
             <div className="overflow-hidden min-h-0 w-full">
-              {/* 開いた biography の本文テキストも中央寄せにして整合性を持たせています */}
               <p className="text-xs sm:text-[13px] text-foreground/80 leading-[2.1] tracking-wide text-center whitespace-pre-wrap px-4 sm:px-0">
                 {designer.description}
               </p>
@@ -168,7 +166,7 @@ export default function DesignerTimeline({ designers }: Props) {
             <DesignerEntry
               key={designer.id}
               designer={designer}
-              centered // データにラインが無い通常の縦並びの場合も中央寄せにするため追加
+              centered
             />
           ))}
         </div>

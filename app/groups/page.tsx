@@ -8,25 +8,20 @@ import GroupPageClient from "./GroupPageClient"
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "グループ一覧 - FASHION DATABASE",
-    description: "ファッション大手（LVMH、ケリング等）の傘下・ブランド相関図。系列や規模に応じた多面的な構造マップを閲覧できます。",
+    description: "ファッション大手（LVMH、ケリング等）の傘下・ブランド相関図。",
     alternates: { canonical: "https://fashdb.com/groups" },
   }
 }
 
 const getGridClasses = (slug: string) => {
   switch (slug.toLowerCase()) {
-    case "lvmh":
-      return "md:col-span-2 md:row-span-2 lg:col-span-2"
+    case "lvmh": return "md:col-span-2 md:row-span-2 lg:col-span-2"
     case "kering":
-    case "richemont":
-      return "md:col-span-1 md:row-span-2"
+    case "richemont": return "md:col-span-1 md:row-span-2"
     case "prada":
-    case "swatch":
-      return "md:col-span-1 md:row-span-1"
-    case "independent":
-      return "md:col-span-2 lg:col-span-3"
-    default:
-      return "md:col-span-1 md:row-span-1"
+    case "swatch": return "md:col-span-1 md:row-span-1"
+    case "independent": return "md:col-span-2 lg:col-span-3"
+    default: return "md:col-span-1 md:row-span-1"
   }
 }
 
@@ -35,46 +30,53 @@ export default async function GroupsPage() {
     supabase.from("groups").select("*").order("id"),
     supabase
       .from("brands")
-      .select("id, name, slug, country_slug, country_name, country_name_ja, region_slug, group_slug")
+      .select(`
+        id, name, slug, group_slug,
+        countries (id, name, name_ja),
+        regions (id, slug)
+      `)
       .not("group_slug", "is", null)
       .order("name")
   ])
 
   if (groupsResult.error || brandsResult.error) {
-    console.error(groupsResult.error || brandsResult.error)
+    throw new Error("データ取得中にエラーが発生しました")
   }
 
   const rawGroups = groupsResult.data || []
   const rawBrands = brandsResult.data || []
 
   const formattedGroups = rawGroups.map((group) => {
-    const groupBrands = rawBrands.filter((b) => b.group_slug === group.group_slug)
+    const groupBrands = rawBrands.filter((b) => b.group_slug === group.slug)
     const countries: Record<string, any> = {}
 
-    groupBrands.forEach((brand) => {
-      const countryKey = brand.country_slug || "unknown"
+    groupBrands.forEach((brand: any) => {
+      const countryId = brand.countries?.id || "unknown"
+      const countryName = brand.countries?.name || "UNKNOWN"
+      const countryNameJa = brand.countries?.name_ja || "不明"
+      const regionSlug = brand.regions?.slug || "unknown"
 
-      if (!countries[countryKey]) {
-        countries[countryKey] = {
-          country_name: brand.country_name || "UNKNOWN",
-          country_name_ja: brand.country_name_ja || "不明",
+      if (!countries[countryId]) {
+        countries[countryId] = {
+          country_name: countryName,
+          country_name_ja: countryNameJa,
           brands: []
         }
       }
 
-      countries[countryKey].brands.push({
+      countries[countryId].brands.push({
         id: brand.id,
         name: brand.name,
         slug: brand.slug,
-        country_slug: brand.country_slug,
-        region_slug: brand.region_slug,
+        country_slug: countryId,
+        region_slug: regionSlug,
       })
     })
 
     return {
       ...group,
       countries,
-      gridClasses: getGridClasses(group.group_slug),
+      gridClasses: getGridClasses(group.slug),
     }
   })
 
