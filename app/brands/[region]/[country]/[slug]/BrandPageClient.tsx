@@ -16,10 +16,6 @@ type Brand = {
   name: string
   name_ja: string | null
   slug: string
-  region_slug: string
-  country_slug: string
-  region_name_ja: string
-  country_name_ja: string
   brand_histories?: any[]
 }
 

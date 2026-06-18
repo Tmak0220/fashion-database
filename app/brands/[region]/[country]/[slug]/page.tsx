@@ -16,10 +16,12 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, country, slug } = await params
+  
   const { data: brand } = await supabase
     .from("brands")
     .select(`
-      name, name_ja, country_name_ja,
+      name, name_ja,
+      countries ( name_ja, name ),
       brand_histories (content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
@@ -34,7 +36,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const historyContent = sortedHistories[0]?.content
   
   const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) - FASHION DATABASE` : `${brand.name} - FASHION DATABASE`
-  const description = historyContent ? historyContent.slice(0, 120) : `${brand.country_name_ja || "不明"}のブランド。`
+  
+  const countryObj = brand.countries as any
+  const countryNameJa = countryObj ? (countryObj.name_ja || countryObj.name) : "不明"
+  const description = historyContent ? historyContent.slice(0, 120) : `${countryNameJa}のブランド。`
 
   return {
     title,
@@ -49,8 +54,9 @@ export default async function Page({ params }: Props) {
   const { data: brand } = await supabase
     .from("brands")
     .select(`
-      id, name, name_ja, slug, region_slug, country_slug, 
-      region_name, region_name_ja, country_name_ja, country_name,
+      id, name, name_ja, slug, country_id,
+      countries ( id, name, name_ja ),
+      regions ( id, name, name_ja ),
       brand_histories (title, content, order, key, lang, is_visible)
     `)
     .eq("slug", slug)
@@ -68,24 +74,27 @@ export default async function Page({ params }: Props) {
 
   const { data: relatedBrands } = await supabase
     .from("brands")
-    .select("id, name, name_ja, slug, region_slug, country_slug")
-    .eq("country_slug", brand.country_slug)
+    .select("id, name, name_ja, slug")
+    .eq("country_id", brand.country_id)
     .neq("slug", brand.slug)
 
   const sanitizedRelatedBrands = (relatedBrands || [])
     .sort(() => 0.5 - Math.random())
     .slice(0, 4)
-    .map((b) => ({ ...b, image_url: null }))
+    .map((b) => ({ ...b, region_slug: region, country_slug: country, image_url: null }))
+
+  const countryData = brand.countries as any
+  const regionData = brand.regions as any
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
     { label: "ブランド", href: "/brands" },
     { 
-      label: (brand as any).region_name_ja || (brand as any).region_name || region, 
+      label: regionData?.name_ja || regionData?.name || region, 
       href: `/brands/${region}` 
     },
     { 
-      label: (brand as any).country_name_ja || (brand as any).country_name || country, 
+      label: countryData?.name_ja || countryData?.name || country, 
       href: `/brands/${region}/${country}` 
     },
     { label: brand.name_ja || brand.name },
