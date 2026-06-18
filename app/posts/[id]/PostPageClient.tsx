@@ -26,14 +26,14 @@ type Post = {
   brands: {
     slug: string
     name: string
-    region_slug: string
-    country_slug: string
+    regions: { slug: string }
+    countries: { slug: string }
   } | null
   designers: {
     slug: string
     name: string
-    region_slug: string
-    country_slug: string
+    regions: { slug: string }
+    countries: { slug: string }
   } | null
   post_tags: {
     tags: {
@@ -93,16 +93,24 @@ export default function PostPageClient({ id }: Props) {
       }
 
       const { data, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          users (id, username, avatar_url),
-          brands (slug, name, region_slug, country_slug),
-          designers (slug, name, region_slug, country_slug),
-          post_tags (tags (slug, name))
-        `)
-        .eq("id", id)
-        .single()
+      .from("posts")
+      .select(`
+        *,
+        users (id, username, avatar_url),
+        brands (
+          slug, name, 
+          regions (slug), 
+          countries (slug)
+        ),
+        designers (
+          slug, name, 
+          regions (slug), 
+          countries (slug)
+        ),
+        post_tags (tags (slug, name))
+      `)
+      .eq("id", id)
+      .single()
 
       if (error || !data) {
         console.error("投稿の取得に失敗しました:", error)
@@ -312,7 +320,7 @@ export default function PostPageClient({ id }: Props) {
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 {post.brands && (
                   <Link
-                    href={`/brands/${post.brands.region_slug}/${post.brands.country_slug}/${post.brands.slug}`}
+                    href={`/brands/${post.brands.regions.slug}/${post.brands.countries.slug}/${post.brands.slug}`}
                     className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
                   >
                     {post.brands.name}
@@ -320,7 +328,7 @@ export default function PostPageClient({ id }: Props) {
                 )}
                 {post.designers && (
                   <Link
-                    href={`/designers/${post.designers.region_slug}/${post.designers.country_slug}/${post.designers.slug}`}
+                    href={`/designers/${post.designers.regions.slug}/${post.designers.countries.slug}/${post.designers.slug}`}
                     className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
                   >
                     {post.designers.name}
