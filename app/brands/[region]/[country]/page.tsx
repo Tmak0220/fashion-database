@@ -36,7 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CountryPage({ params }: Props) {
   const { region, country } = await params
 
-  // 1. まずURLのスラッグから国と地域のデータを並列で取得
   const [countryResult, regionResult] = await Promise.all([
     supabase
       .from("countries")
@@ -45,7 +44,7 @@ export default async function CountryPage({ params }: Props) {
       .single(),
     supabase
       .from("regions")
-      .select("id, name, name_ja") // 後の条件のために id も取得
+      .select("id, name, name_ja") 
       .eq("slug", region)
       .single()
   ])
@@ -55,7 +54,6 @@ export default async function CountryPage({ params }: Props) {
 
   if (!countryData || !regionData) notFound()
 
-  // 2. 確定した各IDをベースに、歴史と所属ブランド一覧を並列で取得
   const [historyResult, brandsResult] = await Promise.all([
     supabase
       .from("country_histories")
@@ -66,7 +64,6 @@ export default async function CountryPage({ params }: Props) {
       .eq("is_visible", true)
       .order("order", { ascending: true }),
     
-    // 【修正箇所】スラッグではなく、一貫性のあるIDでブランドを絞り込む
     supabase
       .from("brands")
       .select("id, name, name_ja, slug")

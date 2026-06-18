@@ -1,25 +1,31 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import CollectionButton from "@/components/CollectionButton"
-import SectionHeading from "@/components/SectionHeading"
-import Breadcrumb from "@/components/Breadcrumb"
 import DesignerBrandTimeline from "@/components/DesignerBrandTimeline"
+import SectionHeading from "@/components/SectionHeading"
+import RelatedDesignerCard from "@/components/RelatedDesignerCard"
 import { useAuthModal } from "@/context/AuthModalContext"
 
 type Designer = {
   id: string
-  slug: string
   name: string
   name_ja: string | null
-  description: string | null
+  slug: string
+  designer_histories?: any[]
+}
+
+type RelatedDesigner = {
+  id: string
+  name: string
+  name_ja: string | null
+  slug: string
   region_slug: string
-  region_name_ja: string
   country_slug: string
-  country_name_ja: string
 }
 
 type Post = {
@@ -29,26 +35,26 @@ type Post = {
   brand_slug: string | null
 }
 
-type Props = {
-  designer: Designer
-  relatedDesigners: {
-    id: string
-    name: string
-    name_ja: string | null
-    slug: string
-    region_slug: string
-    country_slug: string
-  }[]
+type DesignerHistoryItem = {
+  title: string
+  content: string
+  order: number
+  type: 'text' | 'markdown' | 'html'
 }
 
-export default function DesignerPageClient({ designer: initialDesigner }: Props) {
+type Props = {
+  designer: Designer
+  relatedDesigners: RelatedDesigner[]
+}
+
+export default function DesignerPageClient({ designer, relatedDesigners }: Props) {
   const params = useParams()
   const slug = params.slug as string
   const { openAuthModal } = useAuthModal()
-  const [designer, setDesigner] = useState<Designer | null>(initialDesigner)
+  const [brands, setBrands] = useState<any[]>([])
   const [collections, setCollections] = useState<any[]>([])
-  const [brands, setBrands] = useState<any[]>([]) 
   const [posts, setPosts] = useState<Post[]>([])
+  const [historyItems, setHistoryItems] = useState<DesignerHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isPlusMember, setIsPlusMember] = useState(false)
@@ -57,8 +63,41 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
   const [followLoading, setFollowLoading] = useState(false)
 
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setCurrentUserId(session.user.id)
+        const { data: memberData } = await supabase
+          .from("users")
+          .select("plus_member")
+          .eq("id", session.user.id)
+          .single()
+        setIsPlusMember(memberData?.plus_member || false)
+
+        const { data: followStatus } = await supabase
+          .from("designer_follows")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("designer_slug", slug)
+          .maybeSingle()
+        setFollowing(!!followStatus)
+      } else {
+        setCurrentUserId(null)
+        setIsPlusMember(false)
+        setFollowing(false)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [slug])
+
+  useEffect(() => {
+    let isMounted = true
+
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      if (!isMounted) return
 
       if (user) {
         setCurrentUserId(user.id)
@@ -70,54 +109,40 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
         setIsPlusMember(memberData?.plus_member || false)
       }
 
-      const { data: designerData } = await supabase
-        .from("designers")
-        .select("*")
-        .eq("slug", slug)
-        .single()
-      setDesigner(designerData)
-
-      const { data: brandsData } = await supabase
-        .from("brand_designers")
-        .select(`*, brands (*)`)
-        .eq("designer_slug", slug)
-        .order("start_year", { ascending: true })
-      setBrands(brandsData || []) 
-
-      const { data: collectionsData } = await supabase
-        .from("collections")
-        .select("*")
-        .eq("designer_slug", slug)
-        .order("year", { ascending: true })
-      setCollections(collectionsData || [])
-
-      const { data: postsData } = await supabase
-        .from("posts")
-        .select(`id, image_urls, title, brand_slug`)
-        .eq("designer_slug", slug)
-        .order("created_at", { ascending: false })
-      setPosts(postsData || [])
-
-      const { count } = await supabase
-        .from("designer_follows")
-        .select("*", { count: "exact", head: true })
-        .eq("designer_slug", slug)
-      setFollowersCount(count || 0)
-
-      if (user) {
-        const { data: followData } = await supabase
-          .from("designer_follows")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("designer_slug", slug)
-          .maybeSingle()
-        setFollowing(!!followData)
+      if (designer.designer_histories && designer.designer_histories.length > 0) {
+        setHistoryItems(
+          designer.designer_histories.map((item: any) => ({
+            title: item.title || `${designer.name_ja || designer.name} について`,
+            content: item.content || "",
+            order: Number(item.order) || 0,
+            type: 'markdown' as const
+          }))
+        )
+      } else {
+        setHistoryItems([])
       }
-      setLoading(false)
+
+      const [brandsRes, collectionsRes, postsRes, followCountRes, followStatusRes] = await Promise.all([
+        supabase.from("brand_designers").select("*, brands (*)").eq("designer_slug", slug).order("start_year", { ascending: true }),
+        supabase.from("collections").select("*").eq("designer_slug", slug).order("year", { ascending: true }),
+        supabase.from("posts").select("id, image_urls, title, brand_slug").eq("designer_slug", slug).order("created_at", { ascending: false }),
+        supabase.from("designer_follows").select("*", { count: "exact", head: true }).eq("designer_slug", slug),
+        user ? supabase.from("designer_follows").select("id").eq("user_id", user.id).eq("designer_slug", slug).maybeSingle() : Promise.resolve({ data: null })
+      ])
+
+      if (isMounted) {
+        setBrands(brandsRes.data || [])
+        setCollections(collectionsRes.data || [])
+        setPosts(postsRes.data || [])
+        setFollowersCount(followCountRes.count || 0)
+        setFollowing(!!followStatusRes.data)
+        setLoading(false)
+      }
     }
 
     fetchData()
-  }, [slug])
+    return () => { isMounted = false }
+  }, [slug, designer.id])
 
   const handleFollow = async () => {
     if (!currentUserId || !isPlusMember) {
@@ -126,7 +151,6 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
     }
     if (followLoading) return
     setFollowLoading(true)
-
     if (following) {
       await supabase.from("designer_follows").delete().eq("user_id", currentUserId).eq("designer_slug", slug)
       setFollowing(false)
@@ -139,88 +163,106 @@ export default function DesignerPageClient({ designer: initialDesigner }: Props)
     setFollowLoading(false)
   }
 
-  if (loading) return <main className="p-6 sm:p-10 text-sm text-muted">Loading...</main>
-  if (!designer) return <main className="p-6 sm:p-10 text-sm text-muted">Designer not found</main>
+  if (loading) return <div className="text-sm text-subtle font-medium p-6">読み込み中...</div>
 
   return (
-    <main className="p-6 sm:p-10 md:p-14 lg:p-16">
-      <Breadcrumb
-        items={[
-          { label: "ファッションデータベース", href: "/" },
-          { label: "デザイナー", href: "/designers" },
-          { label: designer.region_name_ja, href: `/designers/${designer.region_slug}` },
-          { label: designer.country_name_ja, href: `/designers/${designer.region_slug}/${designer.country_slug}` },
-          { label: designer.name_ja || designer.name },
-        ]}
-      />
-
-      <div className="mt-8 sm:mt-10">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 sm:gap-8">
-          <div>
-            <h1 className={`type-brand text-4xl sm:text-5xl md:text-6xl ${designer.name.length <= 6 ? "tracking-[0.24em] pr-[0.24em]" : ""}`}>
-              {designer.name}
-            </h1>
-            {designer.name_ja && (
-              <p className="mt-3 text-lg sm:text-xl tracking-[0.04em] text-muted">
-                {designer.name_ja}
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-6 border-t md:border-t-0 pt-4 md:pt-0 border-border justify-between md:justify-end">
-            <div>
-              <p className="text-xs sm:text-sm text-subtle">Followers</p>
-              <p className="mt-0.5 text-xl sm:text-2xl font-medium">{followersCount}</p>
-            </div>
-            <button
-              onClick={handleFollow}
-              disabled={followLoading}
-              className="border border-border bg-surface rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm tracking-[0.04em] hover:bg-black hover:text-white transition-colors duration-300"
-            >
-              {following ? "Following" : "Follow Designer"}
-            </button>
-          </div>
+    <div>
+      <div className="flex items-end justify-between gap-6 pb-6 border-b border-border/30 mb-20 sm:mb-24">
+        <div className="space-y-1">
+          <span className="text-[9px] tracking-[0.14em] text-subtle font-medium block leading-none">FOLLOWERS</span>
+          <span className="text-xl sm:text-2xl font-light text-foreground mt-2 block leading-none tracking-wider tabular-nums">{followersCount}</span>
         </div>
+        
+        <button
+          onClick={handleFollow}
+          disabled={followLoading}
+          className="border border-border/80 bg-surface rounded-xl px-5 py-2.5 text-xs sm:text-sm font-medium tracking-[0.02em] hover:bg-foreground hover:text-background transition-all duration-300 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed mb-[1px]"
+        >
+          {following ? "フォロー中" : "フォロー"}
+        </button>
+      </div>
 
-        {designer.description && (
-          <p className="mt-8 sm:mt-10 max-w-3xl text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted whitespace-pre-line">
-            {designer.description}
-          </p>
-        )}
-
-        <DesignerBrandTimeline brands={brands} />
-
-        <section className="mt-12 sm:mt-16">
-          <SectionHeading title="Collections" titleJa="コレクション" className="mb-6" />
-          <div className="flex flex-wrap gap-2.5 sm:gap-4">
-            {collections.map((collection) => (
-              <CollectionButton key={collection.id} collection={collection} />
+      {historyItems.length > 0 && (
+        <section className="mb-28 sm:mb-36 max-w-2xl mx-auto px-4 sm:px-0">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="type-brand text-lg sm:text-xl tracking-[0.2em] text-foreground uppercase leading-none font-medium">
+              History
+            </h2>
+            <p className="text-[10px] tracking-[0.08em] text-subtle font-medium mt-2.5 leading-none">
+              歴史
+            </p>
+          </div>
+          
+          <div className="space-y-10">
+            {historyItems.map((item, index) => (
+              <div key={index} className="space-y-4">
+                {historyItems.length > 1 && (
+                  <h3 className="text-center text-xs font-semibold tracking-[0.06em] text-foreground opacity-80 uppercase">
+                    {item.title}
+                  </h3>
+                )}
+                <p className="text-sm sm:text-[15px] text-foreground/80 leading-[2.2] tracking-wide font-normal text-justify whitespace-pre-wrap">
+                  {item.content}
+                </p>
+              </div>
             ))}
           </div>
         </section>
+      )}
 
-        <section className="mt-16 sm:mt-24">
-          <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {posts.map((post) => {
-              const urlSlug = `${post.brand_slug || "archive"}-${post.id}`
+      <DesignerBrandTimeline brands={brands} />
 
-              return (
-                <Link key={post.id} href={`/posts/${urlSlug}`} className="block">
-                  <article className="space-y-3">
-                    <img src={post.image_urls?.[0]} alt="" className="w-full aspect-[4/5] object-cover rounded-2xl border border-border" />
-                    {post.title && (
-                      <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
-                        {post.title}
-                      </p>
-                    )}
-                  </article>
-                </Link>
-              )
-            })}
+      <section className="mt-28 sm:mt-36">
+        <SectionHeading title="Collections" titleJa="コレクション" className="mb-8" />
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
+          {collections.map((collection) => (
+            <CollectionButton key={collection.id} collection={collection} />
+          ))}
+        </div>
+      </section>
+
+      {relatedDesigners.length > 0 && (
+        <section className="mt-32 sm:mt-40">
+          <SectionHeading title="Related Designers" titleJa="関連するデザイナー" className="mb-8" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+            {relatedDesigners.map((rd) => (
+              <RelatedDesignerCard key={rd.id} designer={rd} />
+            ))}
           </div>
         </section>
-      </div>
-    </main>
+      )}
+
+      <section className="mt-32 sm:mt-40 pb-16">
+        <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
+          {posts.map((post) => {
+            const urlSlug = `${post.brand_slug || "archive"}-${post.id}`
+
+            return (
+              <Link key={post.id} href={`/posts/${urlSlug}`} className="block group">
+                <article className="space-y-4">
+                  <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl border border-border">
+                    {post.image_urls?.[0] && (
+                      <Image 
+                        src={post.image_urls[0]} 
+                        alt={post.title || ""} 
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                      />
+                    )}
+                  </div>
+                  {post.title && (
+                    <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
+                      {post.title}
+                    </p>
+                  )}
+                </article>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
+    </div>
   )
 }

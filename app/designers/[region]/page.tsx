@@ -57,13 +57,11 @@ export default async function DesignersRegionPage({ params }: Props) {
     supabase
       .from("countries")
       .select("*")
-      .eq("region_slug", region)
+      .eq("region_id", regionData.id)
       .order("name", { ascending: true }),
   ])
 
-  const history = (historyResult.data ?? []).sort(
-    (a, b) => a.order - b.order
-  )
+  const history = historyResult.data ?? []
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },

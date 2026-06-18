@@ -48,7 +48,7 @@ export default async function CountryPage({ params }: Props) {
 
     supabase
       .from("regions")
-      .select("name, name_ja")
+      .select("id, name, name_ja")
       .eq("slug", region)
       .single(),
   ])
@@ -71,14 +71,12 @@ export default async function CountryPage({ params }: Props) {
     supabase
       .from("designers")
       .select("id, name, name_ja, slug")
-      .eq("region_slug", region)
-      .eq("country_slug", country)
+      .eq("region_id", regionData.id)
+      .eq("country_id", countryData.id)
       .order("name", { ascending: true }),
   ])
 
-  const history = (historyResult.data ?? []).sort(
-    (a, b) => a.order - b.order
-  )
+  const history = historyResult.data ?? []
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },

@@ -33,7 +33,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function RegionPage({ params }: Props) {
   const { region } = await params
 
-  // 1. まずURLのスラッグから地域データを取得
   const { data: regionData } = await supabase
     .from("regions")
     .select("*")
@@ -42,7 +41,6 @@ export default async function RegionPage({ params }: Props) {
 
   if (!regionData) notFound()
 
-  // 2. 地域ID（regionData.id）をベースに、歴史と国一覧を並列で取得
   const [historyResult, countriesResult] = await Promise.all([
     supabase
       .from("region_histories")
@@ -53,7 +51,6 @@ export default async function RegionPage({ params }: Props) {
       .eq("is_visible", true)
       .order("order", { ascending: true }),
     
-    // 【修正箇所】region_slug ではなく region_id で絞り込むように変更
     supabase
       .from("countries")
       .select("*")
