@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic"
+export const revalidate = 0 // 💡 追加：完全にキャッシュを無効化し、常に最新のDBを参照させる
+export const dynamicParams = true // 💡 追加：ビルド時に存在しなかったスラッグでも、アクセス時に動的に生成する
 
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
