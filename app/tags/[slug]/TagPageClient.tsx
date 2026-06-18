@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
@@ -253,12 +254,16 @@ export default function TagPageClient({ slug = "" }: Props) {
               {group.posts.map((post) => (
                 <Link key={`${group.tag.slug}-${post.id}`} href={`/posts/archive-${post.id}`} className="block group">
                   <article className="space-y-3">
-                    <div className="overflow-hidden rounded-xl border border-border bg-surface">
-                      <img
-                        src={post.image_urls?.[0]}
-                        alt=""
-                        className="w-full aspect-[4/5] object-cover opacity-100 group-hover:opacity-90 transition duration-300 ease-out"
-                      />
+                    <div className="relative overflow-hidden rounded-xl border border-border bg-surface w-full aspect-[4/5]">
+                      {post.image_urls?.[0] && (
+                        <Image
+                          src={post.image_urls[0]}
+                          alt={post.title || ""}
+                          fill
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          className="object-cover opacity-100 group-hover:opacity-90 transition duration-300 ease-out"
+                        />
+                      )}
                     </div>
                     {post.title && (
                       <p className="text-xs sm:text-sm font-medium leading-snug text-foreground group-hover:text-neutral-600 transition duration-200">

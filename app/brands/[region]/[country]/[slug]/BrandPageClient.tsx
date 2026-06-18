@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -244,14 +245,16 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
             return (
               <Link key={post.id} href={`/posts/${urlSlug}`} className="block group">
                 <article className="space-y-4">
-                  <div className="overflow-hidden rounded-2xl border border-border">
-                    <img 
-                      src={post.image_urls?.[0]} 
-                      alt="" 
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-105" 
-                    />
+                  <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl border border-border">
+                    {post.image_urls?.[0] && (
+                      <Image 
+                        src={post.image_urls[0]} 
+                        alt={post.title || ""} 
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                      />
+                    )}
                   </div>
                   {post.title && (
                     <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>

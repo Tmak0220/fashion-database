@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 import { createPost } from "@/app/actions/createPost"
 import { compressImage } from "@/lib/imageCompression"
@@ -83,7 +84,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
     setStatusMessage(null)
 
     if (!isPlusMember) {
-      setStatusMessage({ text: "PLUS MEMBER限定機能です。", type: "error" })
+      setStatusMessage({ text: "MEMBER限定機能です。", type: "error" })
       return
     }
     if (yearError) {
@@ -142,15 +143,15 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   if (!isPlusMember) {
     return (
       <div className="border border-border rounded-2xl p-8 sm:p-10 bg-surface">
-        <p className="type-label text-[11px] tracking-[0.12em] text-subtle">PLUS MEMBERS ONLY</p>
+        <p className="type-label text-[11px] tracking-[0.12em] text-subtle">MEMBERS ONLY</p>
         <h3 className="mt-5 text-2xl sm:text-3xl text-foreground break-words leading-tight">
-          投稿機能はPLUS限定です
+          投稿機能はMEMBER限定です
         </h3>
         <p className="mt-6 text-sm leading-7 text-muted max-w-xl">
-          PLUS MEMBERになると、画像投稿、ブックマーク、フォロー、高画質閲覧、限定アーカイブ機能が利用できます。
+          MEMBERになると、画像投稿、ブックマーク、フォロー、高画質閲覧、限定アーカイブ機能が利用できます。
         </p>
         <Link href="/members" className="inline-block mt-8 border border-border rounded-xl px-6 py-4 bg-white font-medium text-[14px] hover:bg-black hover:text-white transition-colors duration-300">
-          PLUS MEMBERになる
+          MEMBERになる
         </Link>
       </div>
     )
@@ -181,8 +182,14 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         <div className="grid grid-cols-2 gap-6">
           {imageUrls.map((url) => (
             <div key={url} className="space-y-3">
-              <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-                <img src={url} alt="" className="w-full aspect-[4/5] object-cover" />
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]">
+                <Image
+                  src={url}
+                  alt="Preview"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover"
+                />
               </div>
               <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
                 削除する

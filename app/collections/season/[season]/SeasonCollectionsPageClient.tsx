@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 
 type Post = {
   id: string
@@ -69,12 +70,16 @@ export default function SeasonCollectionsPageClient({ season, initialPosts }: Pr
             {initialPosts.map((post) => (
               <Link key={post.id} href={`/posts/${post.id}`} className="group block">
                 <article className="space-y-4">
-                  <div className="overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
-                    <img
-                      src={post.image_urls?.[0]}
-                      alt=""
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.025]"
-                    />
+                  <div className="relative overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
+                    {post.image_urls?.[0] && (
+                      <Image
+                        src={post.image_urls[0]}
+                        alt={post.title || ""}
+                        fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.025]"
+                      />
+                    )}
                   </div>
                   <div className="space-y-1 px-1">
                     {post.brand_slug && (

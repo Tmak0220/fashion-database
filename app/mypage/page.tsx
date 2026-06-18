@@ -1,7 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
@@ -402,12 +403,19 @@ export default function MyPage() {
             {posts.map((post) => (
               <div key={post.id} className="group flex flex-col justify-between">
                 <div className="space-y-3.5">
-                  <Link href={`/posts/${post.id}`} className="block overflow-hidden rounded-2xl border border-border bg-surface">
-                    <img
-                      src={post.image_urls?.[0]}
-                      alt={post.title || "Post Image"}
-                      className="w-full aspect-[4/5] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                    />
+                  <Link 
+                    href={`/posts/${post.id}`} 
+                    className="block overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]"
+                  >
+                    {post.image_urls?.[0] && (
+                      <Image
+                        src={post.image_urls[0]}
+                        alt={post.title || "Post Image"}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                    )}
                   </Link>
                   <div className="px-1">
                     <p className="text-[15px] sm:text-base font-medium leading-snug text-foreground break-words">

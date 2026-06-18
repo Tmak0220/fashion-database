@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 
 type LikedPost = {
@@ -162,11 +163,15 @@ export default function LikePageClient() {
               >
                 <article className="space-y-3">
                   <div className="overflow-hidden rounded-2xl border border-border bg-neutral-50 aspect-[4/5] relative">
-                    <img
-                      src={post.image_urls?.[0]}
-                      alt=""
-                      className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
+                    {post.image_urls?.[0] && (
+                      <Image
+                        src={post.image_urls[0]}
+                        alt={post.title || ""}
+                        fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-1 px-1">

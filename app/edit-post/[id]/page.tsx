@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 
 type Post = {
@@ -327,8 +328,14 @@ export default function EditPostPage() {
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl">
           {imageUrls.map((url, index) => (
             <div key={url} className="space-y-3">
-              <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-                <img src={url} alt={`Preview ${index + 1}`} className="w-full aspect-[4/5] object-cover" />
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
+                <Image
+                  src={url}
+                  alt={`Preview ${index + 1}`}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-cover"
+                />
               </div>
               <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
                 削除する

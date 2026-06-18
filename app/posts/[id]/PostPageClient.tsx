@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 
 type Post = {
@@ -231,7 +232,16 @@ export default function PostPageClient({ id }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <div className="grid grid-cols-1 gap-4 sm:gap-6">
           {post.image_urls?.map((url) => (
-            <img key={url} src={url} alt="" className="w-full rounded-2xl border border-border" />
+            <div key={url} className="relative w-full aspect-[4/5]">
+              <Image
+                src={url}
+                alt={post.title || ""}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+                className="object-cover rounded-2xl border border-border"
+              />
+            </div>
           ))}
         </div>
 
@@ -262,9 +272,15 @@ export default function PostPageClient({ id }: Props) {
                 href={`/users/${post.users.username}`}
                 className="inline-flex items-center gap-4 hover:opacity-80 transition group"
               >
-                <div className="shrink-0">
+                <div className="relative w-12 h-12 shrink-0">
                   {post.users?.avatar_url ? (
-                    <img src={post.users.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover border border-border" />
+                    <Image
+                      src={post.users.avatar_url}
+                      alt=""
+                      fill
+                      sizes="48px"
+                      className="rounded-full object-cover border border-border"
+                    />
                   ) : (
                     <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
                   )}

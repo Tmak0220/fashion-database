@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 import { compressImage } from "@/lib/imageCompression"
 
@@ -90,7 +91,7 @@ export default function AvatarUpload({ userId, initialAvatarUrl }: Props) {
         return
       }
 
-      setAvatarUrl(imageUrl)
+      setAvatarUrl(`${imageUrl}?t=${new Date().getTime()}`)
       showMessage("アバター画像を更新しました。", "success")
       router.refresh()
     } catch (err) {
@@ -104,12 +105,15 @@ export default function AvatarUpload({ userId, initialAvatarUrl }: Props) {
 
   return (
     <div className="space-y-8 flex flex-col items-start">
-      <div className="w-48 h-48 rounded-full overflow-hidden border border-border bg-surface flex items-center justify-center">
+      <div className="relative w-48 h-48 rounded-full overflow-hidden border border-border bg-surface flex items-center justify-center">
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
             alt="Avatar"
-            className="w-full h-full object-cover"
+            fill
+            sizes="192px"
+            priority
+            className="object-cover"
           />
         ) : (
           <div

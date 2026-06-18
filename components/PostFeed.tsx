@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
@@ -93,22 +94,28 @@ export default function PostFeed() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
       {posts.map((post) => (
         <article key={post.id} className="space-y-5">
-          <div className="relative">
-            <Link href={`/posts/${post.id}`} className="block">
-              <img
-                src={post.image_urls?.[0]}
-                alt=""
-                className="w-full aspect-[4/5] object-cover rounded-2xl border border-border"
-              />
+          <div className="relative w-full aspect-[4/5]">
+            <Link href={`/posts/${post.id}`} className="block w-full h-full">
+              {post.image_urls?.[0] && (
+                <Image
+                  src={post.image_urls[0]}
+                  alt={post.title || "投稿画像"}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover rounded-2xl border border-border"
+                />
+              )}
             </Link>
           </div>
 
           <div className={`space-y-3 ${!isPlusMember ? "select-none pointer-events-none filter blur-[5px] opacity-50" : ""}`}>
             <div className="flex items-center gap-3">
               {post.users?.avatar_url && (
-                <img
+                <Image
                   src={post.users.avatar_url}
-                  alt=""
+                  alt={post.users.username || "ユーザーアバター"}
+                  width={400}
+                  height={400}
                   className="w-10 h-10 rounded-full object-cover"
                 />
               )}

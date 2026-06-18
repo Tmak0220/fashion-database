@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -50,7 +51,6 @@ export default function SearchContent() {
 
       setLoading(true)
 
-      // 1. Brands 検索
       const { data: brandsData } = await supabase
         .from("brands")
         .select("id, name, name_ja, slug, region_slug, country_slug, search_keywords")
@@ -59,21 +59,18 @@ export default function SearchContent() {
 
       const matchedBrandSlugs = brandsData?.map((brand) => brand.slug) || []
 
-      // 2. Users 検索
       const { data: usersData } = await supabase
         .from("users")
         .select("id, username, avatar_url")
         .ilike("username", `%${query}%`)
         .limit(12)
 
-      // 3. Posts 検索
       let postsQuery = supabase
         .from("posts")
         .select("id, title, image_urls, brand_slug")
         .limit(18)
 
       if (matchedBrandSlugs.length > 0) {
-        // カンマ区切りの文字列を直接埋め込むのをやめ、配列ベースの安全なクエリ、または明示的なカンマ結合に変更
         postsQuery = postsQuery.or(`title.ilike.%${query}%,brand_slug.in.(${matchedBrandSlugs.map(s => `"${s}"`).join(",")})`)
       } else {
         postsQuery = postsQuery.ilike("title", `%${query}%`)
@@ -100,7 +97,6 @@ export default function SearchContent() {
         <p className="mt-12 text-sm text-muted">Loading...</p>
       ) : (
         <div className="mt-16 space-y-20">
-          {/* Brands */}
           <section>
             <h2 className="text-xl tracking-[0.1em] uppercase font-medium border-b border-border pb-3">Brands</h2>
             {brands.length === 0 ? (
@@ -125,7 +121,6 @@ export default function SearchContent() {
             )}
           </section>
 
-          {/* Users */}
           <section>
             <h2 className="text-xl tracking-[0.1em] uppercase font-medium border-b border-border pb-3">Users</h2>
             {users.length === 0 ? (
@@ -138,11 +133,19 @@ export default function SearchContent() {
                     href={`/users/${user.username}`}
                     className="flex items-center gap-4 border border-border rounded-xl p-4 hover:bg-neutral-50 transition duration-200"
                   >
-                    {user.avatar_url ? (
-                      <img src={user.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover border border-border" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
-                    )}
+                    <div className="relative w-12 h-12 flex-shrink-0">
+                      {user.avatar_url ? (
+                        <Image
+                          src={user.avatar_url}
+                          alt=""
+                          fill
+                          sizes="48px"
+                          className="rounded-full object-cover border border-border"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
+                      )}
+                    </div>
                     <p className="text-sm font-medium text-foreground">{user.username || "名称非公開"}</p>
                   </Link>
                 ))}
@@ -150,7 +153,6 @@ export default function SearchContent() {
             )}
           </section>
 
-          {/* Posts */}
           <section>
             <h2 className="text-xl tracking-[0.1em] uppercase font-medium border-b border-border pb-3">Posts</h2>
             {posts.length === 0 ? (
@@ -162,11 +164,17 @@ export default function SearchContent() {
                   return (
                     <Link key={post.id} href={`/posts/${slugPrefix}-${post.id}`} className="block group">
                       <article className="space-y-3">
-                        <img
-                          src={post.image_urls?.[0]}
-                          alt=""
-                          className="w-full aspect-[4/5] object-cover rounded-xl border border-border group-hover:opacity-90 transition duration-200"
-                        />
+                        <div className="relative overflow-hidden rounded-xl border border-border w-full aspect-[4/5]">
+                          {post.image_urls?.[0] && (
+                            <Image
+                              src={post.image_urls[0]}
+                              alt={post.title || ""}
+                              fill
+                              sizes="(max-width: 768px) 50vw, 33vw"
+                              className="object-cover group-hover:opacity-90 transition duration-200"
+                            />
+                          )}
+                        </div>
                         {post.title && (
                           <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition">
                             {post.title}
