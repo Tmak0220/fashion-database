@@ -72,95 +72,86 @@ export default function PostPageClient({ id }: Props) {
 
       if (user) {
         setCurrentUserId(user.id)
-        
-        const isAdmin = 
-          user?.user_metadata?.role === "admin" || 
-          user?.role === "admin" ||
-          user?.app_metadata?.role === "admin"
-
+        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
         const { data: memberData } = await supabase
           .from("users")
           .select("plus_member, plus_members, is_active")
           .eq("id", user.id)
           .maybeSingle()
-
-        const hasValidFlag = 
-          memberData?.plus_member === true || 
-          memberData?.plus_members === true || 
-          memberData?.is_active === true
-
+        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
         setIsPlusMember(isAdmin || hasValidFlag)
       }
 
-      const { data, error } = await supabase
-      .from("posts")
-      .select(`
-        *,
-        users (id, username, avatar_url),
-        brands (
-          slug, name, 
-          regions (slug), 
-          countries (slug)
-        ),
-        designers (
-          slug, name, 
-          regions (slug), 
-          countries (slug)
-        ),
-        post_tags (tags (slug, name))
-      `)
-      .eq("id", id)
-      .single()
+      // 1. 投稿本体の取得
+      const { data: rawPost, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          users (id, username, avatar_url),
+          post_tags (tags (slug, name))
+        `)
+        .eq("id", id)
+        .single()
 
-      if (error || !data) {
-        console.error("投稿の取得に失敗しました:", error)
+      if (error || !rawPost) {
+        console.error("投稿の取得失敗:", error)
         setLoading(false)
         return
       }
 
-      setPost(data)
+      // 2. ブランドとデザイナーを個別に取得
+      let brandData = null
+      if (rawPost.brand_slug) {
+        const { data } = await supabase
+          .from("brands")
+          .select("slug, name, regions(slug), countries(slug)")
+          .eq("slug", rawPost.brand_slug)
+          .maybeSingle()
+        brandData = data
+      }
 
-      const slugPrefix = data.brand_slug || "archive"
+      let designerData = null
+      if (rawPost.designer_slug) {
+        const { data } = await supabase
+          .from("designers")
+          .select("slug, name, regions(slug), countries(slug)")
+          .eq("slug", rawPost.designer_slug)
+          .maybeSingle()
+        designerData = data
+      }
+
+      const combinedPost = {
+        ...rawPost,
+        brands: brandData,
+        designers: designerData
+      } as Post
+
+      setPost(combinedPost)
+
+      // 3. URLリダイレクト処理 (修正済み)
+      const slugPrefix = combinedPost.brands?.slug || "archive"
       const expectedPath = `/posts/${slugPrefix}-${id}`
       if (window.location.pathname !== expectedPath) {
         window.history.replaceState(null, "", expectedPath)
       }
 
+      // 4. いいね・フォロー・ブックマーク情報の取得
       const { count } = await supabase
         .from("likes")
         .select("*", { count: "exact", head: true })
         .eq("post_id", id)
-
       setLikeCount(count || 0)
 
       if (user) {
-        const { data: likedData } = await supabase
-          .from("likes")
-          .select("id")
-          .eq("post_id", id)
-          .eq("user_id", user.id)
-          .maybeSingle()
-
+        const { data: likedData } = await supabase.from("likes").select("id").eq("post_id", id).eq("user_id", user.id).maybeSingle()
         setLiked(!!likedData)
 
-        if (data.users?.id) {
-          const { data: followData } = await supabase
-            .from("follows")
-            .select("id")
-            .eq("follower_id", user.id)
-            .eq("following_id", data.users.id)
-            .maybeSingle()
-
+        if (rawPost.users?.id) {
+          const { data: followData } = await supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", rawPost.users.id).maybeSingle()
           setFollowing(!!followData)
         }
 
-        const { data: bookmarkData } = await supabase
-          .from("bookmarks")
-          .select("id")
-          .eq("post_id", id)
-          .eq("user_id", user.id)
-          .maybeSingle()
-
+        const { data: bookmarkData } = await supabase.from("bookmarks").select("id").eq("post_id", id).eq("user_id", user.id).maybeSingle()
         setBookmarked(!!bookmarkData)
       }
 
@@ -169,7 +160,7 @@ export default function PostPageClient({ id }: Props) {
 
     fetchPost()
   }, [id])
-
+  
   const requirePlus = () => {
     if (!currentUserId || !isPlusMember) {
       setStatusMessage({ text: "本機能の利用にはMEMBER登録が必要です。", type: "error" })
