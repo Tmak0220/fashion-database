@@ -74,7 +74,7 @@ export default function FollowList({ userId, type }: Props) {
       {list.map((user, index) => (
         <Link
           key={`${user.id}-${index}`}
-          href={`/users/@${user.username}`}
+          href={user.username ? `/users/${user.username}` : "#"}
           className="flex items-center gap-4 border border-border rounded-2xl p-4 hover:bg-black hover:text-white transition group"
         >
           {user.avatar_url ? (
@@ -90,7 +90,7 @@ export default function FollowList({ userId, type }: Props) {
           )}
           <div>
             <p className="font-medium text-base">
-              {user.username || "名称非公開"}
+              {user.username ? `@${user.username}` : "名称非公開"}
             </p>
           </div>
         </Link>

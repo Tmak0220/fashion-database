@@ -3,12 +3,14 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { compressImage } from "@/lib/imageCompression"
 
 type Props = {
   userId: string
   initialAvatarUrl: string | null
+  username: string | null
 }
 
 type StatusMessage = {
@@ -16,10 +18,11 @@ type StatusMessage = {
   type: "error" | "success"
 }
 
-export default function AvatarUpload({ userId, initialAvatarUrl }: Props) {
+export default function AvatarUpload({ userId, initialAvatarUrl, username }: Props) {
   const router = useRouter()
   const [uploading, setUploading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl || "")
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(initialAvatarUrl)
   const [fileName, setFileName] = useState("選択されていません")
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
@@ -91,6 +94,19 @@ export default function AvatarUpload({ userId, initialAvatarUrl }: Props) {
         return
       }
 
+      if (currentAvatarUrl) {
+        try {
+          await fetch("/api/delete-object", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: currentAvatarUrl }),
+          })
+        } catch (delErr) {
+          console.error("Failed to delete old avatar from R2:", delErr)
+        }
+      }
+
+      setCurrentAvatarUrl(imageUrl)
       setAvatarUrl(`${imageUrl}?t=${new Date().getTime()}`)
       showMessage("アバター画像を更新しました。", "success")
       router.refresh()
@@ -103,29 +119,49 @@ export default function AvatarUpload({ userId, initialAvatarUrl }: Props) {
     }
   }
 
+  const AvatarInner = () => (
+    <>
+      {avatarUrl ? (
+        <Image
+          src={avatarUrl}
+          alt="Avatar"
+          fill
+          sizes="192px"
+          priority
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div
+          className="type-brand text-5xl text-subtle select-none tracking-wide flex items-center justify-center transition-transform duration-500 group-hover:scale-105"
+          style={{ lineHeight: 1 }}
+        >
+          FD
+        </div>
+      )}
+
+      {username && (
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <span className="text-[10px] text-white tracking-[0.2em] font-medium pl-[0.2em]">
+            VIEW PROFILE
+          </span>
+        </div>
+      )}
+    </>
+  )
+
   return (
-    <div className="space-y-8 flex flex-col items-start">
-      <div className="relative w-48 h-48 rounded-full overflow-hidden border border-border bg-surface flex items-center justify-center">
-        {avatarUrl ? (
-          <Image
-            src={avatarUrl}
-            alt="Avatar"
-            fill
-            sizes="192px"
-            priority
-            className="object-cover"
-          />
+    <div className="space-y-4 flex flex-col items-start">
+      <div className="group relative w-48 h-48 rounded-full overflow-hidden border border-border bg-surface flex items-center justify-center">
+        {username ? (
+          <Link href={`/users/${username}`} className="absolute inset-0 w-full h-full flex items-center justify-center">
+            <AvatarInner />
+          </Link>
         ) : (
-          <div
-            className="type-brand text-5xl text-subtle select-none tracking-wide flex items-center justify-center"
-            style={{ lineHeight: 1 }}
-          >
-            FD
-          </div>
+          <AvatarInner />
         )}
       </div>
 
-      <div className="space-y-4 w-full max-w-sm">
+      <div className="space-y-4 w-full max-w-sm pt-4">
         <div>
           <label className="inline-flex items-center gap-4 cursor-pointer">
             <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300">

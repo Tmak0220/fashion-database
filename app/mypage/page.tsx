@@ -65,7 +65,6 @@ export default function MyPage() {
         .eq("id", userId)
         .single()
 
-      // 有料会員のみ自分の過去ポストを取得する（無料ユーザーはそもそも投稿できないため不要）
       if (profileData?.plus_member) {
         const { data, error } = await supabase
           .from("posts")
@@ -152,7 +151,6 @@ export default function MyPage() {
         .eq("follower_id", user.id)
       setFollowingCount(following || 0)
 
-      // 有料会員の場合のみブックマーク数を取得
       if (data?.plus_member) {
         const { count: bookmarks } = await supabase
           .from("bookmarks")
@@ -287,7 +285,7 @@ export default function MyPage() {
         </div>
 
         <div className="mt-12 sm:mt-14">
-          <AvatarUpload userId={profile.id} initialAvatarUrl={profile.avatar_url} />
+          <AvatarUpload userId={profile.id} initialAvatarUrl={profile.avatar_url} username={profile.username} />
         </div>
 
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 border-t border-b border-border py-8 gap-x-6 gap-y-8">
@@ -301,12 +299,18 @@ export default function MyPage() {
             <p className="mt-2 text-2xl font-medium">{profile.plus_member ? posts.length : "—"}</p>
           </div>
 
-          <Link href={`/users/${profile.id}/followers`} className="flex flex-col hover:opacity-60 transition-opacity">
+          <Link 
+            href={profile.username ? `/users/${profile.username}` : "#"} 
+            className="flex flex-col hover:opacity-60 transition-opacity"
+          >
             <p className="type-label text-[11px] tracking-[0.12em] text-subtle">FOLLOWERS</p>
             <p className="mt-2 text-2xl font-medium">{followersCount}</p>
           </Link>
 
-          <Link href={`/users/${profile.id}/following`} className="flex flex-col hover:opacity-60 transition-opacity">
+          <Link 
+            href={profile.username ? `/users/${profile.username}` : "#"} 
+            className="flex flex-col hover:opacity-60 transition-opacity"
+          >
             <p className="type-label text-[11px] tracking-[0.12em] text-subtle">FOLLOWING</p>
             <p className="mt-2 text-2xl font-medium">{followingCount}</p>
           </Link>
