@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
 type Post = {
@@ -14,6 +15,7 @@ type Post = {
   season_slug: string | null
   designer_slug: string | null
   image_urls: string[]
+  user_id: string
 }
 
 type Tag = {
@@ -33,6 +35,7 @@ export default function EditPostPage() {
   const postId = params.id as string
 
   const [loading, setLoading] = useState(true)
+  const [isAuthorized, setIsAuthorized] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -54,8 +57,27 @@ export default function EditPostPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchPostAndVerify = async () => {
       if (!postId) return
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setIsAuthorized(false)
+        setLoading(false)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("plus_member")
+        .eq("id", user.id)
+        .single()
+
+      if (!profile?.plus_member) {
+        setIsAuthorized(false)
+        setLoading(false)
+        return
+      }
 
       const { data: postData, error: postError } = await supabase
         .from("posts")
@@ -66,17 +88,20 @@ export default function EditPostPage() {
         .eq("id", postId)
         .single()
 
-      if (postError) {
-        console.error("Fetch Error:", postError.message)
+      if (postError || !postData) {
+        console.error("Fetch Error:", postError?.message)
+        setIsAuthorized(false)
         setLoading(false)
         return
       }
 
-      if (!postData) {
-        console.error("No post data found for ID:", postId)
+      if (postData.user_id !== user.id) {
+        setIsAuthorized(false)
         setLoading(false)
         return
       }
+
+      setIsAuthorized(true)
 
       const { data: tagsData } = await supabase.from("tags").select("*").order("name")
       const { data: postTagsData } = await supabase.from("post_tags").select("tag_id").eq("post_id", postId)
@@ -97,7 +122,7 @@ export default function EditPostPage() {
       setLoading(false)
     }
 
-    fetchPost()
+    fetchPostAndVerify()
   }, [postId])
 
   useEffect(() => {
@@ -304,7 +329,34 @@ export default function EditPostPage() {
   }
 
   if (loading) {
-    return <main className="p-10 text-sm text-muted">読み込み中...</main>
+    return <main className="p-10 text-sm text-muted font-medium">読み込み中...</main>
+  }
+
+  if (!isAuthorized) {
+    return (
+      <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="max-w-md w-full p-8 border border-border bg-surface rounded-2xl shadow-xl">
+          <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
+            MEMBER限定機能
+          </h1>
+          <p className="mt-4 text-xs text-muted leading-relaxed">
+            投稿の編集、管理および削除機能を利用するには、投稿を所有しているMEMBERアカウントでのログインが必要です。
+          </p>
+          <Link
+            href="/members"
+            className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
+          >
+            MEMBERに登録する
+          </Link>
+          <Link 
+            href="/" 
+            className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
+          >
+            トップページに戻る
+          </Link>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -368,7 +420,7 @@ export default function EditPostPage() {
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">BRAND</p>
             <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
-            <p className="mt-2 text-xs text-subtle">マスタにキーワードが登録されていれば自動変換されます</p>
+            <p className="mt-2 text-xs text-muted">登録済みのキーワードは、関連ブランドに自動的にリンクされます</p>
           </div>
 
           <div>
@@ -404,6 +456,7 @@ export default function EditPostPage() {
           <div>
             <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
             <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
+            <p className="mt-2 text-xs text-muted">登録済みのキーワードは、関連デザイナーに自動的にリンクされます</p>
           </div>
 
           <div>

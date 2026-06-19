@@ -16,6 +16,7 @@ type Profile = {
   username: string | null
   bio: string | null
   avatar_url: string | null
+  plus_member: boolean
 }
 
 type Post = {
@@ -57,16 +58,26 @@ export default function MyPage() {
   
   const fetchPosts = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("posts")
-        .select("id, image_urls, title")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-      
-      if (error) throw error;
-      setPosts(data || []);
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profileData } = await supabase
+        .from("users")
+        .select("plus_member")
+        .eq("id", userId)
+        .single()
+
+      // 有料会員のみ自分の過去ポストを取得する（無料ユーザーはそもそも投稿できないため不要）
+      if (profileData?.plus_member) {
+        const { data, error } = await supabase
+          .from("posts")
+          .select("id, image_urls, title")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+        
+        if (error) throw error
+        setPosts(data || [])
+      }
     } catch (err) {
-      console.error("Fetch posts error:", err);
+      console.error("Fetch posts error:", err)
     }
   }
 
@@ -141,11 +152,14 @@ export default function MyPage() {
         .eq("follower_id", user.id)
       setFollowingCount(following || 0)
 
-      const { count: bookmarks } = await supabase
-        .from("bookmarks")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-      setBookmarksCount(bookmarks || 0)
+      // 有料会員の場合のみブックマーク数を取得
+      if (data?.plus_member) {
+        const { count: bookmarks } = await supabase
+          .from("bookmarks")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+        setBookmarksCount(bookmarks || 0)
+      }
 
       const { data: followBrandsData } = await supabase
         .from("brand_follows")
@@ -284,7 +298,7 @@ export default function MyPage() {
 
           <div className="flex flex-col">
             <p className="type-label text-[11px] tracking-[0.12em] text-subtle">POSTS</p>
-            <p className="mt-2 text-2xl font-medium">{posts.length}</p>
+            <p className="mt-2 text-2xl font-medium">{profile.plus_member ? posts.length : "—"}</p>
           </div>
 
           <Link href={`/users/${profile.id}/followers`} className="flex flex-col hover:opacity-60 transition-opacity">
@@ -297,10 +311,17 @@ export default function MyPage() {
             <p className="mt-2 text-2xl font-medium">{followingCount}</p>
           </Link>
 
-          <Link href="/bookmarks" className="flex flex-col hover:opacity-60 transition-opacity">
-            <p className="type-label text-[11px] tracking-[0.12em] text-subtle">BOOKMARKS</p>
-            <p className="mt-2 text-2xl font-medium">{bookmarksCount}</p>
-          </Link>
+          {profile.plus_member ? (
+            <Link href="/bookmarks" className="flex flex-col hover:opacity-60 transition-opacity">
+              <p className="type-label text-[11px] tracking-[0.12em] text-subtle">BOOKMARKS</p>
+              <p className="mt-2 text-2xl font-medium">{bookmarksCount}</p>
+            </Link>
+          ) : (
+            <div className="flex flex-col opacity-40 cursor-not-allowed">
+              <p className="type-label text-[11px] tracking-[0.12em] text-subtle">BOOKMARKS</p>
+              <p className="mt-2 text-sm font-semibold tracking-[0.05em] text-subtle pt-1.5">MEMBER限定</p>
+            </div>
+          )}
         </div>
 
         <div className="mt-12 sm:mt-14">
@@ -389,53 +410,55 @@ export default function MyPage() {
           )}
         </div>
 
-        <div className="border-t border-border pt-14 pb-14">
-          <div className="flex flex-col mb-10">
-            <h2 className="type-display text-xl sm:text-2xl md:text-3xl text-foreground break-words leading-tight">
-              My Posts
-            </h2>
-            <p className="mt-2 text-xs tracking-[0.14em] text-muted font-medium">
-              過去のポスト
-            </p>
-          </div>
+        {profile.plus_member && (
+          <div className="border-t border-border pt-14 pb-14">
+            <div className="flex flex-col mb-10">
+              <h2 className="type-display text-xl sm:text-2xl md:text-3xl text-foreground break-words leading-tight">
+                My Posts
+              </h2>
+              <p className="mt-2 text-xs tracking-[0.14em] text-muted font-medium">
+                過去のポスト
+              </p>
+            </div>
 
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
-            {posts.map((post) => (
-              <div key={post.id} className="group flex flex-col justify-between">
-                <div className="space-y-3.5">
-                  <Link 
-                    href={`/posts/${post.id}`} 
-                    className="block overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]"
-                  >
-                    {post.image_urls?.[0] && (
-                      <Image
-                        src={post.image_urls[0]}
-                        alt={post.title || "Post Image"}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                      />
-                    )}
-                  </Link>
-                  <div className="px-1">
-                    <p className="text-[15px] sm:text-base font-medium leading-snug text-foreground break-words">
-                      {post.title || "無題のポスト"}
-                    </p>
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
+              {posts.map((post) => (
+                <div key={post.id} className="group flex flex-col justify-between">
+                  <div className="space-y-3.5">
+                    <Link 
+                      href={`/posts/${post.id}`} 
+                      className="block overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]"
+                    >
+                      {post.image_urls?.[0] && (
+                        <Image
+                          src={post.image_urls[0]}
+                          alt={post.title || "Post Image"}
+                          fill
+                          sizes="(max-width: 768px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      )}
+                    </Link>
+                    <div className="px-1">
+                      <p className="text-[15px] sm:text-base font-medium leading-snug text-foreground break-words">
+                        {post.title || "無題のポスト"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-6 mt-4 pt-2.5 border-t border-border/30 px-1">
+                    <Link href={`/posts/${post.id}`} className="text-xs font-medium text-muted hover:text-foreground hover:underline transition-colors">
+                      表示
+                    </Link>
+                    <Link href={`/edit-post/${post.id}`} className="text-xs font-medium text-subtle hover:text-foreground hover:underline transition-colors">
+                      編集
+                    </Link>
                   </div>
                 </div>
-
-                <div className="flex gap-6 mt-4 pt-2.5 border-t border-border/30 px-1">
-                  <Link href={`/posts/${post.id}`} className="text-xs font-medium text-muted hover:text-foreground hover:underline transition-colors">
-                    表示
-                  </Link>
-                  <Link href={`/edit-post/${post.id}`} className="text-xs font-medium text-subtle hover:text-foreground hover:underline transition-colors">
-                    編集
-                  </Link>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </section>
     </main>
   )

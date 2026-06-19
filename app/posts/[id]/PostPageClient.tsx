@@ -242,19 +242,24 @@ export default function PostPageClient({ id }: Props) {
 
         <div className="relative">
           {!isPlusMember && (
-            <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] flex flex-col items-center justify-center text-center px-4 pt-32">
-              <div className="max-w-sm p-6 border border-border bg-surface rounded-2xl shadow-xl">
-                <h2 className="text-lg font-semibold text-foreground">こちらは限定コンテンツです</h2>
+            <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] flex flex-col items-center justify-center text-center px-4">
+              <div className="max-w-sm w-full p-6 sm:p-8 border border-border bg-surface rounded-2xl shadow-xl">
+                <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
+                  MEMBER限定コンテンツ
+                </h2>
                 <p className="mt-3 text-xs text-muted leading-relaxed">
-                  アーカイブの詳細、解説の閲覧、およびインタラクション機能の利用にはMEMBER登録が必要です。
+                  アーカイブの詳細や解説の閲覧、およびすべての機能を利用するにはMEMBER登録が必要です。
                 </p>
                 <Link
                   href="/members"
-                  className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition hover:opacity-90"
+                  className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
                 >
                   MEMBERに登録する
                 </Link>
-                <Link href="/" className="mt-4 block text-[11px] text-subtle hover:text-foreground transition">
+                <Link 
+                  href="/" 
+                  className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
+                >
                   トップページに戻る
                 </Link>
               </div>

@@ -103,7 +103,11 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       
       await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags }, user.id)
       
-      setStatusMessage({ text: "ポストが正常に作成されました。", type: "success" })
+      setStatusMessage({ text: "投稿が完了しました", type: "success" })
+
+      setTimeout(() => {
+        setStatusMessage(null)
+      }, 3000)
 
       setTitle("")
       setDescription("")
@@ -145,10 +149,10 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       <div className="border border-border rounded-2xl p-8 sm:p-10 bg-surface">
         <p className="type-label text-[11px] tracking-[0.12em] text-subtle">MEMBERS ONLY</p>
         <h3 className="mt-5 text-2xl sm:text-3xl text-foreground break-words leading-tight">
-          投稿機能はMEMBER限定です
+          MEMBER限定機能
         </h3>
         <p className="mt-6 text-sm leading-7 text-muted max-w-xl">
-          MEMBERになると、画像投稿、ブックマーク、フォロー、高画質閲覧、限定アーカイブ機能が利用できます。
+          MEMBERになると、アーカイブの解説の閲覧、画像の投稿、いいね、ブックマーク、フォローが利用できます。
         </p>
         <Link href="/members" className="inline-block mt-8 border border-border rounded-xl px-6 py-4 bg-white font-medium text-[14px] hover:bg-black hover:text-white transition-colors duration-300">
           MEMBERになる
@@ -212,7 +216,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       <div>
         <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">BRAND</p>
         <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
-        <p className="mt-2 text-xs text-muted">マスタにキーワードが登録されていれば自動変換されます</p>
+        <p className="mt-2 text-xs text-muted">登録済みのキーワードは、関連ブランドに自動的にリンクされます</p>
       </div>
 
       <div>
@@ -248,6 +252,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       <div>
         <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
         <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
+        <p className="mt-2 text-xs text-muted">登録済みのキーワードは、関連デザイナーに自動的にリンクされます</p>
       </div>
 
       <div>

@@ -21,7 +21,8 @@ export default function AuthModal() {
 
   if (!isOpen) return null
 
-  const handleModalLogin = async () => {
+  const handleModalLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
     setLoading(true)
     setStatusMessage(null)
 
@@ -32,7 +33,10 @@ export default function AuthModal() {
 
     if (error) {
       setLoading(false)
-      setStatusMessage({ text: error.message, type: "error" })
+      setStatusMessage({ 
+        text: error.status === 400 ? "メールアドレスまたはパスワードが正しくありません。" : "ログインに失敗しました。もう一度お試しください。", 
+        type: "error" 
+      })
       return
     }
 
@@ -40,7 +44,7 @@ export default function AuthModal() {
 
     if (!user) {
       setLoading(false)
-      setStatusMessage({ text: "ログインに失敗しました", type: "error" })
+      setStatusMessage({ text: "ユーザー情報の取得に失敗しました", type: "error" })
       return
     }
 
@@ -67,19 +71,23 @@ export default function AuthModal() {
         onClick={closeAuthModal}
       />
       
-      <div className="relative bg-surface border border-border w-full max-w-md p-8 rounded-2xl shadow-xl mx-4 animate-in fade-in zoom-in-95 duration-200">
+      <form 
+        onSubmit={handleModalLogin}
+        className="relative bg-surface border border-border w-full max-w-md p-8 rounded-2xl shadow-xl mx-4 animate-in fade-in zoom-in-95 duration-200"
+      >
         <button 
+          type="button"
           onClick={closeAuthModal}
-          className="absolute top-4 right-4 text-subtle hover:text-foreground text-sm font-medium"
+          className="absolute top-4 right-4 text-subtle hover:text-foreground text-sm font-medium transition-colors"
         >
           ✕
         </button>
 
         <div className="text-center">
-          <h2 className="text-xl font-bold tracking-tight text-foreground">
-            MEMBER限定機能です
+          <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
+            MEMBER限定機能
           </h2>
-          <p className="mt-2 text-sm text-muted leading-relaxed">
+          <p className="mt-2 text-xs text-muted leading-relaxed">
             ブランドのフォローや限定コンテンツを閲覧するにはログインが必要です。
           </p>
         </div>
@@ -87,17 +95,19 @@ export default function AuthModal() {
         <div className="mt-8 flex flex-col gap-4">
           <input
             type="email"
-            placeholder="Email"
+            placeholder="EMAIL"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
             className="border border-border bg-background rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
           />
 
           <input
             type="password"
-            placeholder="Password"
+            placeholder="PASSWORD"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
             className="border border-border bg-background rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
           />
         </div>
@@ -113,17 +123,17 @@ export default function AuthModal() {
         )}
 
         <button
-          onClick={handleModalLogin}
+          type="submit"
           disabled={loading}
           className="type-ui mt-6 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-background text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
         >
           {loading ? "LOADING..." : "ログイン"}
         </button>
 
-        <p className="mt-6 text-center text-xs text-subtle">
+        <p className="mt-6 text-center text-[11px] text-subtle leading-relaxed">
           アカウントをお持ちでない場合は、トップページ上のMEMBERSHIPボタンから新規登録を行ってください。
         </p>
-      </div>
+      </form>
     </div>
   )
 }

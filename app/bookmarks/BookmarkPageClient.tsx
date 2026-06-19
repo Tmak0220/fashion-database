@@ -22,7 +22,7 @@ type BookmarkPost = {
 export default function BookmarkPageClient() {
   const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isPlusMember, setIsPlusMember] = useState(false)
   const [selectedBrand, setSelectedBrand] = useState<string>("すべて")
 
   useEffect(() => {
@@ -30,11 +30,24 @@ export default function BookmarkPageClient() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        setIsLoggedIn(false)
+        setIsPlusMember(false)
         setLoading(false)
         return
       }
-      setIsLoggedIn(true)
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("plus_member")
+        .eq("id", user.id)
+        .single()
+
+      if (!profile?.plus_member) {
+        setIsPlusMember(false)
+        setLoading(false)
+        return
+      }
+
+      setIsPlusMember(true)
 
       const { data, error } = await supabase
         .from("bookmarks")
@@ -92,22 +105,30 @@ export default function BookmarkPageClient() {
   }, [])
 
   if (loading) {
-    return <main className="p-10 text-sm text-muted">読み込み中...</main>
+    return <main className="p-10 text-sm text-muted font-medium">読み込み中...</main>
   }
 
-  if (!isLoggedIn) {
+  if (!isPlusMember) {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="max-w-md p-8 border border-border bg-surface rounded-2xl shadow-xl">
-          <h1 className="text-xl font-semibold tracking-wide text-foreground">MY ARCHIVE CLOSET</h1>
+        <div className="max-w-md w-full p-8 border border-border bg-surface rounded-2xl shadow-xl">
+          <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
+            MEMBER限定機能
+          </h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            選択したアーカイブを保存し、ブランドごとに一覧で管理できるコレクション機能です。本機能の利用にはMEMBER登録が必要です。
+            お気に入りのアーカイブを保存し、ブランドごとに一覧で管理できるコレクション機能です。本機能の利用にはMEMBER登録が必要です。
           </p>
           <Link
             href="/members"
-            className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition hover:opacity-90"
+            className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
           >
             MEMBERに登録してクローゼットを作る
+          </Link>
+          <Link 
+            href="/" 
+            className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
+          >
+            トップページに戻る
           </Link>
         </div>
       </main>
@@ -128,10 +149,10 @@ export default function BookmarkPageClient() {
   return (
     <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-border pb-6">
-        <h1 className="text-3xl tracking-[0.08em] uppercase font-light">
+        <h1 className="text-2xl tracking-[0.08em] font-medium text-foreground">
           ブックマーク
         </h1>
-        <p className="text-xs text-subtle">
+        <p className="text-xs text-subtle font-medium">
           計 {bookmarks.length} 個のアーカイブ
         </p>
       </div>
@@ -142,7 +163,7 @@ export default function BookmarkPageClient() {
             <button
               key={brand}
               onClick={() => setSelectedBrand(brand)}
-              className={`px-4 py-1.5 rounded-full text-xs transition font-medium border ${
+              className={`px-4 py-1.5 rounded-full text-xs transition-colors font-medium border ${
                 selectedBrand === brand
                   ? "bg-black text-white border-black"
                   : "bg-surface text-muted border-border hover:bg-neutral-50"
@@ -178,7 +199,7 @@ export default function BookmarkPageClient() {
                         alt={post.title || ""}
                         fill
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                        className="object-cover transition duration-500 group-hover:scale-[1.02]"
                       />
                     )}
                   </div>
@@ -190,7 +211,7 @@ export default function BookmarkPageClient() {
                       </p>
                     )}
                     {post.title && (
-                      <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition">
+                      <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition-colors">
                         {post.title}
                       </p>
                     )}
