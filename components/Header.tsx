@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { User, Star, Folder } from "lucide-react"
+import { User, Folder } from "lucide-react"
 
 export default function Header() {
   const router = useRouter()
@@ -74,11 +74,6 @@ export default function Header() {
             <Link href="/mypage" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
               <User size={22} strokeWidth={1.5} />
               <span className="font-medium tracking-wider">マイページ</span>
-            </Link>
-
-            <Link href="/likes" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-              <Star size={22} strokeWidth={1.5} />
-              <span className="font-medium tracking-wider">お気に入り</span>
             </Link>
 
             <Link href="/bookmarks" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">

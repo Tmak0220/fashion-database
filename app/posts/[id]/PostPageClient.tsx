@@ -82,7 +82,6 @@ export default function PostPageClient({ id }: Props) {
         setIsPlusMember(isAdmin || hasValidFlag)
       }
 
-      // 1. 投稿本体の取得
       const { data: rawPost, error } = await supabase
         .from("posts")
         .select(`
@@ -99,7 +98,6 @@ export default function PostPageClient({ id }: Props) {
         return
       }
 
-      // 2. ブランドとデザイナーを個別に取得
       let brandData = null
       if (rawPost.brand_slug) {
         const { data } = await supabase
@@ -128,14 +126,12 @@ export default function PostPageClient({ id }: Props) {
 
       setPost(combinedPost)
 
-      // 3. URLリダイレクト処理 (修正済み)
       const slugPrefix = combinedPost.brands?.slug || "archive"
       const expectedPath = `/posts/${slugPrefix}-${id}`
       if (window.location.pathname !== expectedPath) {
         window.history.replaceState(null, "", expectedPath)
       }
 
-      // 4. いいね・フォロー・ブックマーク情報の取得
       const { count } = await supabase
         .from("likes")
         .select("*", { count: "exact", head: true })
@@ -250,7 +246,7 @@ export default function PostPageClient({ id }: Props) {
               <div className="max-w-sm p-6 border border-border bg-surface rounded-2xl shadow-xl">
                 <h2 className="text-lg font-semibold text-foreground">こちらは限定コンテンツです</h2>
                 <p className="mt-3 text-xs text-muted leading-relaxed">
-                  アーカイブの詳細 data、解説の閲覧、およびインタラクション機能の利用にはMEMBER登録が必要です。
+                  アーカイブの詳細、解説の閲覧、およびインタラクション機能の利用にはMEMBER登録が必要です。
                 </p>
                 <Link
                   href="/members"
@@ -362,27 +358,48 @@ export default function PostPageClient({ id }: Props) {
             </div>
 
             <div className="mt-8 sm:mt-12 flex flex-col gap-4">
-              <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleLike}
                   disabled={likeLoading}
-                  className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] ${
+                  title={liked ? "チェックを解除" : "チェックする"}
+                  className={`border rounded-xl px-4 py-3 text-xs font-medium transition duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shrink-0 ${
                     liked 
                       ? "bg-black text-white border-black" 
                       : "bg-surface text-foreground border-border hover:bg-neutral-50"
-                  } ${isOwnPost ? "flex-1" : ""}`}
+                  }`}
                 >
-                  {liked ? `お気に入りを解除 (${likeCount})` : `お気に入りに追加 (${likeCount})`}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="0.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`transition-colors duration-200 ${liked ? "text-white" : "text-foreground"}`}
+                  >
+                    <path d="M 3.5 12.5 L 12 21.5 L 20.5 12.5 L 21 8.5 L 17.5 3 L 6.5 3 L 3 8.5 Z" />
+                    <path d="M 6.5 3 L 8.5 8.5 L 15.5 8.5 L 17.5 3" opacity="0.6" />
+                    <path d="M 3 8.5 L 8.5 8.5 L 12 3 L 15.5 8.5 L 21 8.5" opacity="0.6" />
+                    <path d="M 8.5 8.5 L 12 21.5 L 15.5 8.5" opacity="0.6" />
+                    <path d="M 3.5 12.5 L 8.5 12.5 L 12 21.5 L 15.5 12.5 L 20.5 12.5" opacity="0.4" />
+                    <path d="M 8.5 8.5 L 12 12.5 L 15.5 8.5" opacity="0.4" />
+                    <path d="M 12 3 L 12 8.5 L 12 12.5" opacity="0.4" />
+                  </svg>
+                  {likeCount > 0 && <span className="text-xs font-mono">{likeCount}</span>}
                 </button>
                 
                 <button
                   onClick={handleBookmark}
                   disabled={bookmarkLoading}
-                  className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] ${
+                  className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] flex-1 min-w-[120px] ${
                     bookmarked 
                       ? "bg-neutral-100 text-muted border-neutral-200" 
                       : "bg-surface text-foreground border-border hover:bg-neutral-50"
-                  } ${isOwnPost ? "flex-1" : ""}`}
+                  }`}
                 >
                   {bookmarked ? "保存済み" : "保存する"}
                 </button>
@@ -391,7 +408,7 @@ export default function PostPageClient({ id }: Props) {
                   <button
                     onClick={handleFollow}
                     disabled={followLoading}
-                    className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] ${
+                    className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] flex-1 min-w-[120px] ${
                       following 
                         ? "bg-neutral-50 text-subtle border-border" 
                         : "bg-surface text-foreground border-border hover:bg-neutral-50"
