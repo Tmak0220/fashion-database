@@ -22,36 +22,58 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
+  const showMessage = (text: string, type: "error" | "success") => {
+    setStatusMessage({ text, type })
+    setTimeout(() => {
+      setStatusMessage(null)
+    }, 3000)
+  }
+
   const handleSave = async () => {
     setLoading(true)
     setStatusMessage(null)
+
+    const trimmedUsername = username.trim()
+
+    if (!trimmedUsername) {
+      showMessage("ユーザー名を入力してください。", "error")
+      setLoading(false)
+      return
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_-]+$/
+    if (!usernameRegex.test(trimmedUsername)) {
+      showMessage("ユーザー名は半角英数字、ハイフン(-)、アンダースコア(_)のみ使用できます。", "error")
+      setLoading(false)
+      return
+    }
+
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
+      showMessage("ユーザー名は3文字以上、20文字以内で入力してください。", "error")
+      setLoading(false)
+      return
+    }
     
     try {
       const { error } = await supabase
         .from("users")
-        .update({ username, bio })
+        .update({ username: trimmedUsername, bio })
         .eq("id", userId)
 
       if (error) {
-        setStatusMessage({ text: "プロフィールの保存に失敗しました。", type: "error" })
-        setTimeout(() => {
-          setStatusMessage(null)
-        }, 3000)
+        if (error.code === "23505") {
+          showMessage("このユーザー名はすでに使用されています。", "error")
+        } else {
+          showMessage("プロフィールの保存に失敗しました。", "error")
+        }
         return
       }
 
-      setStatusMessage({ text: "プロフィールを保存しました。", type: "success" })
+      showMessage("プロフィールを保存しました。", "success")
       router.refresh()
-      
-      setTimeout(() => {
-        setStatusMessage(null)
-      }, 3000)
     } catch (err) {
       console.error(err)
-      setStatusMessage({ text: "予期せぬエラーが発生しました。", type: "error" })
-      setTimeout(() => {
-        setStatusMessage(null)
-      }, 3000)
+      showMessage("予期せぬエラーが発生しました。", "error")
     } finally {
       setLoading(false)
     }
@@ -60,8 +82,14 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">USERNAME</p>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white" />
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">USERNAME</p>
+        <p className="text-xs text-muted mb-2">※半角英数字、ハイフン(-)、アンダースコア(_)が使用できます (3〜20文字)</p>
+        <input 
+          value={username} 
+          onChange={(e) => setUsername(e.target.value)} 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white" 
+          placeholder="example_name"
+        />
       </div>
 
       <div>
