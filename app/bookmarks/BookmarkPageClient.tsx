@@ -35,19 +35,21 @@ export default function BookmarkPageClient() {
         return
       }
 
-      const { data: profile } = await supabase
+      const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
+      const { data: memberData } = await supabase
         .from("users")
-        .select("plus_member")
+        .select("plus_member, plus_members, is_active")
         .eq("id", user.id)
-        .single()
+        .maybeSingle()
+      
+      const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
+      const memberStatus = isAdmin || hasValidFlag
+      setIsPlusMember(memberStatus)
 
-      if (!profile?.plus_member) {
-        setIsPlusMember(false)
+      if (!memberStatus) {
         setLoading(false)
         return
       }
-
-      setIsPlusMember(true)
 
       const { data, error } = await supabase
         .from("bookmarks")
@@ -58,10 +60,7 @@ export default function BookmarkPageClient() {
             image_urls,
             year,
             season,
-            brand_slug,
-            brands (
-              name
-            )
+            brand_slug
           )
         `)
         .eq("user_id", user.id)
@@ -73,25 +72,39 @@ export default function BookmarkPageClient() {
         return
       }
 
-      if (data) {
-        const formattedData: BookmarkPost[] = data
-          .filter((item: any) => item.posts)
-          .map((item: any) => {
-            const rawPost = item.posts
-            const rawBrand = Array.isArray(rawPost.brands) ? rawPost.brands[0] : rawPost.brands
+      if (data && data.length > 0) {
+        const formattedData: BookmarkPost[] = await Promise.all(
+          data
+            .filter((item: any) => item.posts)
+            .map(async (item: any) => {
+              const rawPost = item.posts
+              let brandInfo = null
 
-            return {
-              posts: {
-                id: rawPost.id,
-                title: rawPost.title,
-                image_urls: rawPost.image_urls,
-                year: rawPost.year,
-                season: rawPost.season,
-                brand_slug: rawPost.brand_slug,
-                brands: rawBrand ? { name: rawBrand.name } : null
+              if (rawPost.brand_slug) {
+                const { data: brandData } = await supabase
+                  .from("brands")
+                  .select("name")
+                  .eq("slug", rawPost.brand_slug)
+                  .maybeSingle()
+                
+                if (brandData) {
+                  brandInfo = { name: brandData.name }
+                }
               }
-            }
-          })
+
+              return {
+                posts: {
+                  id: rawPost.id,
+                  title: rawPost.title,
+                  image_urls: rawPost.image_urls,
+                  year: rawPost.year,
+                  season: rawPost.season,
+                  brand_slug: rawPost.brand_slug,
+                  brands: brandInfo
+                }
+              }
+            })
+        )
 
         setBookmarks(formattedData)
       } else {

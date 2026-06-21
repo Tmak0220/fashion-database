@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuthModal } from "@/context/AuthModalContext"
 import FollowList from "@/components/FollowList"
+import FollowingTimeline from "@/components/FollowingTimeline"
 
 type UserProfile = {
   id: string
@@ -20,7 +21,7 @@ type Post = {
   title: string | null
 }
 
-type TabType = "posts" | "followers" | "following"
+type TabType = "posts" | "followers" | "following" | "timeline"
 
 export default function UserPage() {
   const params = useParams()
@@ -156,6 +157,7 @@ export default function UserPage() {
   }
 
   const displayUsername = `@${profile.username}`
+  const isOwnProfile = currentUserId === profile.id
 
   return (
     <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16">
@@ -176,7 +178,7 @@ export default function UserPage() {
               {profile.username ? displayUsername : "名称非公開"}
             </h1>
 
-            <div className="mt-6 flex gap-8">
+            <div className="mt-6 flex flex-wrap gap-8">
               <button 
                 onClick={() => setActiveTab("posts")} 
                 className={`text-left hover:opacity-70 transition ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
@@ -200,6 +202,20 @@ export default function UserPage() {
                 <p className="text-2xl font-medium">{followingCount}</p>
                 <p className="text-sm">フォロー中</p>
               </button>
+
+              {isOwnProfile && (
+                <button 
+                  onClick={() => setActiveTab("timeline")} 
+                  className={`text-left hover:opacity-70 transition ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
+                >
+                  <div className="h-[32px] flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 10h18M3 14h18M3 18h18M3 6h18"/>
+                    </svg>
+                  </div>
+                  <p className="text-sm">タイムライン</p>
+                </button>
+              )}
             </div>
 
             {profile.bio && (
@@ -208,7 +224,7 @@ export default function UserPage() {
               </p>
             )}
 
-            {currentUserId !== profile.id && (
+            {!isOwnProfile && (
               <button
                 onClick={handleFollow}
                 disabled={followLoading}
@@ -261,6 +277,10 @@ export default function UserPage() {
 
         {activeTab === "following" && (
           <FollowList userId={profile.id} type="following" />
+        )}
+
+        {activeTab === "timeline" && isOwnProfile && (
+          <FollowingTimeline currentUserId={profile.id} />
         )}
       </section>
     </main>

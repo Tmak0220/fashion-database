@@ -5,6 +5,13 @@ import Link from "next/link"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 
+type RelatedPost = {
+  id: string
+  title: string | null
+  image_urls: string[]
+  brand_slug: string | null
+}
+
 type Post = {
   id: string
   title: string | null
@@ -54,6 +61,7 @@ type StatusMessage = {
 
 export default function PostPageClient({ id }: Props) {
   const [post, setPost] = useState<Post | null>(null)
+  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isPlusMember, setIsPlusMember] = useState(false)
@@ -69,9 +77,10 @@ export default function PostPageClient({ id }: Props) {
   useEffect(() => {
     const fetchPost = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      const userId = user?.id || null
 
       if (user) {
-        setCurrentUserId(user.id)
+        setCurrentUserId(userId)
         const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
         const { data: memberData } = await supabase
           .from("users")
@@ -132,6 +141,42 @@ export default function PostPageClient({ id }: Props) {
         window.history.replaceState(null, "", expectedPath)
       }
 
+      let sameBrandFetched: RelatedPost[] = []
+      let otherBrandFetched: RelatedPost[] = []
+
+      if (rawPost.brand_slug) {
+        let query = supabase
+          .from("posts")
+          .select("id, title, image_urls, brand_slug")
+          .eq("brand_slug", rawPost.brand_slug)
+          .neq("id", id)
+        
+        if (userId) query = query.neq("user_id", userId)
+
+        const { data: bPosts } = await query.limit(10)
+        if (bPosts && bPosts.length > 0) {
+          sameBrandFetched = bPosts.sort(() => 0.5 - Math.random()).slice(0, 2)
+        }
+      }
+
+      const excludedIds = [id, ...sameBrandFetched.map(p => p.id)]
+      let otherQuery = supabase
+        .from("posts")
+        .select("id, title, image_urls, brand_slug")
+        .not("id", "in", `(${excludedIds.join(",")})`)
+      
+      if (rawPost.brand_slug) otherQuery = otherQuery.neq("brand_slug", rawPost.brand_slug)
+      if (userId) otherQuery = otherQuery.neq("user_id", userId)
+
+      const { data: oPosts } = await otherQuery.limit(20)
+      if (oPosts && oPosts.length > 0) {
+        const neededOtherCount = 4 - sameBrandFetched.length
+        otherBrandFetched = oPosts.sort(() => 0.5 - Math.random()).slice(0, neededOtherCount)
+      }
+
+      const finalRelated = [...sameBrandFetched, ...otherBrandFetched].sort(() => 0.5 - Math.random())
+      setRelatedPosts(finalRelated)
+
       const { count } = await supabase
         .from("likes")
         .select("*", { count: "exact", head: true })
@@ -143,8 +188,8 @@ export default function PostPageClient({ id }: Props) {
         setLiked(!!likedData)
 
         if (rawPost.users?.id) {
-          const { data: followData } = await supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", rawPost.users.id).maybeSingle()
-          setFollowing(!!followData)
+          const { data: followDataCorrect } = await supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", rawPost.users.id).maybeSingle()
+          setFollowing(!!followDataCorrect)
         }
 
         const { data: bookmarkData } = await supabase.from("bookmarks").select("id").eq("post_id", id).eq("user_id", user.id).maybeSingle()
@@ -223,7 +268,7 @@ export default function PostPageClient({ id }: Props) {
   const isOwnPost = currentUserId === post.user_id
 
   return (
-    <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
+    <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16 space-y-16 sm:space-y-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <div className="grid grid-cols-1 gap-4 sm:gap-6">
           {post.image_urls?.map((url) => (
@@ -440,6 +485,45 @@ export default function PostPageClient({ id }: Props) {
           </div>
         </div>
       </div>
+
+      {relatedPosts.length > 0 && (
+        <div className="border-t border-border pt-12 sm:pt-16">
+          <h2 className="text-xs tracking-[0.2em] font-medium text-muted uppercase mb-8">
+            Related Posts
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {relatedPosts.map((rPost) => {
+              const rPrefix = rPost.brand_slug || "archive"
+              return (
+                <Link
+                  key={rPost.id}
+                  href={`/posts/${rPrefix}-${rPost.id}`}
+                  className="group flex flex-col gap-3"
+                >
+                  <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl border border-border bg-neutral-50">
+                    {rPost.image_urls?.[0] ? (
+                      <Image
+                        src={rPost.image_urls[0]}
+                        alt={isPlusMember ? (rPost.title || "") : ""}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-neutral-100" />
+                    )}
+                  </div>
+                  <h3 className={`text-xs sm:text-sm font-medium text-foreground line-clamp-1 group-hover:text-neutral-600 transition ${
+                    !isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : ""
+                  }`}>
+                    {rPost.title}
+                  </h3>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </main>
   )
 }
