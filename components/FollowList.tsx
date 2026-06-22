@@ -12,6 +12,7 @@ type Props = {
 type UserData = {
   id: string
   username: string | null
+  display_name: string | null
   avatar_url: string | null
 }
 
@@ -58,6 +59,7 @@ export default function FollowList({ userId, type }: Props) {
           user_data:${targetColumn} (
             id,
             username,
+            display_name,
             avatar_url
           )
         `)
@@ -136,12 +138,17 @@ export default function FollowList({ userId, type }: Props) {
               className="w-12 h-12 rounded-full object-cover border border-border"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xs group-hover:bg-zinc-800">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xs group-hover:bg-zinc-800 text-foreground group-hover:text-white">
               No Image
             </div>
           )}
-          <div>
-            <p className="font-medium text-base">
+          <div className="flex flex-col gap-0.5">
+            {user.display_name && (
+              <p className="font-semibold text-base leading-tight">
+                {user.display_name}
+              </p>
+            )}
+            <p className={`text-xs ${user.display_name ? "text-muted-foreground group-hover:text-zinc-300" : "font-medium text-base"}`}>
               {user.username ? `@${user.username}` : "名称非公開"}
             </p>
           </div>

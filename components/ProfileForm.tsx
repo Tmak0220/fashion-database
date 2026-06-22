@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase"
 type Props = {
   userId: string
   initialUsername: string | null
+  initialDisplayName: string | null
   initialBio: string | null
 }
 
@@ -15,9 +16,10 @@ type StatusMessage = {
   type: "error" | "success"
 }
 
-export default function ProfileForm({ userId, initialUsername, initialBio }: Props) {
+export default function ProfileForm({ userId, initialUsername, initialDisplayName, initialBio }: Props) {
   const router = useRouter()
   const [username, setUsername] = useState(initialUsername || "")
+  const [displayName, setDisplayName] = useState(initialDisplayName || "")
   const [bio, setBio] = useState(initialBio || "")
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
@@ -34,6 +36,7 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
     setStatusMessage(null)
 
     const trimmedUsername = username.trim()
+    const trimmedDisplayName = displayName.trim()
 
     if (!trimmedUsername) {
       showMessage("ユーザー名を入力してください。", "error")
@@ -53,11 +56,21 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
       setLoading(false)
       return
     }
+
+    if (trimmedDisplayName.length > 30) {
+      showMessage("表示名は30文字以内で入力してください。", "error")
+      setLoading(false)
+      return
+    }
     
     try {
       const { error } = await supabase
         .from("users")
-        .update({ username: trimmedUsername, bio })
+        .update({ 
+          username: trimmedUsername, 
+          display_name: trimmedDisplayName || null,
+          bio 
+        })
         .eq("id", userId)
 
       if (error) {
@@ -82,8 +95,19 @@ export default function ProfileForm({ userId, initialUsername, initialBio }: Pro
   return (
     <div className="space-y-8">
       <div>
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DISPLAY NAME</p>
+        <p className="text-xs text-muted mb-2">画面上に優先して表示される名前です (日本語可 / 30文字以内)</p>
+        <input 
+          value={displayName} 
+          onChange={(e) => setDisplayName(e.target.value)} 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white" 
+          placeholder="山田 太郎"
+        />
+      </div>
+
+      <div>
         <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">USERNAME</p>
-        <p className="text-xs text-muted mb-2">※半角英数字、ハイフン(-)、アンダースコア(_)が使用できます (3〜20文字)</p>
+        <p className="text-xs text-muted mb-2">識別URL等に使用されます。半角英数字、ハイフン(-)、アンダースコア(_)のみ (3〜20文字)</p>
         <input 
           value={username} 
           onChange={(e) => setUsername(e.target.value)} 

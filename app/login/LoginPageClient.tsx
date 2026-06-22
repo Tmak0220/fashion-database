@@ -26,6 +26,7 @@ export default function LoginPageClient() {
   const [signupLoading, setSignupLoading] = useState(false)
 
   const [username, setUsername] = useState("")
+  const [displayName, setDisplayName] = useState("")
   const [profileLoading, setProfileLoading] = useState(false)
 
   const showMessage = (text: string, type: "error" | "success") => {
@@ -91,6 +92,7 @@ export default function LoginPageClient() {
     setProfileLoading(true)
 
     const trimmedUsername = username.trim()
+    const trimmedDisplayName = displayName.trim()
     const usernameRegex = /^[a-zA-Z0-9_-]+$/
 
     if (!trimmedUsername) {
@@ -113,6 +115,7 @@ export default function LoginPageClient() {
         id: createdUserId,
         email: createdEmail,
         username: trimmedUsername,
+        display_name: trimmedDisplayName || trimmedUsername,
         created_at: now,
         updated_at: now,
       })
@@ -168,7 +171,7 @@ export default function LoginPageClient() {
                 disabled={loginLoading}
                 className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
               >
-                {loginLoading ? "LOADING..." : "ログイン"}
+                {loginLoading ? "読み込み中..." : "ログイン"}
               </button>
             </form>
 
@@ -209,16 +212,28 @@ export default function LoginPageClient() {
             </form>
           </div>
         ) : (
-          <form onSubmit={handleProfileSetup} className="max-w-md mx-auto flex flex-col justify-between min-h-[400px]">
-            <div>
+          <form onSubmit={handleProfileSetup} className="max-w-md mx-auto flex flex-col justify-between min-h-[500px]">
+            <div className="space-y-8">
               <div className="flex flex-col gap-2">
                 <h1 className="type-brand text-3xl md:text-4xl tracking-[0.14em] pr-[0.14em]">WELCOME</h1>
                 <p className="text-xs tracking-[0.12em] text-muted font-medium">アカウントの初期設定を行います</p>
               </div>
 
-              <div className="mt-12">
-                <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">USERNAME</p>
-                <p className="text-xs text-muted mb-2">※半角英数字、ハイフン(-)、アンダースコア(_)が使用できます (3〜20文字)</p>
+              <div>
+                <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DISPLAY NAME</p>
+                <p className="text-xs text-muted mb-2">※画面上に表示される名前です。漢字やひらがなも使用できます。</p>
+                <input
+                  type="text"
+                  placeholder="表示名（例：FASHION DATABASE）"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full border border-border bg-surface rounded-xl px-5 py-4 outline-none text-sm focus:border-muted text-foreground"
+                />
+              </div>
+
+              <div>
+                <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">USER ID (@username)</p>
+                <p className="text-xs text-muted mb-2">※プロフィールURL等に使用される固有のIDです。半角英数字、ハイフン(-)、アンダースコア(_)が使用できます。</p>
                 <input
                   type="text"
                   placeholder="USERNAME"

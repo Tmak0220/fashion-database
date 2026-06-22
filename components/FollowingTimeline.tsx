@@ -18,6 +18,7 @@ type TimelinePost = {
   users: {
     id: string
     username: string | null
+    display_name: string | null
     avatar_url: string | null
   } | null
 }
@@ -85,6 +86,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
           users (
             id,
             username,
+            display_name,
             avatar_url
           )
         `)
@@ -109,6 +111,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
             users: rawUser ? {
               id: rawUser.id,
               username: rawUser.username,
+              display_name: rawUser.display_name,
               avatar_url: rawUser.avatar_url
             } : null
           }
@@ -199,7 +202,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
                 
                 {post.users && (
                   <p className="text-[11px] text-muted-foreground truncate">
-                    by @{post.users.username || "名称非公開"}
+                    by {post.users.display_name || `@${post.users.username}` || "名称非公開"}
                   </p>
                 )}
               </div>

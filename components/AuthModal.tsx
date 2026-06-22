@@ -127,7 +127,7 @@ export default function AuthModal() {
           disabled={loading}
           className="type-ui mt-6 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-background text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
         >
-          {loading ? "LOADING..." : "ログイン"}
+          {loading ? "読み込み中..." : "ログイン"}
         </button>
 
         <p className="mt-6 text-center text-[11px] text-subtle leading-relaxed">

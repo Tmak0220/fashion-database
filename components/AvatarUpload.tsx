@@ -11,6 +11,7 @@ type Props = {
   userId: string
   initialAvatarUrl: string | null
   username: string | null
+  displayName?: string | null
 }
 
 type StatusMessage = {

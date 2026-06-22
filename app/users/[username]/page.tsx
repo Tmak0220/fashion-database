@@ -11,6 +11,7 @@ import FollowingTimeline from "@/components/FollowingTimeline"
 type UserProfile = {
   id: string
   username: string | null
+  display_name: string | null
   bio: string | null
   avatar_url: string | null
 }
@@ -19,6 +20,7 @@ type Post = {
   id: string
   image_urls: string[]
   title: string | null
+  brand_slug: string | null
 }
 
 type TabType = "posts" | "followers" | "following" | "timeline"
@@ -61,7 +63,7 @@ export default function UserPage() {
 
       const { data: profileData } = await supabase
         .from("users")
-        .select("id, username, bio, avatar_url")
+        .select("id, username, display_name, bio, avatar_url")
         .eq("username", username)
         .maybeSingle()
 
@@ -76,7 +78,7 @@ export default function UserPage() {
 
       const { data: postsData } = await supabase
         .from("posts")
-        .select("id, image_urls, title")
+        .select("id, image_urls, title, brand_slug")
         .eq("user_id", targetUserId)
         .order("created_at", { ascending: false })
 
@@ -174,9 +176,22 @@ export default function UserPage() {
           )}
 
           <div>
-            <h1 className="text-3xl font-light tracking-wide">
-              {profile.username ? displayUsername : "名称非公開"}
-            </h1>
+            <div className="space-y-1 pt-1">
+              {profile.display_name ? (
+                <>
+                  <h1 className="text-3xl font-normal tracking-wide text-foreground uppercase">
+                    {profile.display_name}
+                  </h1>
+                  <h2 className="text-xl font-light tracking-wide text-muted">
+                    {profile.username ? displayUsername : "名称非公開"}
+                  </h2>
+                </>
+              ) : (
+                <h1 className="text-3xl font-light tracking-wide text-muted">
+                  {profile.username ? displayUsername : "名称非公開"}
+                </h1>
+              )}
+            </div>
 
             <div className="mt-6 flex flex-wrap gap-8">
               <button 
@@ -248,24 +263,27 @@ export default function UserPage() {
               <p className="mt-8 text-xs text-subtle">まだ投稿されたアイテムはありません。</p>
             ) : (
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {posts.map((post) => (
-                  <Link key={post.id} href={`/posts/archive-${post.id}`} className="group block">
-                    <article className="space-y-3">
-                      <div className="overflow-hidden rounded-2xl border border-border bg-neutral-50 aspect-[4/5] relative">
-                        <img
-                          src={post.image_urls?.[0]}
-                          alt=""
-                          className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                        />
-                      </div>
-                      {post.title && (
-                        <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition px-1">
-                          {post.title}
-                        </p>
-                      )}
-                    </article>
-                  </Link>
-                ))}
+                {posts.map((post) => {
+                  const prefix = post.brand_slug || "archive"
+                  return (
+                    <Link key={post.id} href={`/posts/${prefix}-${post.id}`} className="group block">
+                      <article className="space-y-3">
+                        <div className="overflow-hidden rounded-2xl border border-border bg-neutral-50 aspect-[4/5] relative">
+                          <img
+                            src={post.image_urls?.[0]}
+                            alt=""
+                            className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                          />
+                        </div>
+                        {post.title && (
+                          <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition px-1">
+                            {post.title}
+                          </p>
+                        )}
+                      </article>
+                    </Link>
+                  )
+                })}
               </div>
             )}
           </>

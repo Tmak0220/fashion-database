@@ -10,12 +10,14 @@ type Post = {
   image_urls: string[]
   title: string | null
   description: string | null
+  brand_slug: string | null
   created_at: string
   users: {
     id: string
     username: string | null
+    display_name: string | null
     avatar_url: string | null
-  }
+  } | null
 }
 
 export default function PostFeed() {
@@ -58,6 +60,7 @@ export default function PostFeed() {
           users (
             id,
             username,
+            display_name,
             avatar_url
           )
         `)
@@ -87,52 +90,61 @@ export default function PostFeed() {
   }, [])
 
   if (loading) {
-    return <p>Loading...</p>
+    return <p className="p-6 text-sm text-muted animate-pulse">読み込み中...</p>
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-      {posts.map((post) => (
-        <article key={post.id} className="space-y-5">
-          <div className="relative w-full aspect-[4/5]">
-            <Link href={`/posts/${post.id}`} className="block w-full h-full">
-              {post.image_urls?.[0] && (
-                <Image
-                  src={post.image_urls[0]}
-                  alt={post.title || "投稿画像"}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover rounded-2xl border border-border"
-                />
-              )}
-            </Link>
-          </div>
+      {posts.map((post) => {
+        const prefix = post.brand_slug || "archive"
+        const postHref = `/posts/${prefix}-${post.id}`
 
-          <div className={`space-y-3 ${!isPlusMember ? "select-none pointer-events-none filter blur-[5px] opacity-50" : ""}`}>
-            <div className="flex items-center gap-3">
-              {post.users?.avatar_url && (
-                <Image
-                  src={post.users.avatar_url}
-                  alt={post.users.username || "ユーザーアバター"}
-                  width={400}
-                  height={400}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              )}
-              <span className="text-sm">
-                {post.users?.username || "名称非公開"}
-              </span>
+        return (
+          <article key={post.id} className="space-y-5">
+            <div className="relative w-full aspect-[4/5]">
+              <Link href={postHref} className="block w-full h-full">
+                {post.image_urls?.[0] && (
+                  <Image
+                    src={post.image_urls[0]}
+                    alt={post.title || "投稿画像"}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover rounded-2xl border border-border"
+                  />
+                )}
+              </Link>
             </div>
 
-            <Link href={`/posts/${post.id}`} className="block">
-              <div>
-                <h2 className="text-xl">{post.title}</h2>
-                <p className="mt-2 text-subtle leading-7">{post.description}</p>
+            <div className={`space-y-3 ${!isPlusMember ? "select-none pointer-events-none filter blur-[5px] opacity-50" : ""}`}>
+              <div className="flex items-center gap-3">
+                {post.users?.avatar_url && (
+                  <Image
+                    src={post.users.avatar_url}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover border border-border"
+                  />
+                )}
+                <span className="text-sm font-medium">
+                  {post.users?.display_name || post.users?.username || "名称非公開"}
+                </span>
               </div>
-            </Link>
-          </div>
-        </article>
-      ))}
+
+              <Link href={postHref} className="block group">
+                <div>
+                  <h2 className="text-xl font-medium group-hover:text-neutral-600 transition duration-200">
+                    {post.title}
+                  </h2>
+                  <p className="mt-2 text-subtle leading-7 line-clamp-2">
+                    {post.description}
+                  </p>
+                </div>
+              </Link>
+            </div>
+          </article>
+        )
+      })}
     </div>
   )
 }

@@ -28,6 +28,7 @@ type Post = {
   users: {
     id: string
     username: string | null
+    display_name: string | null
     avatar_url: string | null
   } | null
   brands: {
@@ -95,7 +96,7 @@ export default function PostPageClient({ id }: Props) {
         .from("posts")
         .select(`
           *,
-          users (id, username, avatar_url),
+          users (id, username, display_name, avatar_url),
           post_tags (tags (slug, name))
         `)
         .eq("id", id)
@@ -333,7 +334,7 @@ export default function PostPageClient({ id }: Props) {
                 <div>
                   <p className="text-xs text-subtle">投稿者</p>
                   <span className="text-sm sm:text-base font-medium group-hover:text-neutral-600 transition">
-                    {post.users?.username || "名称非公開"}
+                    {post.users?.display_name || post.users?.username || "名称非公開"}
                   </span>
                 </div>
               </Link>

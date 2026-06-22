@@ -20,6 +20,7 @@ type Brand = {
 type UserProfile = {
   id: string
   username: string | null
+  display_name: string | null
   avatar_url: string | null
 }
 
@@ -61,8 +62,8 @@ export default function SearchContent() {
 
       const { data: usersData } = await supabase
         .from("users")
-        .select("id, username, avatar_url")
-        .ilike("username", `%${query}%`)
+        .select("id, username, display_name, avatar_url")
+        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
         .limit(12)
 
       let postsQuery = supabase
@@ -146,7 +147,16 @@ export default function SearchContent() {
                         <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
                       )}
                     </div>
-                    <p className="text-sm font-medium text-foreground">{user.username || "名称非公開"}</p>
+                    <div className="flex flex-col min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {user.display_name || user.username || "名称非公開"}
+                      </p>
+                      {user.display_name && user.username && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          @{user.username}
+                        </p>
+                      )}
+                    </div>
                   </Link>
                 ))}
               </div>

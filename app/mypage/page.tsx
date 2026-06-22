@@ -14,6 +14,7 @@ type Profile = {
   id: string
   email: string
   username: string | null
+  display_name: string | null
   bio: string | null
   avatar_url: string | null
   plus_member: boolean
@@ -23,6 +24,7 @@ type Post = {
   id: string
   image_urls: string[]
   title: string | null
+  brand_slug: string | null
 }
 
 type FollowBrand = {
@@ -58,7 +60,6 @@ export default function MyPage() {
   
   const fetchPosts = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
       const { data: profileData } = await supabase
         .from("users")
         .select("plus_member")
@@ -68,7 +69,7 @@ export default function MyPage() {
       if (profileData?.plus_member) {
         const { data, error } = await supabase
           .from("posts")
-          .select("id, image_urls, title")
+          .select("id, image_urls, title, brand_slug")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
         
@@ -285,7 +286,7 @@ export default function MyPage() {
         </div>
 
         <div className="mt-12 sm:mt-14">
-          <AvatarUpload userId={profile.id} initialAvatarUrl={profile.avatar_url} username={profile.username} />
+          <AvatarUpload userId={profile.id} initialAvatarUrl={profile.avatar_url} username={profile.username} displayName={profile.display_name} />
         </div>
 
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 border-t border-b border-border py-8 gap-x-6 gap-y-8">
@@ -329,7 +330,12 @@ export default function MyPage() {
         </div>
 
         <div className="mt-12 sm:mt-14">
-          <ProfileForm userId={profile.id} initialUsername={profile.username} initialBio={profile.bio} />
+          <ProfileForm 
+            userId={profile.id} 
+            initialUsername={profile.username} 
+            initialDisplayName={profile.display_name} 
+            initialBio={profile.bio} 
+          />
         </div>
       </section>
 
@@ -426,40 +432,43 @@ export default function MyPage() {
             </div>
 
             <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
-              {posts.map((post) => (
-                <div key={post.id} className="group flex flex-col justify-between">
-                  <div className="space-y-3.5">
-                    <Link 
-                      href={`/posts/${post.id}`} 
-                      className="block overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]"
-                    >
-                      {post.image_urls?.[0] && (
-                        <Image
-                          src={post.image_urls[0]}
-                          alt={post.title || "Post Image"}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 33vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                        />
-                      )}
-                    </Link>
-                    <div className="px-1">
-                      <p className="text-[15px] sm:text-base font-medium leading-snug text-foreground break-words">
-                        {post.title || "無題のポスト"}
-                      </p>
+              {posts.map((post) => {
+                const prefix = post.brand_slug || "archive"
+                return (
+                  <div key={post.id} className="group flex flex-col justify-between">
+                    <div className="space-y-3.5">
+                      <Link 
+                        href={`/posts/${prefix}-${post.id}`} 
+                        className="block overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]"
+                      >
+                        {post.image_urls?.[0] && (
+                          <Image
+                            src={post.image_urls[0]}
+                            alt={post.title || "Post Image"}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                          />
+                        )}
+                      </Link>
+                      <div className="px-1">
+                        <p className="text-[15px] sm:text-base font-medium leading-snug text-foreground break-words">
+                          {post.title || "無題のポスト"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-6 mt-4 pt-2.5 border-t border-border/30 px-1">
+                      <Link href={`/posts/${prefix}-${post.id}`} className="text-xs font-medium text-muted hover:text-foreground hover:underline transition-colors">
+                        表示
+                      </Link>
+                      <Link href={`/edit-post/${post.id}`} className="text-xs font-medium text-subtle hover:text-foreground hover:underline transition-colors">
+                        編集
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="flex gap-6 mt-4 pt-2.5 border-t border-border/30 px-1">
-                    <Link href={`/posts/${post.id}`} className="text-xs font-medium text-muted hover:text-foreground hover:underline transition-colors">
-                      表示
-                    </Link>
-                    <Link href={`/edit-post/${post.id}`} className="text-xs font-medium text-subtle hover:text-foreground hover:underline transition-colors">
-                      編集
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
