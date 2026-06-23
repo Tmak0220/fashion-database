@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useLayoutEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -57,6 +57,10 @@ export default function EditPostPage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+  
   useEffect(() => {
     const fetchPostAndVerify = async () => {
       if (!postId) return
