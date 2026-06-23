@@ -7,7 +7,7 @@ type Props = {
   reset: () => void
 }
 
-export default function Error({ error, reset }: Props) {
+export default function RootError({ error, reset }: Props) {
   useEffect(() => {
     console.error(error)
   }, [error])
@@ -30,7 +30,7 @@ export default function Error({ error, reset }: Props) {
 
       <button
         onClick={() => reset()}
-        className="mt-10 border border-border bg-surface rounded-xl px-6 py-3.5 text-xs font-medium tracking-[0.1em] uppercase transition-all duration-300 hover:bg-foreground hover:text-background hover:border-foreground active:scale-[0.98]"
+        className="mt-10 border border-border bg-white rounded-xl px-8 py-3 text-xs font-medium tracking-[0.1em] uppercase transition-all duration-200 hover:bg-foreground hover:text-background hover:border-foreground active:scale-[0.98]"
       >
         Retry
       </button>

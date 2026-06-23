@@ -85,28 +85,40 @@ export default function FollowList({ userId, type }: Props) {
   }, [userId, type])
 
   if (loading) {
-    return <div className="p-6 text-sm text-muted-foreground animate-pulse">読み込み中...</div>
+    return (
+      <div className="space-y-4 max-w-2xl mx-auto mt-6 animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex items-center gap-4 border border-neutral-100 rounded-2xl p-4">
+            <div className="w-12 h-12 rounded-full bg-neutral-100 border border-neutral-200/60 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-neutral-100 rounded w-1/3" />
+              <div className="h-3 bg-neutral-100 rounded w-1/4" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   if (!isPlusMember) {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[50vh]">
-        <div className="max-w-md w-full p-8 border border-border bg-surface rounded-2xl shadow-xl">
+        <div className="max-w-md w-full p-8 border border-border bg-white rounded-2xl shadow-xl">
           <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
             MEMBER限定機能
           </h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            フォローしているユーザーや、自身をフォローしているユーザーの一覧を確認できる機能です。本機能の利用にはMEMBER登録が必要です。
+            フォローしているユーザーや、自身をフォローしているユーザーの一ラーを確認できる機能です。本機能の利用にはMEMBER登録が必要です。
           </p>
           <Link
             href="/members"
-            className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
+            className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-200 hover:bg-neutral-800"
           >
             MEMBERに登録する
           </Link>
           <Link 
             href="/" 
-            className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
+            className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-200"
           >
             トップページに戻る
           </Link>
@@ -117,7 +129,7 @@ export default function FollowList({ userId, type }: Props) {
 
   if (list.length === 0) {
     return (
-      <div className="p-12 text-center text-sm text-muted-foreground border border-dashed rounded-2xl">
+      <div className="p-12 text-center text-sm text-subtle border border-dashed rounded-2xl max-w-2xl mx-auto mt-6">
         {type === "followers" ? "フォロワーはまだいません。" : "フォロー中のユーザーはまだいません。"}
       </div>
     )
@@ -129,7 +141,7 @@ export default function FollowList({ userId, type }: Props) {
         <Link
           key={`${user.id}-${index}`}
           href={user.username ? `/users/${user.username}` : "#"}
-          className="flex items-center gap-4 border border-border rounded-2xl p-4 hover:bg-black hover:text-white transition group"
+          className="flex items-center gap-4 border border-border rounded-2xl p-4 hover:bg-black hover:text-white transition group active:scale-[0.99]"
         >
           {user.avatar_url ? (
             <img
@@ -138,17 +150,17 @@ export default function FollowList({ userId, type }: Props) {
               className="w-12 h-12 rounded-full object-cover border border-border"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xs group-hover:bg-zinc-800 text-foreground group-hover:text-white">
-              No Image
+            <div className="w-12 h-12 rounded-full bg-neutral-50 border border-border flex items-center justify-center text-[10px] tracking-wider text-subtle group-hover:bg-zinc-900 group-hover:border-zinc-900 group-hover:text-neutral-300 transition duration-200 uppercase">
+              No image
             </div>
           )}
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             {user.display_name && (
-              <p className="font-semibold text-base leading-tight">
+              <p className="font-semibold text-base leading-tight truncate">
                 {user.display_name}
               </p>
             )}
-            <p className={`text-xs ${user.display_name ? "text-muted-foreground group-hover:text-zinc-300" : "font-medium text-base"}`}>
+            <p className={`text-xs truncate ${user.display_name ? "text-subtle group-hover:text-zinc-300" : "font-semibold text-base leading-tight"}`}>
               {user.username ? `@${user.username}` : "名称非公開"}
             </p>
           </div>

@@ -67,39 +67,39 @@ export default function AuthModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm" 
+        className="absolute inset-0 bg-black/30 backdrop-blur-[4px]" 
         onClick={closeAuthModal}
       />
       
       <form 
         onSubmit={handleModalLogin}
-        className="relative bg-surface border border-border w-full max-w-md p-8 rounded-2xl shadow-xl mx-4 animate-in fade-in zoom-in-95 duration-200"
+        className="relative bg-white border border-border w-full max-w-md p-8 rounded-2xl shadow-2xl mx-4 animate-in fade-in zoom-in-95 duration-200"
       >
         <button 
           type="button"
           onClick={closeAuthModal}
-          className="absolute top-4 right-4 text-subtle hover:text-foreground text-sm font-medium transition-colors"
+          className="absolute top-5 right-5 text-subtle hover:text-foreground text-xs p-1 transition-colors"
         >
           ✕
         </button>
 
         <div className="text-center">
-          <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
-            MEMBER限定機能
+          <h2 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
+            MEMBERS ONLY
           </h2>
-          <p className="mt-2 text-xs text-muted leading-relaxed">
+          <p className="mt-3 text-xs text-muted leading-relaxed max-w-[280px] mx-auto">
             ブランドのフォローや限定コンテンツを閲覧するにはログインが必要です。
           </p>
         </div>
 
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="mt-8 flex flex-col gap-3.5">
           <input
             type="email"
             placeholder="EMAIL"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="border border-border bg-background rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
+            className="border border-border bg-white rounded-xl px-4 py-3.5 outline-none text-sm transition-colors focus:border-neutral-400 placeholder:text-neutral-300 text-foreground"
           />
 
           <input
@@ -108,7 +108,7 @@ export default function AuthModal() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="border border-border bg-background rounded-xl px-5 py-4 outline-none text-sm transition-colors focus:border-muted text-foreground"
+            className="border border-border bg-white rounded-xl px-4 py-3.5 outline-none text-sm transition-colors focus:border-neutral-400 placeholder:text-neutral-300 text-foreground"
           />
         </div>
 
@@ -125,12 +125,12 @@ export default function AuthModal() {
         <button
           type="submit"
           disabled={loading}
-          className="type-ui mt-6 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-background text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
+          className="mt-6 w-full border border-border rounded-xl px-8 py-3 text-xs font-medium tracking-[0.1em] uppercase bg-white text-foreground hover:bg-foreground hover:text-background hover:border-foreground transition duration-200 active:scale-[0.98] disabled:opacity-50"
         >
-          {loading ? "読み込み中..." : "ログイン"}
+          {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="mt-6 text-center text-[11px] text-subtle leading-relaxed">
+        <p className="mt-6 text-center text-[10px] text-subtle leading-relaxed px-2">
           アカウントをお持ちでない場合は、トップページ上のMEMBERSHIPボタンから新規登録を行ってください。
         </p>
       </form>

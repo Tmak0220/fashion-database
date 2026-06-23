@@ -90,7 +90,26 @@ export default function PostFeed() {
   }, [])
 
   if (loading) {
-    return <p className="p-6 text-sm text-muted animate-pulse">読み込み中...</p>
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="space-y-5">
+            <div className="w-full aspect-[4/5] bg-neutral-100 rounded-2xl border border-neutral-200/60" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200/60" />
+                <div className="h-4 bg-neutral-100 rounded w-24" />
+              </div>
+              <div className="h-6 bg-neutral-100 rounded w-3/4" />
+              <div className="space-y-2">
+                <div className="h-3.5 bg-neutral-100 rounded w-full" />
+                <div className="h-3.5 bg-neutral-100 rounded w-5/6" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (

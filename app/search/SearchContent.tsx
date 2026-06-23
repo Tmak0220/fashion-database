@@ -89,12 +89,11 @@ export default function SearchContent() {
       <h1 className="mt-2 sm:mt-4 text-4xl sm:text-5xl md:text-6xl tracking-[0.05em] text-foreground font-light">
         RESULTS
       </h1>
-      <p className="mt-2 text-sm sm:text-base tracking-[0.1em] text-muted font-medium">
+      <p className="mt-2 text-sm sm:text-base tracking-[0.1em] text-muted font-medium break-all">
         "{query}"
       </p>
 
       <div className="mt-12 sm:mt-16 space-y-16 sm:space-y-20">
-        {/* BRANDS SECTION */}
         <section>
           <div className="border-b border-border pb-3 flex flex-col gap-0.5">
             <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
@@ -109,14 +108,14 @@ export default function SearchContent() {
               該当するブランドはありません
             </p>
           ) : (
-            <div className="mt-6 sm:mt-8 flex flex-wrap gap-2.5 sm:gap-3">
+            <div className="mt-6 sm:mt-8 flex flex-wrap gap-2 sm:gap-3">
               {brands.map((brand) => (
                 <Link
                   key={brand.id}
                   href={getBrandUrl(brand)}
-                  className="group border border-border bg-white rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 hover:bg-foreground hover:text-background hover:border-foreground transition duration-200"
+                  className="group border border-border bg-white rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 hover:bg-foreground hover:text-background hover:border-foreground transition duration-200 active:scale-[0.98]"
                 >
-                  <div>
+                  <div className="text-center sm:text-left">
                     <p className="text-xs sm:text-sm font-medium tracking-[0.03em]">{brand.name}</p>
                     {brand.name_ja && (
                       <p className="mt-0.5 text-[10px] sm:text-xs text-subtle group-hover:text-neutral-300 transition duration-200">
@@ -130,7 +129,6 @@ export default function SearchContent() {
           )}
         </section>
 
-        {/* USERS SECTION */}
         <section>
           <div className="border-b border-border pb-3 flex flex-col gap-0.5">
             <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
@@ -145,12 +143,12 @@ export default function SearchContent() {
               該当するユーザーはありません
             </p>
           ) : (
-            <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {users.map((user) => (
                 <Link
                   key={user.id}
                   href={`/users/${user.username}`}
-                  className="flex items-center gap-3 sm:gap-4 border border-border bg-white rounded-xl p-3 sm:p-4 hover:bg-neutral-50 hover:border-neutral-400 transition duration-200"
+                  className="flex items-center gap-3 sm:gap-4 border border-border bg-white rounded-xl p-3 sm:p-4 hover:bg-neutral-50 hover:border-neutral-400 transition duration-200 active:scale-[0.99]"
                 >
                   <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                     {user.avatar_url ? (
@@ -162,7 +160,7 @@ export default function SearchContent() {
                         className="rounded-full object-cover border border-border"
                       />
                     ) : (
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-border bg-neutral-50" />
+                      <div className="w-full h-full rounded-full border border-border bg-neutral-50" />
                     )}
                   </div>
                   <div className="flex flex-col min-w-0">
@@ -181,7 +179,6 @@ export default function SearchContent() {
           )}
         </section>
 
-        {/* POSTS SECTION */}
         <section>
           <div className="border-b border-border pb-3 flex flex-col gap-0.5">
             <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
@@ -196,7 +193,7 @@ export default function SearchContent() {
               該当するポストはありません
             </p>
           ) : (
-            <div className="mt-6 sm:mt-8 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
+            <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
               {posts.map((post) => {
                 const slugPrefix = post.brand_slug || "archive"
                 return (
@@ -208,14 +205,14 @@ export default function SearchContent() {
                             src={post.image_urls[0]}
                             alt={post.title || ""}
                             fill
-                            sizes="(max-width: 768px) 50vw, 33vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                           />
                         )}
                       </div>
                       {post.title && (
                         <div className="px-0.5 sm:px-1">
-                          <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-2">
+                          <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-1 sm:line-clamp-2">
                             {post.title}
                           </p>
                         </div>
