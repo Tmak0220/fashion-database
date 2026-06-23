@@ -140,16 +140,16 @@ export default function CreatePostForm({ onPostCreated }: Props) {
     return (
       <div className="space-y-8 animate-pulse">
         <div className="flex items-center gap-4">
-          <div className="h-12 bg-neutral-100 rounded-xl border border-neutral-200/60 w-36" />
+          <div className="h-[54px] bg-neutral-100 rounded-xl border border-neutral-200/60 w-[156px]" />
           <div className="h-4 bg-neutral-100 rounded w-28" />
         </div>
         <div className="space-y-2">
-          <div className="h-4 bg-neutral-100 rounded w-16" />
-          <div className="h-11 bg-neutral-100 rounded-xl border border-neutral-200/60 w-full" />
+          <div className="h-5 bg-neutral-100 rounded w-12" />
+          <div className="h-[50px] bg-neutral-100 rounded-xl border border-neutral-200/60 w-full" />
         </div>
         <div className="space-y-2">
-          <div className="h-4 bg-neutral-100 rounded w-24" />
-          <div className="h-32 bg-neutral-100 rounded-xl border border-neutral-200/60 w-full" />
+          <div className="h-5 bg-neutral-100 rounded w-24" />
+          <div className="h-[166px] bg-neutral-100 rounded-xl border border-neutral-200/60 w-full" />
         </div>
       </div>
     )
@@ -157,15 +157,15 @@ export default function CreatePostForm({ onPostCreated }: Props) {
 
   if (!isPlusMember) {
     return (
-      <div className="border border-border rounded-2xl p-8 sm:p-10 bg-white">
-        <p className="type-label text-[11px] tracking-[0.12em] text-subtle font-medium">MEMBERS ONLY</p>
-        <h3 className="mt-5 text-2xl sm:text-3xl text-foreground break-words leading-tight font-light">
+      <div className="border border-border rounded-2xl p-8 sm:p-10 bg-surface">
+        <p className="type-label text-[11px] tracking-[0.12em] text-subtle">MEMBERS ONLY</p>
+        <h3 className="mt-5 text-2xl sm:text-3xl text-foreground break-words leading-tight">
           MEMBER限定機能
         </h3>
         <p className="mt-6 text-sm leading-7 text-muted max-w-xl">
           MEMBERになると、アーカイブの解説の閲覧、画像の投稿、いいね、ブックマーク、フォローが利用できます。
         </p>
-        <Link href="/members" className="inline-block mt-8 border border-border rounded-xl px-8 py-3 bg-white font-medium text-[12px] tracking-[0.1em] uppercase transition duration-200 hover:bg-foreground hover:text-background hover:border-foreground active:scale-[0.98]">
+        <Link href="/members" className="inline-block mt-8 border border-border rounded-xl px-6 py-4 bg-white font-medium text-[14px] hover:bg-black hover:text-white transition-colors duration-300">
           MEMBERになる
         </Link>
       </div>
@@ -175,16 +175,18 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   return (
     <div className="space-y-8">
       <div>
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">IMAGE</p>
+        <p className="text-xs text-muted mb-3">アーカイブのアイテム画像を選択してください (複数選択可)</p>
         <label className="inline-flex items-center gap-4 cursor-pointer">
-          <span className="type-label text-xs font-medium tracking-[0.1em] uppercase px-6 py-3.5 border border-border rounded-xl bg-white text-foreground hover:bg-foreground hover:text-background hover:border-foreground transition duration-200 active:scale-[0.98]">
+          <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 active:scale-[0.98]">
             ファイルを選択
           </span>
-          <span className="text-sm text-subtle font-medium truncate max-w-[200px]">
+          <span className="text-sm text-muted font-medium truncate max-w-[200px]">
             {fileName}
           </span>
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
         </label>
-        {uploading && <p className="mt-4 text-xs text-subtle animate-pulse">アップロード中...</p>}
+        {uploading && <p className="mt-4 text-sm text-muted animate-pulse">アップロード中...</p>}
         
         {uploadMessage && (
           <div className="mt-4 text-xs p-3 rounded-xl border text-red-500 bg-red-50/50 border-red-200 max-w-md">
@@ -215,34 +217,58 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       )}
 
       <div>
-        <p className="text-xs mb-2 tracking-[0.14em] text-subtle font-medium uppercase">Title</p>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" />
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">TITLE</p>
+        <p className="text-xs text-muted mb-2">アイテム名やコレクション名を入力してください</p>
+        <input 
+          value={title} 
+          onChange={(e) => setTitle(e.target.value)} 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm"
+          placeholder="グッチ 1999年春夏 ジャケット"
+        />
       </div>
 
       <div>
-        <p className="text-xs mb-2 tracking-[0.14em] text-subtle font-medium uppercase">Description</p>
-        <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" />
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DESCRIPTION</p>
+        <p className="text-xs text-muted mb-2">ディテールや特徴、ストーリーについて自由に記述してください</p>
+        <textarea 
+          rows={6} 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" 
+        />
       </div>
 
       <div>
-        <p className="text-xs mb-2 tracking-[0.14em] text-subtle font-medium uppercase">Brand</p>
-        <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm placeholder:text-neutral-300" />
-        <p className="mt-2 text-[11px] text-subtle">登録済みのキーワードは、関連ブランドに自動的にリンクされます</p>
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">BRAND</p>
+        <p className="text-xs text-muted mb-2">アイテムのブランド名を入力してください（英名・和名対応）</p>
+        <input 
+          value={brandSlug} 
+          onChange={(e) => setBrandSlug(e.target.value)} 
+          placeholder="gucci または グッチ" 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" 
+        />
       </div>
 
       <div>
-        <p className="text-xs mb-2 tracking-[0.14em] text-subtle font-medium uppercase">Year</p>
-        <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors text-sm placeholder:text-neutral-300 ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white focus:outline-neutral-400"}`} />
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">YEAR</p>
+        <p className="text-xs text-muted mb-2">発表またはリリースされた年を西暦（半角数字4桁）で入力してください</p>
+        <input 
+          value={year} 
+          onChange={(e) => handleYearChange(e.target.value)} 
+          placeholder="1999" 
+          className={`w-full border rounded-xl px-4 py-3 transition-colors text-sm ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white focus:outline-neutral-400"}`} 
+        />
         {yearError && <p className="mt-2 text-xs text-red-500 font-medium">{yearError}</p>}
       </div>
 
       <div>
-        <p className="text-xs mb-3 tracking-[0.14em] text-subtle font-medium uppercase">Season</p>
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">SEASON</p>
+        <p className="text-xs text-muted mb-3">該当するコレクションのシーズンを選択してください</p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => handleSeasonSelect("ss")}
-            className={`px-6 py-2.5 rounded-xl border text-xs font-medium tracking-wider transition duration-200 active:scale-[0.97] ${
+            className={`px-5 py-3 rounded-xl border text-sm transition duration-200 active:scale-[0.97] ${
               seasonType === "ss" ? "bg-black text-white border-black" : "bg-white border-border hover:border-neutral-400"
             }`}
           >
@@ -251,7 +277,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           <button
             type="button"
             onClick={() => handleSeasonSelect("fw")}
-            className={`px-6 py-2.5 rounded-xl border text-xs font-medium tracking-wider transition duration-200 active:scale-[0.97] ${
+            className={`px-5 py-3 rounded-xl border text-sm transition duration-200 active:scale-[0.97] ${
               seasonType === "fw" ? "bg-black text-white border-black" : "bg-white border-border hover:border-neutral-400"
             }`}
           >
@@ -261,14 +287,20 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       </div>
 
       <div>
-        <p className="text-xs mb-2 tracking-[0.14em] text-subtle font-medium uppercase">Designer</p>
-        <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm placeholder:text-neutral-300" />
-        <p className="mt-2 text-[11px] text-subtle">登録済みのキーワードは、関連デザイナーに自動的にリンクされます</p>
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
+        <p className="text-xs text-muted mb-2">当時のクリエイティブディレクター、またはデザイナー名を入力してください</p>
+        <input 
+          value={designerSlug} 
+          onChange={(e) => setDesignerSlug(e.target.value)} 
+          placeholder="tom-ford または トムフォード" 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" 
+        />
       </div>
 
       <div>
-        <p className="text-xs mb-3 tracking-[0.14em] text-subtle font-medium uppercase">Tags</p>
-        <div className="flex flex-wrap gap-2.5">
+        <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">TAGS</p>
+        <p className="text-xs text-muted mb-3">アイテムに該当するカテゴリータグを選択してください (複数選択可)</p>
+        <div className="flex flex-wrap gap-3">
           {tags.map((tag) => {
             const active = selectedTags.includes(tag.id)
             return (
@@ -276,7 +308,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
                 key={tag.id}
                 type="button"
                 onClick={() => toggleTag(tag.id)}
-                className={`px-4 py-2 rounded-full border text-xs font-medium tracking-[0.05em] transition duration-200 active:scale-[0.96] ${
+                className={`px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-200 active:scale-[0.96] ${
                   active
                     ? "bg-black text-white border-black"
                     : "bg-white border-border hover:border-neutral-400"
@@ -300,8 +332,8 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           </div>
         )}
 
-        <button onClick={handleCreatePost} disabled={creating} className="border border-border rounded-xl px-8 py-3 bg-white text-xs font-medium tracking-[0.1em] uppercase transition duration-200 hover:bg-foreground hover:text-background hover:border-foreground active:scale-[0.98]">
-          {creating ? "Creating..." : "Create"}
+        <button onClick={handleCreatePost} disabled={creating} className="border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white font-medium text-[14px] active:scale-[0.98]">
+          {creating ? "作成中..." : "作成する"}
         </button>
       </div>
     </div>

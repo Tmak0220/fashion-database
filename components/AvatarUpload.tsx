@@ -165,11 +165,11 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
       <div className="space-y-4 w-full max-w-sm pt-4">
         <div>
           <label className="inline-flex items-center gap-4 cursor-pointer">
-            <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300">
+            <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 active:scale-[0.98]">
               ファイルを選択
             </span>
 
-            <span className="text-sm text-muted font-medium truncate max-w-[220px]">
+            <span className="text-sm text-muted font-medium truncate max-w-[200px] sm:max-w-[220px]">
               {fileName}
             </span>
 
@@ -184,13 +184,13 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
         </div>
 
         {uploading && (
-          <p className="text-xs text-muted font-medium animate-pulse">
+          <p className="text-xs text-muted font-medium animate-pulse pl-1">
             アップロード中...
           </p>
         )}
 
         {statusMessage && (
-          <div className={`text-xs p-3 rounded-xl border ${
+          <div className={`text-xs p-4 rounded-xl border max-w-md ${
             statusMessage.type === "error" 
               ? "text-red-500 bg-red-50/50 border-red-200" 
               : "text-foreground bg-neutral-50 border-border"

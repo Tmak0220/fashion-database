@@ -56,6 +56,7 @@ export default function EditPostPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [fileName, setFileName] = useState("選択されていません")
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
@@ -194,6 +195,7 @@ export default function EditPostPage() {
     const uploadedUrls: string[] = []
 
     for (const file of Array.from(files)) {
+      setFileName(file.name)
       const formData = new FormData()
       formData.append("file", file)
 
@@ -216,6 +218,7 @@ export default function EditPostPage() {
 
   const removeImage = (targetUrl: string) => {
     setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
+    setFileName("選択されていません")
   }
 
   const handleUpdate = async () => {
@@ -383,66 +386,76 @@ export default function EditPostPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl">
-          {imageUrls.map((url, index) => (
-            <div key={url} className="space-y-3">
-              <div className="relative overflow-hidden rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
-                <Image
-                  src={url}
-                  alt={`Preview ${index + 1}`}
-                  fill
-                  sizes="(max-width: 640px) 100vw, 50vw"
-                  className="object-cover"
-                />
+        <div>
+          <p className="text-sm mt-12 mb-1 tracking-[0.14em] text-muted font-medium">IMAGE</p>
+          <p className="text-xs text-muted mb-4">アーカイブのアイテム画像を選択してください (最大2枚)</p>
+          
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-4xl mb-6">
+            {imageUrls.map((url, index) => (
+              <div key={url} className="space-y-3">
+                <div className="relative overflow-hidden rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
+                  <Image
+                    src={url}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                </div>
+                <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
+                  削除する
+                </button>
               </div>
-              <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
-                削除する
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-8">
           <label className="inline-flex items-center gap-4 cursor-pointer">
-            <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300">
+            <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 active:scale-[0.98]">
               ファイルを追加
+            </span>
+            <span className="text-sm text-muted font-medium truncate max-w-[200px]">
+              {fileName}
             </span>
             <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
           </label>
-          {uploading && <p className="mt-4 text-sm text-muted">アップロード中...</p>}
+          {uploading && <p className="mt-4 text-sm text-muted animate-pulse">アップロード中...</p>}
         </div>
 
-        <div className="mt-14 space-y-8 max-w-3xl">
+        <div className="mt-10 space-y-8 max-w-3xl">
           <div>
-            <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">TITLE</p>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">TITLE</p>
+            <p className="text-xs text-muted mb-2">アイテム名やコレクション名を入力してください</p>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" placeholder="Multi-Pocket Cargo Pants" />
           </div>
 
           <div>
-            <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">DESCRIPTION</p>
-            <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DESCRIPTION</p>
+            <p className="text-xs text-muted mb-2">ディテールや特徴、ストーリーについて自由に記述してください</p>
+            <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" />
           </div>
 
           <div>
-            <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">BRAND</p>
-            <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
-            <p className="mt-2 text-xs text-muted">登録済みのキーワードは、関連ブランドに自動的にリンクされます</p>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">BRAND</p>
+            <p className="text-xs text-muted mb-2">アイテムのブランド名を入力してください（英名・和名対応）</p>
+            <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" />
           </div>
 
           <div>
-            <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">YEAR</p>
-            <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-surface text-foreground"}`} />
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">YEAR</p>
+            <p className="text-xs text-muted mb-2">発表またはリリースされた年を西暦（半角数字4桁）で入力してください</p>
+            <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors text-sm ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white text-foreground focus:outline-neutral-400"}`} />
             {yearError && <p className="mt-2 text-xs text-red-500 font-medium">{yearError}</p>}
           </div>
 
           <div>
-            <p className="text-sm mb-4 tracking-[0.14em] text-muted font-medium">SEASON</p>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">SEASON</p>
+            <p className="text-xs text-muted mb-3">該当するコレクションのシーズンを選択してください</p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => handleSeasonSelect("ss")}
-                className={`px-5 py-3 rounded-xl border text-sm transition ${
-                  season === "ss" ? "bg-foreground text-background border-foreground" : "bg-surface border-border text-muted"
+                className={`px-5 py-3 rounded-xl border text-sm transition duration-200 active:scale-[0.97] ${
+                  season === "ss" ? "bg-black text-white border-black" : "bg-white border-border text-foreground hover:border-neutral-400"
                 }`}
               >
                 SS
@@ -450,8 +463,8 @@ export default function EditPostPage() {
               <button
                 type="button"
                 onClick={() => handleSeasonSelect("fw")}
-                className={`px-5 py-3 rounded-xl border text-sm transition ${
-                  season === "fw" ? "bg-foreground text-background border-foreground" : "bg-surface border-border text-muted"
+                className={`px-5 py-3 rounded-xl border text-sm transition duration-200 active:scale-[0.97] ${
+                  season === "fw" ? "bg-black text-white border-black" : "bg-white border-border text-foreground hover:border-neutral-400"
                 }`}
               >
                 FW
@@ -460,13 +473,14 @@ export default function EditPostPage() {
           </div>
 
           <div>
-            <p className="text-sm mb-2 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
-            <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-surface text-foreground" />
-            <p className="mt-2 text-xs text-muted">登録済みのキーワードは、関連デザイナーに自動的にリンクされます</p>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
+            <p className="text-xs text-muted mb-2">当時のクリエイティブディレクター、またはデザイナー名を入力してください</p>
+            <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" />
           </div>
 
           <div>
-            <p className="text-sm mb-4 tracking-[0.14em] text-muted font-medium">TAGS</p>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">TAGS</p>
+            <p className="text-xs text-muted mb-3">アイテムに該当するカテゴリータグを選択してください (複数選択可)</p>
             <div className="flex flex-wrap gap-3">
               {tags.map((tag) => {
                 const active = selectedTags.includes(String(tag.id))
@@ -475,10 +489,10 @@ export default function EditPostPage() {
                     key={tag.id}
                     type="button"
                     onClick={() => toggleTag(tag.id)}
-                    className={`px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 ${
+                    className={`px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-200 active:scale-[0.96] ${
                       active
-                        ? "bg-foreground text-background border-foreground"
-                        : "bg-surface border-border text-muted hover:border-foreground"
+                        ? "bg-black text-white border-black"
+                        : "bg-white border-border text-foreground hover:border-neutral-400"
                     }`}
                   >
                     {tag.name}
@@ -498,11 +512,11 @@ export default function EditPostPage() {
             </div>
           )}
 
-          <div className="flex gap-4 pt-2">
-            <button onClick={handleUpdate} disabled={saving} className="border border-border rounded-xl px-6 py-4 hover:bg-foreground hover:text-background transition bg-surface font-medium text-[14px]">
+          <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <button onClick={handleUpdate} disabled={saving} className="w-full sm:w-auto border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white text-foreground font-medium text-[14px] active:scale-[0.98]">
               {saving ? "変更を保存中..." : "変更を保存する"}
             </button>
-            <button onClick={handleDelete} disabled={deleting} className="border border-red-500 text-red-500 rounded-xl px-6 py-4 hover:bg-red-500 hover:text-white transition bg-surface font-medium text-[14px]">
+            <button onClick={handleDelete} disabled={deleting} className="w-full sm:w-auto border border-red-500 text-red-500 rounded-xl px-6 py-4 hover:bg-red-500 hover:text-white transition bg-white font-medium text-[14px] active:scale-[0.98]">
               {deleting ? "削除中..." : "投稿を削除する"}
             </button>
           </div>
