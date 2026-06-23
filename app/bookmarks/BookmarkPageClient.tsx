@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
+import BookmarkLoading from "./loading"
 
 type BookmarkPost = {
   bookmark_id: string
@@ -187,7 +188,7 @@ export default function BookmarkPageClient() {
   }
 
   if (!isAuthChecked) {
-    return null
+    return <BookmarkLoading />
   }
 
   if (!isPlusMember) {
