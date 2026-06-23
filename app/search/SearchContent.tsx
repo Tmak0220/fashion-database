@@ -35,7 +35,6 @@ export default function SearchContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get("q") || ""
 
-  const [loading, setLoading] = useState(true)
   const [brands, setBrands] = useState<Brand[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
   const [posts, setPosts] = useState<Post[]>([])
@@ -46,11 +45,8 @@ export default function SearchContent() {
         setBrands([])
         setUsers([])
         setPosts([])
-        setLoading(false)
         return
       }
-
-      setLoading(true)
 
       const { data: brandsData } = await supabase
         .from("brands")
@@ -82,123 +78,156 @@ export default function SearchContent() {
       setBrands(brandsData || [])
       setUsers(usersData || [])
       setPosts(postsData || [])
-      setLoading(false)
     }
 
     fetchResults()
   }, [query])
 
   return (
-    <main className="max-w-7xl p-10 md:p-14 lg:p-16">
-      <p className="text-sm text-subtle tracking-wider uppercase">Search</p>
-      <h1 className="mt-4 type-display text-5xl md:text-6xl text-foreground">RESULTS</h1>
-      <p className="mt-4 text-base tracking-wider text-muted font-medium">"{query}"</p>
+    <main className="max-w-7xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
+      <p className="text-[11px] text-subtle tracking-[0.14em] uppercase font-medium">Search</p>
+      <h1 className="mt-2 sm:mt-4 text-4xl sm:text-5xl md:text-6xl tracking-[0.05em] text-foreground font-light">
+        RESULTS
+      </h1>
+      <p className="mt-2 text-sm sm:text-base tracking-[0.1em] text-muted font-medium">
+        "{query}"
+      </p>
 
-      {loading ? (
-        <p className="mt-12 text-sm text-muted">Loading...</p>
-      ) : (
-        <div className="mt-16 space-y-20">
-          <section>
-            <h2 className="text-xl tracking-[0.1em] uppercase font-medium border-b border-border pb-3">Brands</h2>
-            {brands.length === 0 ? (
-              <p className="mt-6 text-sm text-subtle">No brands found</p>
-            ) : (
-              <div className="mt-8 flex flex-wrap gap-3">
-                {brands.map((brand) => (
-                  <Link
-                    key={brand.id}
-                    href={getBrandUrl(brand)}
-                    className="border border-border rounded-xl px-5 py-3 hover:bg-black hover:text-white hover:border-black transition duration-200"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{brand.name}</p>
-                      {brand.name_ja && (
-                        <p className="mt-0.5 text-xs text-subtle group-hover:text-neutral-300">{brand.name_ja}</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-xl tracking-[0.1em] uppercase font-medium border-b border-border pb-3">Users</h2>
-            {users.length === 0 ? (
-              <p className="mt-6 text-sm text-subtle">No users found</p>
-            ) : (
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {users.map((user) => (
-                  <Link
-                    key={user.id}
-                    href={`/users/${user.username}`}
-                    className="flex items-center gap-4 border border-border rounded-xl p-4 hover:bg-neutral-50 transition duration-200"
-                  >
-                    <div className="relative w-12 h-12 flex-shrink-0">
-                      {user.avatar_url ? (
-                        <Image
-                          src={user.avatar_url}
-                          alt=""
-                          fill
-                          sizes="48px"
-                          className="rounded-full object-cover border border-border"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full border border-border bg-neutral-50" />
-                      )}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {user.display_name || user.username || "名称非公開"}
+      <div className="mt-12 sm:mt-16 space-y-16 sm:space-y-20">
+        {/* BRANDS SECTION */}
+        <section>
+          <div className="border-b border-border pb-3 flex flex-col gap-0.5">
+            <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
+              Brands
+            </h2>
+            <p className="text-[10px] sm:text-xs tracking-[0.14em] text-subtle font-medium">
+              ブランド
+            </p>
+          </div>
+          {brands.length === 0 ? (
+            <p className="mt-6 text-xs sm:text-sm text-subtle leading-relaxed">
+              該当するブランドはありません
+            </p>
+          ) : (
+            <div className="mt-6 sm:mt-8 flex flex-wrap gap-2.5 sm:gap-3">
+              {brands.map((brand) => (
+                <Link
+                  key={brand.id}
+                  href={getBrandUrl(brand)}
+                  className="group border border-border bg-white rounded-xl px-4 py-2.5 sm:px-5 sm:py-3 hover:bg-foreground hover:text-background hover:border-foreground transition duration-200"
+                >
+                  <div>
+                    <p className="text-xs sm:text-sm font-medium tracking-[0.03em]">{brand.name}</p>
+                    {brand.name_ja && (
+                      <p className="mt-0.5 text-[10px] sm:text-xs text-subtle group-hover:text-neutral-300 transition duration-200">
+                        {brand.name_ja}
                       </p>
-                      {user.display_name && user.username && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          @{user.username}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
-          <section>
-            <h2 className="text-xl tracking-[0.1em] uppercase font-medium border-b border-border pb-3">Posts</h2>
-            {posts.length === 0 ? (
-              <p className="mt-6 text-sm text-subtle">No posts found</p>
-            ) : (
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-6">
-                {posts.map((post) => {
-                  const slugPrefix = post.brand_slug || "archive"
-                  return (
-                    <Link key={post.id} href={`/posts/${slugPrefix}-${post.id}`} className="block group">
-                      <article className="space-y-3">
-                        <div className="relative overflow-hidden rounded-xl border border-border w-full aspect-[4/5]">
-                          {post.image_urls?.[0] && (
-                            <Image
-                              src={post.image_urls[0]}
-                              alt={post.title || ""}
-                              fill
-                              sizes="(max-width: 768px) 50vw, 33vw"
-                              className="object-cover group-hover:opacity-90 transition duration-200"
-                            />
-                          )}
-                        </div>
-                        {post.title && (
-                          <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition">
+        {/* USERS SECTION */}
+        <section>
+          <div className="border-b border-border pb-3 flex flex-col gap-0.5">
+            <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
+              Users
+            </h2>
+            <p className="text-[10px] sm:text-xs tracking-[0.14em] text-subtle font-medium">
+              ユーザー
+            </p>
+          </div>
+          {users.length === 0 ? (
+            <p className="mt-6 text-xs sm:text-sm text-subtle leading-relaxed">
+              該当するユーザーはありません
+            </p>
+          ) : (
+            <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {users.map((user) => (
+                <Link
+                  key={user.id}
+                  href={`/users/${user.username}`}
+                  className="flex items-center gap-3 sm:gap-4 border border-border bg-white rounded-xl p-3 sm:p-4 hover:bg-neutral-50 hover:border-neutral-400 transition duration-200"
+                >
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
+                    {user.avatar_url ? (
+                      <Image
+                        src={user.avatar_url}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 40px, 48px"
+                        className="rounded-full object-cover border border-border"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-border bg-neutral-50" />
+                    )}
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">
+                      {user.display_name || user.username || "名称非公開"}
+                    </p>
+                    {user.display_name && user.username && (
+                      <p className="text-[10px] sm:text-xs text-muted truncate mt-0.5">
+                        @{user.username}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* POSTS SECTION */}
+        <section>
+          <div className="border-b border-border pb-3 flex flex-col gap-0.5">
+            <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
+              Posts
+            </h2>
+            <p className="text-[10px] sm:text-xs tracking-[0.14em] text-subtle font-medium">
+              ポスト
+            </p>
+          </div>
+          {posts.length === 0 ? (
+            <p className="mt-6 text-xs sm:text-sm text-subtle leading-relaxed">
+              該当するポストはありません
+            </p>
+          ) : (
+            <div className="mt-6 sm:mt-8 grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
+              {posts.map((post) => {
+                const slugPrefix = post.brand_slug || "archive"
+                return (
+                  <Link key={post.id} href={`/posts/${slugPrefix}-${post.id}`} className="block group">
+                    <article className="space-y-2.5 sm:space-y-3.5">
+                      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
+                        {post.image_urls?.[0] && (
+                          <Image
+                            src={post.image_urls[0]}
+                            alt={post.title || ""}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                          />
+                        )}
+                      </div>
+                      {post.title && (
+                        <div className="px-0.5 sm:px-1">
+                          <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-2">
                             {post.title}
                           </p>
-                        )}
-                      </article>
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
+                        </div>
+                      )}
+                    </article>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   )
 }

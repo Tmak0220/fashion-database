@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase"
 import ProfileForm from "@/components/ProfileForm"
 import AvatarUpload from "@/components/AvatarUpload"
 import CreatePostForm from "@/components/CreatePostForm"
+import MyPageLoading from "./loading"
 
 type Profile = {
   id: string
@@ -195,11 +196,7 @@ export default function MyPage() {
   }, [router])
 
   if (loading || !profile) {
-    return (
-      <main className="p-6 sm:p-10 md:p-14 lg:p-16 text-[14px] text-muted font-medium">
-        読み込み中...
-      </main>
-    )
+    return <MyPageLoading />
   }
 
   return (

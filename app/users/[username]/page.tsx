@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuthModal } from "@/context/AuthModalContext"
@@ -33,7 +34,6 @@ export default function UserPage() {
   const { openAuthModal } = useAuthModal()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isPlusMember, setIsPlusMember] = useState(false)
   const [following, setFollowing] = useState(false)
@@ -42,12 +42,10 @@ export default function UserPage() {
   const [postsCount, setPostsCount] = useState(0)
   const [followLoading, setFollowLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>("posts")
+  const [initialFetched, setInitialFetched] = useState(false)
 
   useEffect(() => {
-    if (!username) {
-      setLoading(false)
-      return
-    }
+    if (!username) return
 
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -68,8 +66,7 @@ export default function UserPage() {
         .maybeSingle()
 
       if (!profileData) {
-        setProfile(null)
-        setLoading(false)
+        setInitialFetched(true)
         return
       }
 
@@ -110,7 +107,7 @@ export default function UserPage() {
         setFollowing(!!followData)
       }
 
-      setLoading(false)
+      setInitialFetched(true)
     }
 
     fetchData()
@@ -150,135 +147,144 @@ export default function UserPage() {
     setFollowLoading(false)
   }
 
-  if (loading) {
-    return <main className="p-10 text-sm text-muted">読み込み中...</main>
+  if (initialFetched && !profile) {
+    return (
+      <main className="max-w-6xl mx-auto p-6 sm:p-10 text-center py-20">
+        <p className="text-sm text-subtle">ユーザーが見つかりませんでした</p>
+      </main>
+    )
   }
 
-  if (!profile) {
-    return <main className="p-10 text-sm text-muted">ユーザーが見つかりませんでした</main>
-  }
+  if (!profile) return null
 
   const displayUsername = `@${profile.username}`
   const isOwnProfile = currentUserId === profile.id
 
   return (
-    <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16">
-      <section>
-        <div className="flex items-start gap-6">
+    <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
+      <section className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 sm:gap-8 md:gap-10">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
           {profile.avatar_url ? (
-            <img
+            <Image
               src={profile.avatar_url}
               alt=""
-              className="w-24 h-24 rounded-full object-cover border border-border shrink-0"
+              fill
+              sizes="(max-width: 640px) 96px, 112px"
+              className="rounded-full object-cover border border-border"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full border border-border bg-neutral-50 shrink-0" />
+            <div className="w-full h-full rounded-full border border-border bg-neutral-50" />
           )}
+        </div>
 
-          <div>
-            <div className="space-y-1 pt-1">
-              {profile.display_name ? (
-                <>
-                  <h1 className="text-3xl font-normal tracking-wide text-foreground uppercase">
-                    {profile.display_name}
-                  </h1>
-                  <h2 className="text-xl font-light tracking-wide text-muted">
-                    {profile.username ? displayUsername : "名称非公開"}
-                  </h2>
-                </>
-              ) : (
-                <h1 className="text-3xl font-light tracking-wide text-muted">
-                  {profile.username ? displayUsername : "名称非公開"}
-                </h1>
-              )}
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-8">
-              <button 
-                onClick={() => setActiveTab("posts")} 
-                className={`text-left hover:opacity-70 transition ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
-              >
-                <p className="text-2xl font-medium">{postsCount}</p>
-                <p className="text-sm">投稿</p>
-              </button>
-
-              <button 
-                onClick={() => setActiveTab("followers")} 
-                className={`text-left hover:opacity-70 transition ${activeTab === "followers" ? "text-foreground" : "text-subtle"}`}
-              >
-                <p className="text-2xl font-medium">{followersCount}</p>
-                <p className="text-sm">フォロワー</p>
-              </button>
-
-              <button 
-                onClick={() => setActiveTab("following")} 
-                className={`text-left hover:opacity-70 transition ${activeTab === "following" ? "text-foreground" : "text-subtle"}`}
-              >
-                <p className="text-2xl font-medium">{followingCount}</p>
-                <p className="text-sm">フォロー中</p>
-              </button>
-
-              {isOwnProfile && (
-                <button 
-                  onClick={() => setActiveTab("timeline")} 
-                  className={`text-left hover:opacity-70 transition ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
-                >
-                  <div className="h-[32px] flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 10h18M3 14h18M3 18h18M3 6h18"/>
-                    </svg>
-                  </div>
-                  <p className="text-sm">タイムライン</p>
-                </button>
-              )}
-            </div>
-
-            {profile.bio && (
-              <p className="mt-6 max-w-2xl leading-relaxed text-muted whitespace-pre-line text-sm">
-                {profile.bio}
+        <div className="flex-1 min-w-0 w-full">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-normal tracking-wide text-foreground uppercase truncate">
+              {profile.display_name || profile.username || "名称非公開"}
+            </h1>
+            {profile.display_name && profile.username && (
+              <p className="text-base sm:text-lg font-light tracking-wide text-muted truncate">
+                {displayUsername}
               </p>
             )}
+          </div>
 
-            {!isOwnProfile && (
+          {profile.bio && (
+            <p className="mt-4 max-w-2xl mx-auto sm:mx-0 leading-relaxed text-muted whitespace-pre-line text-xs sm:text-sm">
+              {profile.bio}
+            </p>
+          )}
+
+          <div className="mt-6 flex justify-center sm:justify-start flex-wrap gap-x-6 gap-y-4 sm:gap-8 border-t border-b sm:border-none border-neutral-100 py-4 sm:py-0">
+            <button
+              onClick={() => setActiveTab("posts")}
+              className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
+            >
+              <p className="text-xl sm:text-2xl font-medium tracking-tight">{postsCount}</p>
+              <p className="text-[11px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">投稿</p>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("followers")}
+              className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "followers" ? "text-foreground" : "text-subtle"}`}
+            >
+              <p className="text-xl sm:text-2xl font-medium tracking-tight">{followersCount}</p>
+              <p className="text-[11px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">フォロワー</p>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("following")}
+              className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "following" ? "text-foreground" : "text-subtle"}`}
+            >
+              <p className="text-xl sm:text-2xl font-medium tracking-tight">{followingCount}</p>
+              <p className="text-[11px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">フォロー中</p>
+            </button>
+
+            {isOwnProfile && (
               <button
-                onClick={handleFollow}
-                disabled={followLoading}
-                className="mt-8 border border-border rounded-xl px-5 py-2.5 text-xs font-medium hover:bg-black hover:text-white transition active:scale-[0.98]"
+                onClick={() => setActiveTab("timeline")}
+                className={`flex flex-col items-center sm:items-start hover:opacity-70 transition duration-200 ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
               >
-                {following ? "フォロー中" : "フォローする"}
+                <div className="h-[28px] sm:h-[32px] flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 10h18M3 14h18M3 18h18M3 6h18"/>
+                  </svg>
+                </div>
+                <p className="text-[11px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">タイムライン</p>
               </button>
             )}
           </div>
+
+          {!isOwnProfile && (
+            <div className="mt-6 sm:mt-8">
+              <button
+                onClick={handleFollow}
+                disabled={followLoading}
+                className="w-full sm:w-auto border border-border bg-white rounded-xl px-8 py-2.5 text-xs font-medium hover:bg-foreground hover:text-background hover:border-foreground transition duration-200 active:scale-[0.98]"
+              >
+                {following ? "フォロー中" : "フォローする"}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="mt-20 border-t border-border pt-10">
+      <section className="mt-12 sm:mt-16 md:mt-20 border-t border-border pt-8 sm:pt-10">
         {activeTab === "posts" && (
           <>
-            <h2 className="text-xl tracking-[0.08em] uppercase font-medium">
-              ARCHIVE CLOSET
-            </h2>
+            <div className="flex flex-col gap-0.5">
+              <h2 className="text-lg sm:text-xl tracking-[0.1em] uppercase font-medium text-foreground">
+                ARCHIVE CLOSET
+              </h2>
+              <p className="text-[10px] sm:text-xs tracking-[0.14em] text-subtle font-medium">
+                クローゼット
+              </p>
+            </div>
 
             {posts.length === 0 ? (
-              <p className="mt-8 text-xs text-subtle">まだ投稿されたアイテムはありません。</p>
+              <p className="mt-8 text-xs sm:text-sm text-subtle leading-relaxed">まだ投稿されたアイテムはありません。</p>
             ) : (
-              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
                 {posts.map((post) => {
                   const prefix = post.brand_slug || "archive"
                   return (
                     <Link key={post.id} href={`/posts/${prefix}-${post.id}`} className="group block">
-                      <article className="space-y-3">
-                        <div className="overflow-hidden rounded-2xl border border-border bg-neutral-50 aspect-[4/5] relative">
-                          <img
+                      <article className="space-y-2.5 sm:space-y-3.5">
+                        <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-surface aspect-[4/5] relative w-full">
+                          <Image
                             src={post.image_urls?.[0]}
-                            alt=""
-                            className="w-full h-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                            alt={post.title || ""}
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                           />
                         </div>
                         {post.title && (
-                          <p className="text-xs text-foreground font-normal line-clamp-1 group-hover:text-neutral-600 transition px-1">
-                            {post.title}
-                          </p>
+                          <div className="px-0.5 sm:px-1">
+                            <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-1">
+                              {post.title}
+                            </p>
+                          </div>
                         )}
                       </article>
                     </Link>

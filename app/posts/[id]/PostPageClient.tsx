@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
+import PostLoading from "./loading"
 
 type RelatedPost = {
   id: string
@@ -80,6 +81,7 @@ export default function PostPageClient({ id }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       const userId = user?.id || null
 
+      let plusMemberStatus = false
       if (user) {
         setCurrentUserId(userId)
         const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
@@ -89,7 +91,8 @@ export default function PostPageClient({ id }: Props) {
           .eq("id", user.id)
           .maybeSingle()
         const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        setIsPlusMember(isAdmin || hasValidFlag)
+        plusMemberStatus = isAdmin || hasValidFlag
+        setIsPlusMember(plusMemberStatus)
       }
 
       const { data: rawPost, error } = await supabase
@@ -271,15 +274,15 @@ export default function PostPageClient({ id }: Props) {
         setBookmarked(true)
       }
     }
-    setBookmarkLoading(false)
+    bookmarkLoading && setBookmarkLoading(false)
   }
 
   if (loading) {
-    return <main className="p-6 sm:p-10 text-sm text-muted">読み込み中...</main>
+    return <PostLoading />
   }
 
   if (!post) {
-    return <main className="p-6 sm:p-10 text-sm text-muted">投稿が見つかりませんでした</main>
+    return <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16 text-center text-sm text-muted">投稿が見つかりませんでした</main>
   }
 
   const isOwnPost = currentUserId === post.user_id
