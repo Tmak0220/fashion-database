@@ -178,19 +178,19 @@ export default function UserPage() {
             )}
           </div>
 
-          <div className="flex-1 min-w-0 pr-2 sm:pr-0">
+          <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-3xl font-normal tracking-wide text-foreground uppercase truncate">
               {profile.display_name || profile.username || "名称非公開"}
             </h1>
             {profile.display_name && profile.username && (
-              <p className="text-sm sm:text-lg font-light tracking-wide text-muted truncate mt-0.5 sm:mt-1">
+              <p className="text-sm sm:text-lg font-light tracking-wide text-muted truncate mt-1">
                 {displayUsername}
               </p>
             )}
           </div>
         </div>
 
-        <div className={`mt-6 sm:mt-8 grid gap-x-2 border-t border-b sm:border-none border-neutral-100 py-3.5 sm:py-0 ${isOwnProfile ? 'grid-cols-4 sm:flex sm:flex-wrap sm:gap-8' : 'grid-cols-3 sm:flex sm:flex-wrap sm:gap-8'}`}>
+        <div className={`mt-6 sm:mt-8 grid border-t border-b sm:border-none border-neutral-100 py-3.5 sm:py-0 ${isOwnProfile ? 'grid-cols-4 sm:flex sm:flex-wrap sm:gap-8' : 'grid-cols-3 sm:flex sm:flex-wrap sm:gap-8'}`}>
           <button
             onClick={() => setActiveTab("posts")}
             className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
@@ -218,7 +218,7 @@ export default function UserPage() {
           {isOwnProfile && (
             <button
               onClick={() => setActiveTab("timeline")}
-              className={`flex flex-col items-center sm:items-start hover:opacity-70 transition duration-200 ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
+              className={`flex flex-col items-center sm:items-start justify-center sm:justify-start hover:opacity-70 transition duration-200 ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
             >
               <div className="h-[27px] sm:h-[32px] flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
