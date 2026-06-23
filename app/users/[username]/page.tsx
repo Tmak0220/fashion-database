@@ -163,7 +163,7 @@ export default function UserPage() {
   return (
     <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
       <section className="w-full">
-        <div className="flex items-start sm:items-center gap-5 sm:gap-8 md:gap-10">
+        <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
           <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0">
             {profile.avatar_url ? (
               <Image
@@ -178,47 +178,31 @@ export default function UserPage() {
             )}
           </div>
 
-          <div className="flex-1 min-w-0 pt-1 sm:pt-0">
-            <h1 className="text-xl sm:text-3xl font-normal tracking-wide text-foreground uppercase truncate">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-3xl font-normal tracking-wide text-foreground uppercase break-words leading-tight">
               {profile.display_name || profile.username || "名称非公開"}
             </h1>
             {profile.display_name && profile.username && (
-              <p className="text-sm sm:text-lg font-light tracking-wide text-muted truncate mt-0.5 sm:mt-1">
+              <p className="text-sm sm:text-lg font-light tracking-wide text-muted truncate mt-1">
                 {displayUsername}
               </p>
             )}
           </div>
         </div>
 
-        <div className={`mt-6 sm:mt-8 grid border-t border-b sm:border-none border-neutral-100 py-3.5 sm:py-0 ${isOwnProfile ? 'grid-cols-4 sm:flex sm:flex-wrap sm:gap-8' : 'grid-cols-3 sm:flex sm:flex-wrap sm:gap-8'}`}>
+        <div className={`mt-8 grid sm:flex sm:flex-wrap sm:gap-10 border-t border-b sm:border-none border-neutral-100 divide-y sm:divide-y-0 divide-neutral-100 ${isOwnProfile ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-none'}`}>
           <button
             onClick={() => setActiveTab("posts")}
-            className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
+            className={`py-3 sm:py-0 text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "posts" ? "text-foreground" : "text-subtle"}`}
           >
             <p className="text-lg sm:text-2xl font-medium tracking-tight">{postsCount}</p>
             <p className="text-[10px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">投稿</p>
           </button>
 
-          <button
-            onClick={() => setActiveTab("followers")}
-            className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "followers" ? "text-foreground" : "text-subtle"}`}
-          >
-            <p className="text-lg sm:text-2xl font-medium tracking-tight">{followersCount}</p>
-            <p className="text-[10px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">フォロワー</p>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("following")}
-            className={`text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "following" ? "text-foreground" : "text-subtle"}`}
-          >
-            <p className="text-lg sm:text-2xl font-medium tracking-tight">{followingCount}</p>
-            <p className="text-[10px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">フォロー中</p>
-          </button>
-
           {isOwnProfile && (
             <button
               onClick={() => setActiveTab("timeline")}
-              className={`flex flex-col items-center sm:items-start justify-center sm:justify-start hover:opacity-70 transition duration-200 ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
+              className={`py-3 sm:py-0 flex flex-col items-center sm:items-start justify-center sm:justify-start hover:opacity-70 transition duration-200 ${activeTab === "timeline" ? "text-foreground" : "text-subtle"}`}
             >
               <div className="h-[27px] sm:h-[32px] flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[18px] sm:h-[18px]">
@@ -228,6 +212,22 @@ export default function UserPage() {
               <p className="text-[10px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">タイムライン</p>
             </button>
           )}
+
+          <button
+            onClick={() => setActiveTab("followers")}
+            className={`py-3 sm:py-0 text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "followers" ? "text-foreground" : "text-subtle"}`}
+          >
+            <p className="text-lg sm:text-2xl font-medium tracking-tight">{followersCount}</p>
+            <p className="text-[10px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">フォロワー</p>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("following")}
+            className={`py-3 sm:py-0 text-center sm:text-left hover:opacity-70 transition duration-200 ${activeTab === "following" ? "text-foreground" : "text-subtle"}`}
+          >
+            <p className="text-lg sm:text-2xl font-medium tracking-tight">{followingCount}</p>
+            <p className="text-[10px] sm:text-xs font-medium tracking-wider text-subtle mt-0.5">フォロー中</p>
+          </button>
         </div>
 
         {profile.bio && (
@@ -295,16 +295,16 @@ export default function UserPage() {
           </>
         )}
 
+        {activeTab === "timeline" && isOwnProfile && (
+          <FollowingTimeline currentUserId={profile.id} />
+        )}
+
         {activeTab === "followers" && (
           <FollowList userId={profile.id} type="followers" />
         )}
 
         {activeTab === "following" && (
           <FollowList userId={profile.id} type="following" />
-        )}
-
-        {activeTab === "timeline" && isOwnProfile && (
-          <FollowingTimeline currentUserId={profile.id} />
         )}
       </section>
     </main>
