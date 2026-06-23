@@ -26,6 +26,7 @@ type FilterType = "all" | "brand" | "designer" | "tag"
 export default function BookmarkPageClient() {
   const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
   const [isPlusMember, setIsPlusMember] = useState(false)
+  const [isAuthChecked, setIsAuthChecked] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   const [activeTab, setActiveTab] = useState<FilterType>("all")
@@ -40,6 +41,7 @@ export default function BookmarkPageClient() {
 
     if (!user) {
       setIsPlusMember(false)
+      setIsAuthChecked(true)
       return
     }
 
@@ -57,6 +59,7 @@ export default function BookmarkPageClient() {
     setIsPlusMember(memberStatus)
 
     if (!memberStatus) {
+      setIsAuthChecked(true)
       return
     }
 
@@ -79,6 +82,7 @@ export default function BookmarkPageClient() {
 
     if (error) {
       console.error("Bookmark fetch error:", error.message)
+      setIsAuthChecked(true)
       return
     }
 
@@ -142,6 +146,7 @@ export default function BookmarkPageClient() {
     } else {
       setBookmarks([])
     }
+    setIsAuthChecked(true)
   }
 
   useEffect(() => {
@@ -179,6 +184,10 @@ export default function BookmarkPageClient() {
     setSelectedIds(prev => 
       prev.includes(bookmarkId) ? prev.filter(id => id !== bookmarkId) : [...prev, bookmarkId]
     )
+  }
+
+  if (!isAuthChecked) {
+    return null
   }
 
   if (!isPlusMember) {
