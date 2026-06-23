@@ -163,7 +163,7 @@ export default function UserPage() {
   return (
     <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
       <section className="w-full">
-        <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
+        <div className="flex items-start sm:items-center gap-5 sm:gap-8 md:gap-10">
           <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0">
             {profile.avatar_url ? (
               <Image
@@ -178,12 +178,12 @@ export default function UserPage() {
             )}
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pt-1 sm:pt-0">
             <h1 className="text-xl sm:text-3xl font-normal tracking-wide text-foreground uppercase truncate">
               {profile.display_name || profile.username || "名称非公開"}
             </h1>
             {profile.display_name && profile.username && (
-              <p className="text-sm sm:text-lg font-light tracking-wide text-muted truncate mt-1">
+              <p className="text-sm sm:text-lg font-light tracking-wide text-muted truncate mt-0.5 sm:mt-1">
                 {displayUsername}
               </p>
             )}
