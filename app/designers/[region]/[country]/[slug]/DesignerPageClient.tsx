@@ -55,7 +55,6 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
   const [collections, setCollections] = useState<any[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [historyItems, setHistoryItems] = useState<DesignerHistoryItem[]>([])
-  const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isPlusMember, setIsPlusMember] = useState(false)
   const [following, setFollowing] = useState(false)
@@ -124,7 +123,6 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
         setCollections(collectionsRes.data || [])
         setPosts(postsRes.data || [])
         setFollowersCount(followCountRes.count || 0)
-        setLoading(false)
       }
     }
 
@@ -150,8 +148,6 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
     }
     setFollowLoading(false)
   }
-
-  if (loading) return <div className="text-sm text-subtle font-medium p-6">読み込み中...</div>
 
   return (
     <div>

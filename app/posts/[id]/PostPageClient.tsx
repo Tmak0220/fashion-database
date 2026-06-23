@@ -249,11 +249,27 @@ export default function PostPageClient({ id }: Props) {
     setBookmarkLoading(true)
 
     if (bookmarked) {
-      await supabase.from("bookmarks").delete().eq("post_id", id).eq("user_id", currentUserId)
-      setBookmarked(false)
+      const { error } = await supabase
+        .from("bookmarks")
+        .delete()
+        .eq("post_id", id)
+        .eq("user_id", currentUserId)
+
+      if (error) {
+        console.error("Bookmark deletion failed:", error.message)
+      } else {
+        setBookmarked(false)
+      }
     } else {
-      await supabase.from("bookmarks").insert({ post_id: id, user_id: currentUserId })
-      setBookmarked(true)
+      const { error } = await supabase
+        .from("bookmarks")
+        .insert({ post_id: id, user_id: currentUserId })
+
+      if (error) {
+        console.error("Bookmark insertion failed:", error.message)
+      } else {
+        setBookmarked(true)
+      }
     }
     setBookmarkLoading(false)
   }

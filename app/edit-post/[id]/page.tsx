@@ -34,7 +34,6 @@ export default function EditPostPage() {
   const router = useRouter()
   const postId = params.id as string
 
-  const [loading, setLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -63,7 +62,6 @@ export default function EditPostPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         setIsAuthorized(false)
-        setLoading(false)
         return
       }
 
@@ -75,7 +73,6 @@ export default function EditPostPage() {
 
       if (!profile?.plus_member) {
         setIsAuthorized(false)
-        setLoading(false)
         return
       }
 
@@ -91,13 +88,11 @@ export default function EditPostPage() {
       if (postError || !postData) {
         console.error("Fetch Error:", postError?.message)
         setIsAuthorized(false)
-        setLoading(false)
         return
       }
 
       if (postData.user_id !== user.id) {
         setIsAuthorized(false)
-        setLoading(false)
         return
       }
 
@@ -119,7 +114,6 @@ export default function EditPostPage() {
 
       const currentTags = postTagsData?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
-      setLoading(false)
     }
 
     fetchPostAndVerify()
@@ -328,10 +322,6 @@ export default function EditPostPage() {
     }
   }
 
-  if (loading) {
-    return <main className="p-10 text-sm text-muted font-medium">読み込み中...</main>
-  }
-
   if (!isAuthorized) {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[60vh]">
@@ -340,7 +330,7 @@ export default function EditPostPage() {
             MEMBER限定機能
           </h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            投稿の編集、管理および削除機能を利用するには、投稿を所有しているMEMBERアカウントでのログインが必要です。
+            投稿の編集、管理および削除機能利用するには、投稿を所有しているMEMBERアカウントでのログインが必要です。
           </p>
           <Link
             href="/members"
