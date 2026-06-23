@@ -418,33 +418,33 @@ export default function EditPostPage() {
             </span>
             <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
           </label>
-          {uploading && <p className="mt-4 text-sm text-muted animate-pulse">アップロード中...</p>}
+          {uploading && <p className="mt-4 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
         </div>
 
         <div className="mt-10 space-y-8 max-w-3xl">
           <div>
             <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">TITLE</p>
             <p className="text-xs text-muted mb-2">アイテム名やコレクション名を入力してください</p>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" placeholder="Multi-Pocket Cargo Pants" />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" placeholder="Multi-Pocket Cargo Pants" />
           </div>
 
           <div>
             <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DESCRIPTION</p>
             <p className="text-xs text-muted mb-2">ディテールや特徴、ストーリーについて自由に記述してください</p>
-            <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" />
+            <textarea rows={6} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70 leading-relaxed" />
           </div>
 
           <div>
             <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">BRAND</p>
             <p className="text-xs text-muted mb-2">アイテムのブランド名を入力してください（英名・和名対応）</p>
-            <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" />
+            <input value={brandSlug} onChange={(e) => setBrandSlug(e.target.value)} placeholder="gucci または グッチ" className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" />
           </div>
 
           <div>
             <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">YEAR</p>
             <p className="text-xs text-muted mb-2">発表またはリリースされた年を西暦（半角数字4桁）で入力してください</p>
-            <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors text-sm ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white text-foreground focus:outline-neutral-400"}`} />
-            {yearError && <p className="mt-2 text-xs text-red-500 font-medium">{yearError}</p>}
+            <input value={year} onChange={(e) => handleYearChange(e.target.value)} placeholder="1999" className={`w-full border rounded-xl px-4 py-3 transition-colors placeholder:text-neutral-400/70 ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white text-foreground focus:outline-neutral-400"}`} />
+            {yearError && <p className="mt-2 text-xs text-red-500 font-medium pl-1">{yearError}</p>}
           </div>
 
           <div>
@@ -475,7 +475,7 @@ export default function EditPostPage() {
           <div>
             <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">DESIGNER</p>
             <p className="text-xs text-muted mb-2">当時のクリエイティブディレクター、またはデザイナー名を入力してください</p>
-            <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 text-sm" />
+            <input value={designerSlug} onChange={(e) => setDesignerSlug(e.target.value)} placeholder="tom-ford または トムフォード" className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" />
           </div>
 
           <div>

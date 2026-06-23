@@ -165,7 +165,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         <p className="mt-6 text-sm leading-7 text-muted max-w-xl">
           MEMBERになると、アーカイブの解説の閲覧、画像の投稿、いいね、ブックマーク、フォローが利用できます。
         </p>
-        <Link href="/members" className="inline-block mt-8 border border-border rounded-xl px-6 py-4 bg-white font-medium text-[14px] hover:bg-black hover:text-white transition-colors duration-300">
+        <Link href="/members" className="inline-block mt-8 border border-border rounded-xl px-6 py-4 bg-white font-medium text-[14px] hover:bg-black hover:text-white transition-colors duration-300 active:scale-[0.98]">
           MEMBERになる
         </Link>
       </div>
@@ -186,17 +186,17 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           </span>
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
         </label>
-        {uploading && <p className="mt-4 text-sm text-muted animate-pulse">アップロード中...</p>}
+        {uploading && <p className="mt-4 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
         
         {uploadMessage && (
-          <div className="mt-4 text-xs p-3 rounded-xl border text-red-500 bg-red-50/50 border-red-200 max-w-md">
+          <div className="mt-4 text-xs p-4 rounded-xl border text-red-500 bg-red-50/50 border-red-200 max-w-md">
             {uploadMessage.text}
           </div>
         )}
       </div>
 
       {imageUrls.length > 0 && (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {imageUrls.map((url) => (
             <div key={url} className="space-y-3">
               <div className="overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]">
@@ -222,7 +222,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         <input 
           value={title} 
           onChange={(e) => setTitle(e.target.value)} 
-          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm"
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70"
           placeholder="グッチ 1999年春夏 ジャケット"
         />
       </div>
@@ -234,7 +234,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           rows={6} 
           value={description} 
           onChange={(e) => setDescription(e.target.value)} 
-          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70 leading-relaxed" 
         />
       </div>
 
@@ -245,7 +245,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           value={brandSlug} 
           onChange={(e) => setBrandSlug(e.target.value)} 
           placeholder="gucci または グッチ" 
-          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" 
         />
       </div>
 
@@ -256,9 +256,9 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           value={year} 
           onChange={(e) => handleYearChange(e.target.value)} 
           placeholder="1999" 
-          className={`w-full border rounded-xl px-4 py-3 transition-colors text-sm ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white focus:outline-neutral-400"}`} 
+          className={`w-full border rounded-xl px-4 py-3 transition-colors placeholder:text-neutral-400/70 ${yearError ? "border-red-500 bg-red-50/30 focus:outline-red-500" : "border-border bg-white text-foreground focus:outline-neutral-400"}`} 
         />
-        {yearError && <p className="mt-2 text-xs text-red-500 font-medium">{yearError}</p>}
+        {yearError && <p className="mt-2 text-xs text-red-500 font-medium pl-1">{yearError}</p>}
       </div>
 
       <div>
@@ -269,7 +269,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
             type="button"
             onClick={() => handleSeasonSelect("ss")}
             className={`px-5 py-3 rounded-xl border text-sm transition duration-200 active:scale-[0.97] ${
-              seasonType === "ss" ? "bg-black text-white border-black" : "bg-white border-border hover:border-neutral-400"
+              seasonType === "ss" ? "bg-black text-white border-black" : "bg-white border-border text-foreground hover:border-neutral-400"
             }`}
           >
             SS
@@ -278,7 +278,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
             type="button"
             onClick={() => handleSeasonSelect("fw")}
             className={`px-5 py-3 rounded-xl border text-sm transition duration-200 active:scale-[0.97] ${
-              seasonType === "fw" ? "bg-black text-white border-black" : "bg-white border-border hover:border-neutral-400"
+              seasonType === "fw" ? "bg-black text-white border-black" : "bg-white border-border text-foreground hover:border-neutral-400"
             }`}
           >
             FW
@@ -293,7 +293,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           value={designerSlug} 
           onChange={(e) => setDesignerSlug(e.target.value)} 
           placeholder="tom-ford または トムフォード" 
-          className="w-full border border-border rounded-xl px-4 py-3 bg-white focus:outline-neutral-400 text-sm" 
+          className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" 
         />
       </div>
 
@@ -302,7 +302,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         <p className="text-xs text-muted mb-3">アイテムに該当するカテゴリータグを選択してください (複数選択可)</p>
         <div className="flex flex-wrap gap-3">
           {tags.map((tag) => {
-            const active = selectedTags.includes(tag.id)
+            const active = selectedTags.includes(String(tag.id))
             return (
               <button
                 key={tag.id}
@@ -311,7 +311,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
                 className={`px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-200 active:scale-[0.96] ${
                   active
                     ? "bg-black text-white border-black"
-                    : "bg-white border-border hover:border-neutral-400"
+                    : "bg-white border-border text-foreground hover:border-neutral-400"
                 }`}
               >
                 {tag.name}
@@ -332,7 +332,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           </div>
         )}
 
-        <button onClick={handleCreatePost} disabled={creating} className="border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white font-medium text-[14px] active:scale-[0.98]">
+        <button onClick={handleCreatePost} disabled={creating} className="w-full sm:w-auto border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white text-foreground font-medium text-[14px] active:scale-[0.98]">
           {creating ? "作成中..." : "作成する"}
         </button>
       </div>
