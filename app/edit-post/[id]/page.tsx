@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import EditLoading from "./loading"
 
 type Post = {
   id: string
@@ -35,6 +36,7 @@ export default function EditPostPage() {
   const postId = params.id as string
 
   const [isAuthorized, setIsAuthorized] = useState(false)
+  const [isAuthChecked, setIsAuthChecked] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -62,6 +64,7 @@ export default function EditPostPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         setIsAuthorized(false)
+        setIsAuthChecked(true)
         return
       }
 
@@ -73,6 +76,7 @@ export default function EditPostPage() {
 
       if (!profile?.plus_member) {
         setIsAuthorized(false)
+        setIsAuthChecked(true)
         return
       }
 
@@ -88,11 +92,13 @@ export default function EditPostPage() {
       if (postError || !postData) {
         console.error("Fetch Error:", postError?.message)
         setIsAuthorized(false)
+        setIsAuthChecked(true)
         return
       }
 
       if (postData.user_id !== user.id) {
         setIsAuthorized(false)
+        setIsAuthChecked(true)
         return
       }
 
@@ -114,6 +120,8 @@ export default function EditPostPage() {
 
       const currentTags = postTagsData?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
+      
+      setIsAuthChecked(true)
     }
 
     fetchPostAndVerify()
@@ -320,6 +328,10 @@ export default function EditPostPage() {
     } finally {
       setDeleting(false)
     }
+  }
+
+  if (!isAuthChecked) {
+    return <EditLoading />
   }
 
   if (!isAuthorized) {
