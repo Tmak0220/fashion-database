@@ -25,7 +25,6 @@ type FilterType = "all" | "brand" | "designer" | "tag"
 
 export default function BookmarkPageClient() {
   const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
-  const [loading, setLoading] = useState(true)
   const [isPlusMember, setIsPlusMember] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
@@ -41,7 +40,6 @@ export default function BookmarkPageClient() {
 
     if (!user) {
       setIsPlusMember(false)
-      setLoading(false)
       return
     }
 
@@ -59,7 +57,6 @@ export default function BookmarkPageClient() {
     setIsPlusMember(memberStatus)
 
     if (!memberStatus) {
-      setLoading(false)
       return
     }
 
@@ -82,7 +79,6 @@ export default function BookmarkPageClient() {
 
     if (error) {
       console.error("Bookmark fetch error:", error.message)
-      setLoading(false)
       return
     }
 
@@ -146,7 +142,6 @@ export default function BookmarkPageClient() {
     } else {
       setBookmarks([])
     }
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -184,10 +179,6 @@ export default function BookmarkPageClient() {
     setSelectedIds(prev => 
       prev.includes(bookmarkId) ? prev.filter(id => id !== bookmarkId) : [...prev, bookmarkId]
     )
-  }
-
-  if (loading) {
-    return <main className="p-10 text-sm text-muted font-medium">読み込み中...</main>
   }
 
   if (!isPlusMember) {
