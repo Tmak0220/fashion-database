@@ -91,19 +91,19 @@ export default function PostFeed() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 animate-pulse">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="space-y-5">
-            <div className="w-full aspect-[4/5] bg-neutral-100 rounded-2xl border border-neutral-200/60" />
-            <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {[1, 2, 3, 4, 5, 6].map((item) => (
+          <div key={item} className="space-y-5 animate-pulse">
+            <div className="w-full aspect-[4/5] bg-neutral-200/60 rounded-2xl border border-neutral-200/30" />
+            <div className="space-y-4 px-1">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200/60" />
-                <div className="h-4 bg-neutral-100 rounded w-24" />
+                <div className="w-10 h-10 rounded-full bg-neutral-200/60 border border-neutral-200/30 shrink-0" />
+                <div className="h-3.5 bg-neutral-200/50 rounded w-24" />
               </div>
-              <div className="h-6 bg-neutral-100 rounded w-3/4" />
+              <div className="h-5 bg-neutral-200/60 rounded w-11/12" />
               <div className="space-y-2">
-                <div className="h-3.5 bg-neutral-100 rounded w-full" />
-                <div className="h-3.5 bg-neutral-100 rounded w-5/6" />
+                <div className="h-3.5 bg-neutral-200/50 rounded w-full" />
+                <div className="h-3.5 bg-neutral-200/40 rounded w-4/5" />
               </div>
             </div>
           </div>

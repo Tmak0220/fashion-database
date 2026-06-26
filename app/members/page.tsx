@@ -72,24 +72,24 @@ export default function MembersPage() {
   ]
 
   return (
-    <main className="min-h-screen p-10 md:p-14 lg:p-16">
+    <main className="min-h-screen max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
       <div className="max-w-3xl">
-        <p className="type-label text-[11px] text-subtle" style={{ letterSpacing: "0.12em", paddingRight: "0.12em" }}>
-          MEMBERSHIP
+        <p className="type-label text-[11px] text-subtle tracking-[0.12em] uppercase font-medium">
+          Membership
         </p>
-        <h1 className="mt-8 type-display text-5xl md:text-6xl text-foreground">
+        <h1 className="mt-4 sm:mt-6 text-4xl sm:text-5xl md:text-6xl tracking-[0.05em] text-foreground font-light break-words">
           MEMBERSHIP
         </h1>
-        <p className="mt-4 text-base tracking-[0.12em] text-muted font-medium">
+        <p className="mt-2 text-xs sm:text-sm tracking-[0.12em] text-muted font-medium">
           メンバーシップ
         </p>
-        <p className="mt-8 max-w-2xl text-[15px] leading-8 text-muted">
+        <p className="mt-6 sm:mt-8 text-xs sm:text-[14px] md:text-[15px] leading-relaxed sm:leading-7 md:leading-8 text-muted">
           ファッションデータベースをより深く利用するためのメンバーシッププランです。
         </p>
       </div>
 
       {statusMessage && (
-        <div className={`mt-12 max-w-5xl text-xs p-4 rounded-xl border ${
+        <div className={`mt-8 sm:mt-12 text-xs p-4 rounded-xl border ${
           statusMessage.type === "error" 
             ? "text-red-500 bg-red-50/50 border-red-200" 
             : "text-foreground bg-neutral-50 border-border"
@@ -98,49 +98,53 @@ export default function MembersPage() {
         </div>
       )}
 
-      <section className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section className="mt-8 sm:mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {plans.map((plan) => (
           <div
             key={plan.name}
             className={`
-              border rounded-3xl p-8 bg-surface transition
+              border rounded-2xl sm:rounded-3xl p-6 sm:p-8 bg-surface flex flex-col justify-between transition
               ${plan.highlight ? "border-black" : "border-border"}
             `}
           >
             <div>
-              <p className="type-label text-[11px] text-subtle tracking-[0.12em]">{plan.nameJa}</p>
-              <h2 className="mt-4 text-4xl font-medium">{plan.name}</h2>
+              <div>
+                <p className="type-label text-[10px] sm:text-[11px] text-subtle tracking-[0.12em] font-medium">{plan.nameJa}</p>
+                <h2 className="mt-2 sm:mt-4 text-3xl sm:text-4xl font-medium tracking-[0.02em]">{plan.name}</h2>
+              </div>
+
+              <div className="mt-8 sm:mt-10 flex items-end gap-1.5">
+                <span className="text-4xl sm:text-5xl font-medium leading-none tracking-tight">{plan.price}</span>
+                <span className="pb-0.5 text-xs sm:text-sm text-muted font-medium">{plan.period}</span>
+              </div>
+
+              <p className="mt-4 text-xs sm:text-sm text-muted leading-relaxed">{plan.description}</p>
             </div>
 
-            <div className="mt-10 flex items-end gap-2">
-              <span className="text-5xl font-medium">{plan.price}</span>
-              <span className="pb-1 text-muted">{plan.period}</span>
-            </div>
+            <div>
+              <div className="mt-8 sm:mt-10">
+                {plan.disabled ? (
+                  <div className="w-full border border-border rounded-xl px-5 py-3.5 text-center text-xs sm:text-sm text-subtle bg-neutral-50 font-medium">
+                    {plan.button}
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleCheckout}
+                    className="block w-full border border-black bg-black text-white rounded-xl px-5 py-3.5 text-center text-xs sm:text-sm tracking-[0.08em] font-medium transition hover:bg-neutral-800 active:scale-[0.99]"
+                  >
+                    {plan.button}
+                  </button>
+                )}
+              </div>
 
-            <p className="mt-4 text-sm text-muted">{plan.description}</p>
-
-            <div className="mt-10">
-              {plan.disabled ? (
-                <div className="w-full border border-border rounded-xl px-6 py-4 text-center text-sm text-subtle bg-neutral-100">
-                  {plan.button}
-                </div>
-              ) : (
-                <button
-                  onClick={handleCheckout}
-                  className="block w-full border border-black bg-black text-white rounded-xl px-6 py-4 text-center text-sm tracking-[0.08em] transition hover:opacity-80"
-                >
-                  {plan.button}
-                </button>
-              )}
-            </div>
-
-            <div className="mt-10 space-y-5">
-              {plan.features.map((feature) => (
-                <div key={feature} className="flex items-start gap-3">
-                  <div className="mt-[7px] h-[5px] w-[5px] rounded-full bg-black" />
-                  <p className="text-sm leading-7 text-muted">{feature}</p>
-                </div>
-              ))}
+              <div className="mt-8 sm:mt-10 space-y-4 sm:space-y-5 border-t border-dashed border-border pt-6 sm:pt-8">
+                {plan.features.map((feature) => (
+                  <div key={feature} className="flex items-start gap-2.5 sm:gap-3">
+                    <div className="mt-[6px] sm:mt-[7px] h-[4px] w-[4px] sm:h-[5px] sm:w-[5px] rounded-full bg-foreground shrink-0" />
+                    <p className="text-[11px] sm:text-xs md:text-sm leading-relaxed text-muted">{feature}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ))}

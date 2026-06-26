@@ -32,45 +32,49 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="mt-12 max-w-xl">
+    <div className="mt-12 max-w-4xl mx-auto">
       {status === "success" ? (
         <div className="p-6 border border-border bg-neutral-50 rounded-2xl text-sm leading-relaxed text-foreground">
           <p className="font-medium">お問い合わせを受け付けました。</p>
           <p className="mt-2 text-muted text-xs">通常2〜3営業日以内にご返信いたします。</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 【スパム対策】ハニーポットフィールド（画面には絶対に見えない） */}
+        <form onSubmit={handleSubmit} className="space-y-8">
           <div className="hidden" aria-hidden="true">
             <input type="text" name="honey" tabIndex={-1} autoComplete="off" />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="name" className="block text-xs font-medium uppercase tracking-wider text-foreground">お名前</label>
-            <input type="text" id="name" name="name" required className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-background" placeholder="山本 太郎" />
+          <div>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">NAME</p>
+            <p className="text-xs text-muted mb-2">お名前を入力してください</p>
+            <input type="text" id="name" name="name" required className="w-full border border-border rounded-xl px-4 py-3 bg-[#f5f4f2] text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" placeholder="Name" />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-xs font-medium uppercase tracking-wider text-foreground">メールアドレス</label>
-            <input type="type" id="email" name="email" required className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-background" placeholder="your@email.com" />
+          <div>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">EMAIL</p>
+            <p className="text-xs text-muted mb-2">返信先のメールアドレスを入力してください</p>
+            <input type="email" id="email" name="email" required className="w-full border border-border rounded-xl px-4 py-3 bg-[#f5f4f2] text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" placeholder="mail@example.com" />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="message" className="block text-xs font-medium uppercase tracking-wider text-foreground">お問い合わせ内容</label>
-            <textarea id="message" name="message" required rows={6} className="w-full border border-border rounded-xl px-4 py-3 text-sm bg-background resize-none" placeholder="ご質問やご要望をご記入ください。" />
+          <div>
+            <p className="text-sm mb-1 tracking-[0.14em] text-muted font-medium">MESSAGE</p>
+            <p className="text-xs text-muted mb-2">ご質問やご要望、お気づきの点などをご記入ください</p>
+            <textarea id="message" name="message" required rows={6} className="w-full border border-border rounded-xl px-4 py-3 bg-[#f5f4f2] text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70 resize-none leading-relaxed" placeholder="ご質問やご要望をご記入ください。" />
           </div>
 
           {status === "error" && (
             <p className="text-xs text-red-500">送信に失敗しました。直接メールにてご連絡ください。</p>
           )}
 
-          <button
-            type="submit"
-            disabled={status === "loading"}
-            className="border border-border rounded-xl px-8 py-3 text-xs tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white transition duration-200 disabled:opacity-50"
-          >
-            {status === "loading" ? "送信中..." : "内容を送信する"}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={status === "loading"}
+              className="border border-border rounded-xl px-6 py-4 font-medium text-[14px] bg-white text-foreground hover:bg-black hover:text-white transition duration-200 active:scale-[0.98] disabled:opacity-50"
+            >
+              {status === "loading" ? "送信中..." : "内容を送信する"}
+            </button>
+          </div>
         </form>
       )}
     </div>

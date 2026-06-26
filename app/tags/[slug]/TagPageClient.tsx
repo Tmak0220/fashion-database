@@ -213,7 +213,7 @@ export default function TagPageClient({ slug = "" }: Props) {
   }, [posts, tag, isAllTagsMode])
 
   if (loading) {
-    return <main className="p-10 md:p-14 lg:p-16 text-sm text-muted">LOADING...</main>
+    return <TagDetailLoading />
   }
 
   if (!isAllTagsMode && !tag) {

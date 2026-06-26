@@ -27,16 +27,10 @@ export default async function LegalPage() {
     notFound()
   }
 
-  const breadcrumbs = [
-    { label: "ファッションデータベース", href: "/" },
-    { label: "特定商取引法に基づく表記" },
-  ]
-
   return (
     <PageLayout
       title="Legal"
       subtitle={item.title}
-      breadcrumbs={breadcrumbs}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
         <ContentRenderer 

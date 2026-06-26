@@ -27,16 +27,10 @@ export default async function GuidePage() {
     notFound()
   }
 
-  const breadcrumbs = [
-    { label: "ファッションデータベース", href: "/" },
-    { label: "使い方" },
-  ]
-
   return (
     <PageLayout
       title="Guide"
       subtitle={item.title}
-      breadcrumbs={breadcrumbs}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
         <ContentRenderer 

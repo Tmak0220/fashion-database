@@ -147,6 +147,52 @@ export default function UserPage() {
     setFollowLoading(false)
   }
 
+  if (!initialFetched) {
+    return (
+      <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">
+        <section className="w-full animate-pulse">
+          <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
+            <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-neutral-200/60 border border-neutral-200/30 flex-shrink-0" />
+            <div className="flex-1 space-y-2.5">
+              <div className="h-7 sm:h-9 bg-neutral-200/60 rounded w-48 sm:w-64" />
+              <div className="h-4 bg-neutral-200/40 rounded w-24 sm:w-32" />
+            </div>
+          </div>
+
+          <div className="mt-8 grid grid-cols-3 sm:flex sm:gap-10 border-t border-b sm:border-none border-neutral-100 py-3 sm:py-0">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="text-center sm:text-left space-y-1.5 flex flex-col items-center sm:items-start">
+                <div className="h-6 sm:h-8 bg-neutral-200/60 rounded w-8 sm:w-12" />
+                <div className="h-3 bg-neutral-200/40 rounded w-10" />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 space-y-2 max-w-xl">
+            <div className="h-3.5 bg-neutral-200/40 rounded w-full" />
+            <div className="h-3.5 bg-neutral-200/30 rounded w-4/5" />
+          </div>
+        </section>
+
+        <section className="mt-12 sm:mt-16 md:mt-20 border-t border-border pt-8 sm:pt-10">
+          <div className="space-y-1.5 mb-8">
+            <div className="h-5 bg-neutral-200/50 rounded w-36" />
+            <div className="h-3 bg-neutral-200/30 rounded w-16" />
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="space-y-3.5 animate-pulse">
+                <div className="w-full aspect-[4/5] bg-neutral-200/60 rounded-xl sm:rounded-2xl border border-neutral-200/30" />
+                <div className="px-0.5 h-4 bg-neutral-200/40 rounded w-11/12" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    )
+  }
+
   if (initialFetched && !profile) {
     return (
       <main className="max-w-6xl mx-auto p-6 sm:p-10 text-center py-20">

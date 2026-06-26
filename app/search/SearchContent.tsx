@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { getBrandUrl } from "@/lib/routes"
+import SearchLoading from "./loading" 
 
 type Brand = {
   id: string
@@ -38,6 +39,7 @@ export default function SearchContent() {
   const [brands, setBrands] = useState<Brand[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
   const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -48,40 +50,52 @@ export default function SearchContent() {
         return
       }
 
-      const { data: brandsData } = await supabase
-        .from("brands")
-        .select("id, name, name_ja, slug, region_slug, country_slug, search_keywords")
-        .or(`name.ilike.%${query}%,name_ja.ilike.%${query}%,search_keywords.ilike.%${query}%`)
-        .limit(12)
+      setLoading(true)
 
-      const matchedBrandSlugs = brandsData?.map((brand) => brand.slug) || []
+      try {
+        const { data: brandsData } = await supabase
+          .from("brands")
+          .select("id, name, name_ja, slug, region_slug, country_slug, search_keywords")
+          .or(`name.ilike.%${query}%,name_ja.ilike.%${query}%,search_keywords.ilike.%${query}%`)
+          .limit(12)
 
-      const { data: usersData } = await supabase
-        .from("users")
-        .select("id, username, display_name, avatar_url")
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-        .limit(12)
+        const matchedBrandSlugs = brandsData?.map((brand) => brand.slug) || []
 
-      let postsQuery = supabase
-        .from("posts")
-        .select("id, title, image_urls, brand_slug")
-        .limit(18)
+        const { data: usersData } = await supabase
+          .from("users")
+          .select("id, username, display_name, avatar_url")
+          .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+          .limit(12)
 
-      if (matchedBrandSlugs.length > 0) {
-        postsQuery = postsQuery.or(`title.ilike.%${query}%,brand_slug.in.(${matchedBrandSlugs.map(s => `"${s}"`).join(",")})`)
-      } else {
-        postsQuery = postsQuery.ilike("title", `%${query}%`)
+        let postsQuery = supabase
+          .from("posts")
+          .select("id, title, image_urls, brand_slug")
+          .limit(18)
+
+        if (matchedBrandSlugs.length > 0) {
+          postsQuery = postsQuery.or(`title.ilike.%${query}%,brand_slug.in.(${matchedBrandSlugs.map(s => `"${s}"`).join(",")})`)
+        } else {
+          postsQuery = postsQuery.ilike("title", `%${query}%`)
+        }
+
+        const { data: postsData } = await postsQuery
+
+        setBrands(brandsData || [])
+        setUsers(usersData || [])
+        setPosts(postsData || [])
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoading(false)
       }
-
-      const { data: postsData } = await postsQuery
-
-      setBrands(brandsData || [])
-      setUsers(usersData || [])
-      setPosts(postsData || [])
     }
 
     fetchResults()
   }, [query])
+
+  if (loading) {
+    return <SearchLoading />
+  }
 
   return (
     <main className="max-w-7xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16">

@@ -19,7 +19,6 @@ export default function PageLayout({
   breadcrumbs,
   children,
 }: Props) {
-  // breadcrumbs が空の配列 [] として明示的に渡された場合は、パンくず自体を非表示（null）にする
   const shouldRenderBreadcrumbs = breadcrumbs === undefined || breadcrumbs.length > 0
 
   return (
