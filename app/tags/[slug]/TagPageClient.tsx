@@ -63,7 +63,6 @@ const PREFERRED_ORDER = [
 export default function TagPageClient({ slug = "" }: Props) {
   const [tag, setTag] = useState<Tag | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
 
   const isAllTagsMode = !slug
 
@@ -78,7 +77,6 @@ export default function TagPageClient({ slug = "" }: Props) {
 
         if (postTagsError) {
           console.error(postTagsError)
-          setLoading(false)
           return
         }
         postIds = Array.from(new Set(postTagsData?.map((item) => item.post_id).filter(Boolean))) || []
@@ -91,7 +89,6 @@ export default function TagPageClient({ slug = "" }: Props) {
 
         if (tagError || !currentTag) {
           console.error(tagError)
-          setLoading(false)
           return
         }
         setTag(currentTag)
@@ -103,7 +100,6 @@ export default function TagPageClient({ slug = "" }: Props) {
 
         if (postTagsError) {
           console.error(postTagsError)
-          setLoading(false)
           return
         }
         postIds = postTagsData?.map((item) => item.post_id).filter(Boolean) || []
@@ -111,7 +107,6 @@ export default function TagPageClient({ slug = "" }: Props) {
 
       if (postIds.length === 0) {
         setPosts([])
-        setLoading(false)
         return
       }
 
@@ -136,7 +131,6 @@ export default function TagPageClient({ slug = "" }: Props) {
 
       if (postsResult.error || allRelatedTagsResult.error) {
         console.error(postsResult.error || allRelatedTagsResult.error)
-        setLoading(false)
         return
       }
 
@@ -160,7 +154,6 @@ export default function TagPageClient({ slug = "" }: Props) {
       })
 
       setPosts(Array.from(postMap.values()))
-      setLoading(false)
     }
 
     fetchTagPage()
@@ -212,11 +205,7 @@ export default function TagPageClient({ slug = "" }: Props) {
       })
   }, [posts, tag, isAllTagsMode])
 
-  if (loading) {
-    return <TagDetailLoading />
-  }
-
-  if (!isAllTagsMode && !tag) {
+  if (!isAllTagsMode && !tag && posts.length === 0) {
     return <main className="p-10 md:p-14 lg:p-16 text-sm text-muted">TAG NOT FOUND</main>
   }
 
@@ -235,7 +224,7 @@ export default function TagPageClient({ slug = "" }: Props) {
       )}
 
       <section className={isAllTagsMode ? "space-y-24" : "mt-20 space-y-24"}>
-        {groupedPosts.length === 0 && (
+        {posts.length > 0 && groupedPosts.length === 0 && (
           <p className="text-sm text-muted">関連投稿はありません</p>
         )}
 
