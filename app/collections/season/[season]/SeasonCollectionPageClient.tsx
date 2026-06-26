@@ -18,7 +18,7 @@ type Props = {
   initialPosts: Post[]
 }
 
-export default function SeasonCollectionsPageClient({ season, initialPosts }: Props) {
+export default function SeasonCollectionPageClient({ season, initialPosts }: Props) {
   const [isPlusMember, setIsPlusMember] = useState(false)
 
   useEffect(() => {

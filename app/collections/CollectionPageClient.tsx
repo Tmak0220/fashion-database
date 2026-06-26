@@ -22,7 +22,7 @@ type Props = {
   initialBrands: Brand[]
 }
 
-export default function CollectionsPageClient({ initialSeasons, initialBrands }: Props) {
+export default function CollectionPageClient({ initialSeasons, initialBrands }: Props) {
   return (
     <div className="space-y-16">
       <section className="border border-border rounded-2xl bg-surface p-6 md:p-8">

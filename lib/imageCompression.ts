@@ -10,7 +10,7 @@ export async function compressImage(file: File): Promise<File> {
   try {
     const compressedFile = await imageCompression(file, options)
 
-    const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+    const MAX_SIZE = 5 * 1024 * 1024
 
     if (compressedFile.size > MAX_SIZE) {
       throw new Error(

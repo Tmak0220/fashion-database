@@ -8,7 +8,6 @@ export type SiteContent = {
   lang: string | null
 }
 
-// 超シンプル in-memory cache
 const cache = new Map<string, SiteContent | null>()
 
 type Options = {
@@ -22,15 +21,12 @@ export async function useSiteContent(
 ) {
   const lang = options.lang ?? "ja"
 
-  // キャッシュキー（key + lang）
   const cacheKey = `${key}_${lang}`
 
-  // ① キャッシュチェック
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey)
   }
 
-  // ② Supabase取得
   const { data, error } = await supabase
     .from("site_contents")
     .select("*")
@@ -44,10 +40,8 @@ export async function useSiteContent(
 
   const result = data as SiteContent | null
 
-  // ③ キャッシュ保存
   cache.set(cacheKey, result)
 
-  // ④ fallback対応
   if (!result && options.fallback) {
     return {
       key,

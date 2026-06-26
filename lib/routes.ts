@@ -1,5 +1,3 @@
-// /lib/routes.ts
-
 export const getBrandUrl = (
     brand: {
       region_slug: string

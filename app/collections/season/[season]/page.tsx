@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { supabase } from "@/lib/supabase"
-import SeasonCollectionsPageClient from "./SeasonCollectionsPageClient"
+import SeasonCollectionsPageClient from "./SeasonCollectionPageClient"
 
 type Props = {
   params: Promise<{

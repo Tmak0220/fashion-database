@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 import type { Metadata } from "next"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
-import CollectionsPageClient from "./CollectionsPageClient"
+import CollectionsPageClient from "./CollectionPageClient"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
