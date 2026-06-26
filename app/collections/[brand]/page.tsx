@@ -1,8 +1,23 @@
-export const dynamic = "force-dynamic"
+"use client"
 
-import { supabase } from "@/lib/supabase"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import { supabase } from "@/lib/supabase"
 import CollectionButton from "@/components/CollectionButton"
+
+type Post = {
+  id: string
+  title: string | null
+  image_urls: string[]
+  collection_slug: string | null
+  season_slug: string | null
+}
+
+type SeasonItem = {
+  id: string
+  year: string
+  season: string
+}
 
 type Props = {
   params: Promise<{
@@ -10,37 +25,88 @@ type Props = {
   }>
 }
 
-export default async function BrandPage({ params }: Props) {
-  const { brand } = await params
+export default function BrandPage({ params }: Props) {
+  const [brand, setBrand] = useState<string>("")
+  const [posts, setPosts] = useState<Post[]>([])
+  const [uniqueSeasons, setUniqueSeasons] = useState<SeasonItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isPlusMember, setIsPlusMember] = useState(false)
 
-  const { data: postsResult } = await supabase
-    .from("posts")
-    .select("id, title, image_urls, collection_slug, season_slug")
-    .eq("brand_slug", brand)
-    .order("created_at", { ascending: false })
+  useEffect(() => {
+    const checkMemberStatus = async (user: any) => {
+      if (user) {
+        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
+        const { data: memberData } = await supabase
+          .from("users")
+          .select("plus_member, plus_members, is_active")
+          .eq("id", user.id)
+          .maybeSingle()
+        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
+        setIsPlusMember(isAdmin || hasValidFlag)
+      } else {
+        setIsPlusMember(false)
+      }
+    }
 
-  const posts = postsResult ?? []
+    const initData = async () => {
+      const { brand: resolvedBrand } = await params
+      setBrand(resolvedBrand)
 
-  const uniqueSeasons = Array.from(
-    new Map(
-      posts
-        .filter((post) => post.season_slug)
-        .map((post) => {
-          const [year, season] = post.season_slug!.split("-")
-          return [
-            post.season_slug,
-            {
-              id: `${brand}/${post.season_slug}`,
-              year: year,
-              season: season?.toUpperCase() || "",
-            },
-          ]
-        })
-    ).values()
-  ).sort((a, b) => b.id.localeCompare(a.id))
+      const { data: authData } = await supabase.auth.getUser()
+      await checkMemberStatus(authData?.user)
+
+      const { data: postsResult } = await supabase
+        .from("posts")
+        .select("id, title, image_urls, collection_slug, season_slug")
+        .eq("brand_slug", resolvedBrand)
+        .order("created_at", { ascending: false })
+
+      const fetchedPosts = postsResult ?? []
+      setPosts(fetchedPosts)
+
+      const seasons = Array.from(
+        new Map(
+          fetchedPosts
+            .filter((post) => post.season_slug)
+            .map((post) => {
+              const [year, season] = post.season_slug!.split("-")
+              return [
+                post.season_slug,
+                {
+                  id: `${resolvedBrand}/${post.season_slug}`,
+                  year: year,
+                  season: season?.toUpperCase() || "",
+                },
+              ]
+            })
+        ).values()
+      ).sort((a, b) => b.id.localeCompare(a.id))
+
+      setUniqueSeasons(seasons)
+      setLoading(false)
+    }
+
+    initData()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_OUT") {
+        setIsPlusMember(false)
+      } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+        await checkMemberStatus(session?.user)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [params])
+
+  if (loading) {
+    return <div className="p-10 md:p-14 lg:p-16 text-center text-xs text-subtle">LOADING...</div>
+  }
 
   return (
-    <main className="p-10 md:p-14 lg:p-16 max-w-7xl mx-auto w-full">
+    <main className="p-10 md:p-14 lg:p-16 max-w-7xl mx-auto w-full min-h-screen">
       <nav className="flex items-center gap-2 text-[10px] tracking-[0.15em] uppercase text-subtle mb-16">
         <Link href="/" className="hover:text-foreground transition-colors">
           HOME
@@ -89,6 +155,31 @@ export default async function BrandPage({ params }: Props) {
         )}
       </section>
 
+      {!isPlusMember && (
+        <div className="fixed top-20 bottom-0 left-0 right-0 z-40 flex items-center justify-center p-4 bg-transparent pointer-events-auto">
+          <div className="max-w-sm w-full h-fit p-6 sm:p-8 border border-border bg-white rounded-2xl shadow-2xl text-center">
+            <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
+              MEMBER限定コンテンツ
+            </h2>
+            <p className="mt-3 text-xs text-muted leading-relaxed">
+              アーカイブの詳細や解説の閲覧、およびすべての機能を利用するにはMEMBER登録が必要です。
+            </p>
+            <Link
+              href="/members"
+              className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
+            >
+              MEMBERに登録する
+            </Link>
+            <Link 
+              href="/" 
+              className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
+            >
+              トップページに戻る
+            </Link>
+          </div>
+        </div>
+      )}
+
       <section className="mt-20">
         <div className="flex items-end justify-between gap-6 mb-12 border-b border-border/40 pb-4">
           <div>
@@ -110,8 +201,8 @@ export default async function BrandPage({ params }: Props) {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
-            {posts.map((post) => (
-              <Link key={post.id} href={`/posts/${post.id}`} className="group block">
+            {posts.map((post) => {
+              const content = (
                 <article className="space-y-4">
                   <div className="overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
                     <img
@@ -127,14 +218,26 @@ export default async function BrandPage({ params }: Props) {
                       </span>
                     )}
                     {post.title && (
-                      <p className="text-[13px] font-normal tracking-wide text-foreground line-clamp-1 group-hover:text-subtle transition-colors">
+                      <p className={`text-[13px] font-normal tracking-wide text-foreground line-clamp-1 transition-colors ${
+                        !isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : "group-hover:text-subtle"
+                      }`}>
                         {post.title}
                       </p>
                     )}
                   </div>
                 </article>
-              </Link>
-            ))}
+              )
+
+              return isPlusMember ? (
+                <Link key={post.id} href={`/posts/${post.id}`} className="group block">
+                  {content}
+                </Link>
+              ) : (
+                <div key={post.id} className="block">
+                  {content}
+                </div>
+              )
+            })}
           </div>
         )}
       </section>

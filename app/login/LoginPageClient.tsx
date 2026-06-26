@@ -171,7 +171,7 @@ export default function LoginPageClient() {
                 disabled={loginLoading}
                 className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
               >
-                {loginLoading ? "読み込み中..." : "ログイン"}
+                ログイン
               </button>
             </form>
 
@@ -207,7 +207,7 @@ export default function LoginPageClient() {
                 disabled={signupLoading}
                 className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
               >
-                {signupLoading ? "読み込み中..." : "新規登録"}
+                新規登録
               </button>
             </form>
           </div>
@@ -250,7 +250,7 @@ export default function LoginPageClient() {
               disabled={profileLoading}
               className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
             >
-              {profileLoading ? "設定中..." : "登録を完了してはじめる"}
+              登録を完了してはじめる
             </button>
           </form>
         )}
