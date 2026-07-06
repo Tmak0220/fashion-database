@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { createCheckoutSession } from "./actions"
+import { createCheckoutSession } from "@/app/members/actions"
 
 type StatusMessage = {
   text: string

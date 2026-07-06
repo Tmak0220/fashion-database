@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select(`
       name, name_ja,
       countries ( id, name, name_ja, slug ),
-      designer_histories!designer_id (content, order, key, lang, is_visible)
+      designer_histories!designer_id (content, sort_order, key, lang, is_visible)
     `)
     .eq("slug", slug)
     .maybeSingle()
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const histories = designer.designer_histories as any[] || []
   const jaHistories = histories.filter(h => h.key === "designer" && h.lang === "ja" && h.is_visible === true)
-  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
+  const sortedHistories = jaHistories.sort((a, b) => a.sort_order - b.sort_order)
   const historyContent = sortedHistories[0]?.content
   
   const title = designer.name_ja ? `${designer.name_ja} (${designer.name}) - FASHION DATABASE` : `${designer.name} - FASHION DATABASE`
@@ -58,7 +58,7 @@ export default async function Page({ params }: Props) {
       id, name, name_ja, slug, country_id,
       countries ( id, name, name_ja, slug ),
       regions ( id, name, name_ja, slug ),
-      designer_histories!designer_id (title, content, order, key, lang, is_visible)
+      designer_histories!designer_id (title, content, sort_order, key, lang, is_visible)
     `)
     .eq("slug", slug)
     .maybeSingle()
@@ -67,7 +67,7 @@ export default async function Page({ params }: Props) {
 
   const histories = designer.designer_histories as any[] || []
   const jaHistories = histories.filter(h => h.key === "designer" && h.lang === "ja" && h.is_visible === true)
-  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
+  const sortedHistories = jaHistories.sort((a, b) => a.sort_order - b.sort_order)
 
   const designerWithHistories = {
     id: designer.id,

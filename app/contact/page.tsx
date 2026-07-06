@@ -22,7 +22,7 @@ export default function ContactPage() {
           サービスに関するご質問、ご要望などございましたら、以下のフォームまたはメールアドレスよりご連絡ください。
         </p>
         <p className="text-foreground tracking-wide font-semibold block pt-1 selection:bg-neutral-100">
-          support@fashdb.com
+          contact@pct-e.com
         </p>
       </div>
 

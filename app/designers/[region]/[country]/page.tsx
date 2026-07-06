@@ -61,12 +61,12 @@ export default async function CountryPage({ params }: Props) {
   const [historyResult, designersResult] = await Promise.all([
     supabase
       .from("country_histories")
-      .select("title, content, order")
+      .select("title, content, sort_order")
       .eq("country_id", countryData.id)
       .eq("key", "designer")
       .eq("lang", "ja")
       .eq("is_visible", true)
-      .order("order", { ascending: true }),
+      .order("sort_order", { ascending: true }),
 
     supabase
       .from("designers")

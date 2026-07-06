@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select(`
       name, name_ja,
       countries ( id, name, name_ja, slug ),
-      brand_histories!brand_id (content, order, key, lang, is_visible)
+      brand_histories!brand_id (content, sort_order, key, lang, is_visible)
     `)
     .eq("slug", slug)
     .maybeSingle()
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const histories = brand.brand_histories as any[] || []
   const jaHistories = histories.filter(h => h.key === "brand" && h.lang === "ja" && h.is_visible === true)
-  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
+  const sortedHistories = jaHistories.sort((a, b) => a.sort_order - b.sort_order)
   const historyContent = sortedHistories[0]?.content
   
   const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) - FASHION DATABASE` : `${brand.name} - FASHION DATABASE`
@@ -58,7 +58,7 @@ export default async function Page({ params }: Props) {
       id, name, name_ja, slug, country_id,
       countries ( id, name, name_ja, slug ),
       regions ( id, name, name_ja, slug ),
-      brand_histories!brand_id (title, content, order, key, lang, is_visible)
+      brand_histories!brand_id (title, content, sort_order, key, lang, is_visible)
     `)
     .eq("slug", slug)
     .maybeSingle()
@@ -67,7 +67,7 @@ export default async function Page({ params }: Props) {
 
   const histories = brand.brand_histories as any[] || []
   const jaHistories = histories.filter(h => h.key === "brand" && h.lang === "ja" && h.is_visible === true)
-  const sortedHistories = jaHistories.sort((a, b) => a.order - b.order)
+  const sortedHistories = jaHistories.sort((a, b) => a.sort_order - b.sort_order)
 
   const brandWithHistories = {
     id: brand.id,

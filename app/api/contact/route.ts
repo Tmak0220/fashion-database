@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     await resend.emails.send({
-      from: "FASHION DATABASE <support@fashdb.com>",
+      from: "FASHION DATABASE <contact@pct-e.com>",
       to: "rivu65622252@gmail.com",
       subject: `【お問い合わせ】${name}様より`,
       text: `お名前: ${name}\nメールアドレス: ${email}\n\n【本文】\n${message}`,

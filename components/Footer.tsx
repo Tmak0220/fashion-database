@@ -2,9 +2,9 @@ import Link from "next/link"
 
 const FOOTER_LINKS = [
   { href: "/guide", label: "使い方" },
-  { href: "/legal", label: "特定商取引法" },
   { href: "/terms", label: "利用規約" },
   { href: "/privacy", label: "プライバシーポリシー" },
+  { href: "/legal", label: "特定商取引法" },
   { href: "/contact", label: "お問い合わせ" },
 ]
 

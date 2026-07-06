@@ -38,7 +38,7 @@ type Post = {
 type DesignerHistoryItem = {
   title: string
   content: string
-  order: number
+  sort_order: number
   type: 'text' | 'markdown' | 'html'
 }
 
@@ -103,7 +103,7 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
           histories.map((item: any) => ({
             title: item.title || `${designer.name_ja || designer.name} について`,
             content: item.content || "",
-            order: Number(item.order) || 0,
+            sort_order: Number(item.sort_order) || 0,
             type: 'markdown' as const
           }))
         )

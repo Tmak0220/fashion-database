@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 type HistoryItem = {
   title: string
   content: string
-  order: number
+  sort_order: number
   type?: "text" | "markdown" | "html"
 }
 
@@ -27,7 +27,7 @@ export default async function BrandsPage() {
     supabase.from("regions").select("*").order("name", { ascending: true }),
     supabase
       .from("site_contents")
-      .select("key, title, content, order, type, lang")
+      .select("key, title, content, sort_order, type, lang")
       .eq("key", "history")
       .eq("lang", "ja"),
   ])
@@ -36,10 +36,10 @@ export default async function BrandsPage() {
     .map((item) => ({
       title: item.title,
       content: item.content,
-      order: item.order ?? 0,
+      sort_order: item.sort_order ?? 0,
       type: item.type as any,
     }))
-    .sort((a, b) => a.order - b.order)
+    .sort((a, b) => a.sort_order - b.sort_order)
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
