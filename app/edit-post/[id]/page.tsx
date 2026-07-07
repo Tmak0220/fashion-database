@@ -231,9 +231,27 @@ export default function EditPostPage() {
     }
   }
 
-  const removeImage = (targetUrl: string) => {
-    setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
-    setFileName("選択されていません")
+  const removeImage = async (targetUrl: string) => {
+    setStatusMessage(null)
+    try {
+      const res = await fetch("/api/delete-object", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: targetUrl }),
+      })
+
+      if (!res.ok) {
+        throw new Error("R2からの画像削除に失敗しました。")
+      }
+
+      setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
+      setFileName("選択されていません")
+    } catch (err: any) {
+      console.error(err)
+      setStatusMessage({ text: "画像の削除に失敗しました。", type: "error" })
+    }
   }
 
   const handleUpdate = async () => {

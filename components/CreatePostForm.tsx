@@ -134,7 +134,29 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   const toggleTag = (id: string) => setSelectedTags(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
   const handleSeasonSelect = (s: "ss" | "fw") => setSeasonType(p => p === s ? "" : s);
   const handleYearChange = (v: string) => { setYear(v); setYearError(/^[0-9]*$/.test(v) ? "" : "半角数字で入力"); };
-  const removeImage = (url: string) => setImageUrls(p => p.filter(i => i !== url));
+
+  const removeImage = async (url: string) => {
+    setUploadMessage(null)
+    try {
+      const res = await fetch("/api/delete-object", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      })
+
+      if (!res.ok) {
+        throw new Error("R2からの画像削除に失敗しました。")
+      }
+
+      setImageUrls(p => p.filter(i => i !== url))
+      setFileName("選択されていません")
+    } catch (err: any) {
+      console.error(err)
+      setUploadMessage({ text: "画像の削除に失敗しました。", type: "error" })
+    }
+  }
 
   if (checkingPlan) {
     return (
