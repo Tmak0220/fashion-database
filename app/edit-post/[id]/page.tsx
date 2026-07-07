@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import EditLoading from "./loading"
+import { compressImage } from "@/lib/imageCompression"
 
 type Post = {
   id: string
@@ -194,26 +195,40 @@ export default function EditPostPage() {
     setUploading(true)
     const uploadedUrls: string[] = []
 
-    for (const file of Array.from(files)) {
-      setFileName(file.name)
-      const formData = new FormData()
-      formData.append("file", file)
+    try {
+      for (const file of Array.from(files)) {
+        setFileName(file.name)
+        
+        const compressed = await compressImage(file)
+        
+        const formData = new FormData()
+        formData.append("file", compressed)
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
-      const data = await res.json()
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
 
-      if (!res.ok) {
-        setStatusMessage({ text: "画像のアップロードに失敗しました。", type: "error" })
-        continue
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}))
+          throw new Error(errorData.error || "画像のアップロードに失敗しました。")
+        }
+
+        const data = await res.json()
+        uploadedUrls.push(data.url)
       }
-      uploadedUrls.push(data.url)
-    }
 
-    setImageUrls((prev) => [...prev, ...uploadedUrls])
-    setUploading(false)
+      setImageUrls((prev) => [...prev, ...uploadedUrls])
+
+    } catch (err: any) {
+      console.error("Upload Error:", err)
+      setStatusMessage({ 
+        text: err.message || "画像のアップロード中にエラーが発生しました。", 
+        type: "error" 
+      })
+    } finally {
+      setUploading(false)
+    }
   }
 
   const removeImage = (targetUrl: string) => {
