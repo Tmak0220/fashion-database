@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
@@ -23,6 +23,7 @@ type StatusMessage = {
 }
 
 export default function CreatePostForm({ onPostCreated }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [brandSlug, setBrandSlug] = useState("")
@@ -40,6 +41,25 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   const [checkingPlan, setCheckingPlan] = useState(true)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
   const [uploadMessage, setUploadMessage] = useState<StatusMessage | null>(null)
+
+  const imageUrlsRef = useRef<string[]>([])
+
+  useEffect(() => {
+    imageUrlsRef.current = imageUrls
+  }, [imageUrls])
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const urls = imageUrlsRef.current
+      if (urls.length > 0) {
+        const blob = new Blob([JSON.stringify({ urls })], { type: "application/json" })
+        navigator.sendBeacon("/api/delete-objects-beacon", blob)
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [])
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -115,8 +135,10 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       setYear("")
       setYearError("")
       setSeasonType("")
-      setDesignerSlug("")
+      
+      imageUrlsRef.current = []
       setImageUrls([])
+      
       setSelectedTags([])
       setFileName("選択されていません")
 
@@ -152,6 +174,10 @@ export default function CreatePostForm({ onPostCreated }: Props) {
 
       setImageUrls(p => p.filter(i => i !== url))
       setFileName("選択されていません")
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     } catch (err: any) {
       console.error(err)
       setUploadMessage({ text: "画像の削除に失敗しました。", type: "error" })
@@ -206,7 +232,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           <span className="text-sm text-muted font-medium truncate max-w-[200px]">
             {fileName}
           </span>
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
         </label>
         {uploading && <p className="mt-4 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
         

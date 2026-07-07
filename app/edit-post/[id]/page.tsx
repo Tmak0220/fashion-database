@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useLayoutEffect } from "react"
+import { useEffect, useState, useLayoutEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -35,6 +35,7 @@ export default function EditPostPage() {
   const params = useParams()
   const router = useRouter()
   const postId = params.id as string
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [isAuthChecked, setIsAuthChecked] = useState(false)
@@ -58,6 +59,30 @@ export default function EditPostPage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [fileName, setFileName] = useState("選択されていません")
+
+  const initialImageUrlsRef = useRef<string[]>([])
+  const currentImageUrlsRef = useRef<string[]>([])
+
+  useEffect(() => {
+    currentImageUrlsRef.current = imageUrls
+  }, [imageUrls])
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const originalUrls = initialImageUrlsRef.current
+      const currentUrls = currentImageUrlsRef.current
+      
+      const abandonedUrls = currentUrls.filter(url => !originalUrls.includes(url))
+      
+      if (abandonedUrls.length > 0) {
+        const blob = new Blob([JSON.stringify({ urls: abandonedUrls })], { type: "application/json" })
+        navigator.sendBeacon("/api/delete-objects-beacon", blob)
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [])
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
@@ -118,7 +143,11 @@ export default function EditPostPage() {
       setDescription(postData.description || "")
       setBrandSlug(postData.brand_slug || "")
       setDesignerSlug(postData.designer_slug || "")
-      setImageUrls(postData.image_urls || [])
+      
+      const urls = postData.image_urls || []
+      setImageUrls(urls)
+      initialImageUrlsRef.current = urls
+      
       setTags(tagsData || [])
 
       setYear(postData.year ? String(postData.year) : "")
@@ -248,6 +277,10 @@ export default function EditPostPage() {
 
       setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
       setFileName("選択されていません")
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     } catch (err: any) {
       console.error(err)
       setStatusMessage({ text: "画像の削除に失敗しました。", type: "error" })
@@ -328,6 +361,8 @@ export default function EditPostPage() {
       }
     }
 
+    initialImageUrlsRef.current = imageUrls
+
     setSaving(false)
     setStatusMessage({ text: "投稿を更新しました", type: "success" })
     
@@ -356,6 +391,8 @@ export default function EditPostPage() {
       if (!res.ok) {
         throw new Error(data.error || "削除に失敗しました。")
       }
+
+      initialImageUrlsRef.current = []
 
       setStatusMessage({ text: "投稿と画像を削除しました", type: "success" })
       
@@ -449,7 +486,7 @@ export default function EditPostPage() {
             <span className="text-sm text-muted font-medium truncate max-w-[200px]">
               {fileName}
             </span>
-            <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
           </label>
           {uploading && <p className="mt-4 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
         </div>
