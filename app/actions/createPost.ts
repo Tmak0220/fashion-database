@@ -1,6 +1,46 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js"
+import { S3Client, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
+
+const r2 = new S3Client({
+  region: "auto",
+  endpoint: process.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+})
+
+async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
+  if (!tmpUrl.includes("/tmp/")) return tmpUrl
+
+  try {
+    const urlObj = new URL(tmpUrl)
+    const srcKey = decodeURIComponent(urlObj.pathname.slice(1))
+    const destKey = srcKey.replace(/^tmp\//, "posts/")
+
+    await r2.send(
+      new CopyObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        CopySource: `${process.env.R2_BUCKET_NAME}/${srcKey}`,
+        Key: destKey,
+      })
+    )
+
+    await r2.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: srcKey,
+      })
+    )
+
+    return `${urlObj.origin}/${destKey}`
+  } catch (err) {
+    console.error(`Failed to move file to permanent storage: ${tmpUrl}`, err)
+    return tmpUrl
+  }
+}
 
 export async function createPost(input: any, userId: string) {
   try {
@@ -15,11 +55,15 @@ export async function createPost(input: any, userId: string) {
     const currentUserId = userId
     if (!currentUserId) throw new Error("ユーザー認証に失敗しました")
 
+    const permanentImageUrls = await Promise.all(
+      input.imageUrls.map((url: string) => moveToPermanentStorage(url))
+    )
+
     const insertPayload = {
       user_id: currentUserId,
       title: input.title.trim(),
       description: input.description?.trim() || null,
-      image_urls: input.imageUrls,
+      image_urls: permanentImageUrls,
       brand_slug: input.brandSlug?.trim() || null,
       designer_slug: input.designerSlug?.trim() || null,
       season: input.season || null,

@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     await r2.send(
       new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME!,
-        Key: fileName,
+        Key: `tmp/${fileName}`,
         Body: buffer,
         ContentType: file.type || "application/octet-stream",
       })

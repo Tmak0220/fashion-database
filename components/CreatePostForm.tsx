@@ -80,23 +80,38 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   }, [])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return;
+    const files = e.target.files
+    if (!files || files.length === 0) return;
+    
     setUploading(true)
     setUploadMessage(null)
+    
     try {
-      const compressed = await compressImage(file);
-      const formData = new FormData()
-      formData.append("file", compressed)
-      const res = await fetch("/api/upload", { method: "POST", body: formData })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setImageUrls((prev) => [...prev, data.url])
-      setFileName(file.name)
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const compressed = await compressImage(file);
+        const formData = new FormData()
+        formData.append("file", compressed)
+        
+        const res = await fetch("/api/upload", { method: "POST", body: formData })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || "アップロード失敗")
+        return data.url
+      })
+
+      const uploadedUrls = await Promise.all(uploadPromises)
+      
+      setImageUrls((prev) => {
+        const next = [...prev, ...uploadedUrls]
+        setFileName(`${next.length}枚のファイルを選択中`)
+        return next
+      })
     } catch (err: any) {
       setUploadMessage({ text: err.message || "アップロード失敗", type: "error" })
     } finally {
       setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
@@ -125,6 +140,8 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       
       setStatusMessage({ text: "投稿が完了しました", type: "success" })
 
+      imageUrlsRef.current = []
+
       setTimeout(() => {
         setStatusMessage(null)
       }, 3000)
@@ -136,9 +153,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       setYearError("")
       setSeasonType("")
       
-      imageUrlsRef.current = []
       setImageUrls([])
-      
       setSelectedTags([])
       setFileName("選択されていません")
 
@@ -172,12 +187,15 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         throw new Error("R2からの画像削除に失敗しました。")
       }
 
-      setImageUrls(p => p.filter(i => i !== url))
-      setFileName("選択されていません")
-      
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+      setImageUrls(p => {
+        const next = p.filter(i => i !== url)
+        if (next.length === 0) {
+          setFileName("選択されていません")
+        } else {
+          setFileName(`${next.length}枚のファイルを選択中`)
+        }
+        return next
+      })
     } catch (err: any) {
       console.error(err)
       setUploadMessage({ text: "画像の削除に失敗しました。", type: "error" })
@@ -232,7 +250,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           <span className="text-sm text-muted font-medium truncate max-w-[200px]">
             {fileName}
           </span>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
         </label>
         {uploading && <p className="mt-4 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
         
@@ -340,7 +358,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         <input 
           value={designerSlug} 
           onChange={(e) => setDesignerSlug(e.target.value)} 
-          placeholder="tom-ford または トムフォード" 
+          placeholder="tom ford または トムフォード" 
           className="w-full border border-border rounded-xl px-4 py-3 bg-white text-foreground focus:outline-neutral-400 placeholder:text-neutral-400/70" 
         />
       </div>
