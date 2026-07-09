@@ -24,17 +24,18 @@ export async function POST(req: Request) {
 
     const fileExtension = file.name.split(".").pop() || "jpg"
     const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExtension}`
+    const fileKey = `tmp/${fileName}`
 
     await r2.send(
       new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME!,
-        Key: `tmp/${fileName}`,
+        Key: fileKey,
         Body: buffer,
         ContentType: file.type || "application/octet-stream",
       })
     )
 
-    const imageUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`
+    const imageUrl = `${process.env.R2_PUBLIC_URL}/${fileKey}`
 
     return NextResponse.json({
       success: true,
