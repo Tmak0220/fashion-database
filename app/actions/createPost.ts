@@ -17,7 +17,7 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
 
   try {
     const urlObj = new URL(tmpUrl)
-    const srcKey = decodeURIComponent(urlObj.pathname.slice(1))
+    const srcKey = decodeURIComponent(urlObj.pathname).replace(/^\//, "")
     const destKey = srcKey.replace(/^tmp\//, "posts/")
 
     await r2.send(
@@ -35,10 +35,11 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
       })
     )
 
-    return `${urlObj.origin}/${destKey}`
+    const baseUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "") || "https://images.fashdb.com"
+    return `${baseUrl}/${destKey}`
   } catch (err) {
     console.error(`Failed to move file to permanent storage: ${tmpUrl}`, err)
-    return tmpUrl
+    return tmpUrl.replace("https://pub-cbac5457ba7f4798b615bfeb837627d3.r2.dev", "https://images.fashdb.com")
   }
 }
 
