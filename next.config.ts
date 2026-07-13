@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pub-cbac5457ba7f4798b615bfeb837627d3.r2.dev",
+        hostname: "images.fashdb.com",
         port: "",
         pathname: "/**",
       },
