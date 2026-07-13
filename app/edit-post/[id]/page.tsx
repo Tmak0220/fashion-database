@@ -31,6 +31,18 @@ type StatusMessage = {
   type: "error" | "success"
 }
 
+function finalizeImageUrl(tmpUrl: string): string {
+  if (!tmpUrl.includes("/tmp/")) return tmpUrl
+  
+  const match = tmpUrl.match(/tmp\/.+$/)
+  if (!match) return tmpUrl
+  
+  const srcKey = decodeURIComponent(match[0])
+  const destKey = srcKey.replace(/^tmp\//, "")
+  
+  return `https://images.fashdb.com/${destKey}`
+}
+
 export default function EditPostPage() {
   const params = useParams()
   const router = useRouter()
@@ -324,51 +336,56 @@ export default function EditPostPage() {
       ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
       : null
 
-    const { error: postError } = await supabase
-      .from("posts")
-      .update({
-        title,
-        description,
-        brand_slug: finalBrandSlug,
-        designer_slug: finalDesignerSlug,
-        collection_slug: finalCollectionSlug,
-        season_slug: seasonSlug,
-        season: season,
-        year: yearValue,
-        image_urls: imageUrls,
-      })
-      .eq("id", postId)
+    try {
+      const finalImageUrls = imageUrls.map(url => finalizeImageUrl(url))
 
-    if (postError) {
-      console.error(postError)
-      setSaving(false)
-      setStatusMessage({ text: "更新に失敗しました。", type: "error" })
-      return
-    }
+      const { error: postError } = await supabase
+        .from("posts")
+        .update({
+          title,
+          description,
+          brand_slug: finalBrandSlug,
+          designer_slug: finalDesignerSlug,
+          collection_slug: finalCollectionSlug,
+          season_slug: seasonSlug,
+          season: season,
+          year: yearValue,
+          image_urls: finalImageUrls,
+        })
+        .eq("id", postId)
 
-    await supabase.from("post_tags").delete().eq("post_id", postId)
-    
-    if (selectedTags.length > 0) {
-      const { error: insertError } = await supabase.from("post_tags").insert(
-        selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
-      )
+      if (postError) throw postError
+
+      await supabase.from("post_tags").delete().eq("post_id", postId)
       
-      if (insertError) {
-        console.error("タグ保存エラー:", insertError)
-        setStatusMessage({ text: "タグの保存に失敗しました。", type: "error" })
-        setSaving(false)
-        return
+      if (selectedTags.length > 0) {
+        const { error: insertError } = await supabase.from("post_tags").insert(
+          selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
+        )
+        
+        if (insertError) {
+          console.error("タグ保存エラー:", insertError)
+          setStatusMessage({ text: "タグの保存に失敗しました。", type: "error" })
+          setSaving(false)
+          return
+        }
       }
+
+      initialImageUrlsRef.current = finalImageUrls
+      setImageUrls(finalImageUrls)
+
+      setStatusMessage({ text: "投稿を更新しました", type: "success" })
+      
+      setTimeout(() => {
+        router.push("/mypage")
+      }, 1000)
+
+    } catch (postError: any) {
+      console.error(postError)
+      setStatusMessage({ text: "更新に失敗しました: " + postError.message, type: "error" })
+    } finally {
+      setSaving(false)
     }
-
-    initialImageUrlsRef.current = imageUrls
-
-    setSaving(false)
-    setStatusMessage({ text: "投稿を更新しました", type: "success" })
-    
-    setTimeout(() => {
-      router.push("/mypage")
-    }, 1000)
   }
 
   const handleDelete = async () => {

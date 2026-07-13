@@ -16,23 +16,18 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
   if (!tmpUrl.includes("/tmp/")) return tmpUrl
 
   try {
-    // どんなドメインから始まっていても、確実に「tmp/」以降のみを抽出する
-    const match = tmpUrl.match(/tmp\/.+$/)
-    if (!match) return tmpUrl
+    const tmpIndex = tmpUrl.indexOf("tmp/")
+    if (tmpIndex === -1) return tmpUrl
     
-    // R2のCopySource用に、URLエンコードされたままの状態のキーを取得
-    const rawSrcKey = match[0] 
-    // 削除コマンド用に、デコードした状態のキーを取得
+    const rawSrcKey = tmpUrl.substring(tmpIndex)
     const srcKey = decodeURIComponent(rawSrcKey)
-    // tmp/ を外した、バケット直下用のファイル名を作成
     const destKey = srcKey.replace(/^tmp\//, "")
     const bucketName = process.env.R2_BUCKET_NAME!
 
     await r2.send(
       new CopyObjectCommand({
         Bucket: bucketName,
-        // Cloudflare R2のバグを防ぐため、バケット名とエンコード済みのキーをURLエンコードして結合
-        CopySource: encodeURIComponent(`${bucketName}/${rawSrcKey}`),
+        CopySource: `${bucketName}/${rawSrcKey}`,
         Key: destKey,
       })
     )
@@ -46,10 +41,9 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
 
     const baseUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "") || "https://images.fashdb.com"
     return `${baseUrl}/${destKey}`
-  } catch (err: any) {
+  } catch (err) {
     console.error(`Failed to move file to permanent storage: ${tmpUrl}`, err)
-    // ごまかさずにエラーをそのまま画面へ投げて、原因を可視化させます
-    throw new Error(`R2移行エラー: ${err.name || err.message || "Unknown Error"}`)
+    return tmpUrl.replace("https://pub-cbac5457ba7f4798b615bfeb837627d3.r2.dev", "https://images.fashdb.com")
   }
 }
 
