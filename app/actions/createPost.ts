@@ -19,14 +19,17 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
     const tmpIndex = tmpUrl.indexOf("tmp/")
     if (tmpIndex === -1) return tmpUrl
     
-    const srcKey = decodeURIComponent(tmpUrl.substring(tmpIndex))
+    // R2の仕様に合わせ、元ファイル名はデコードせず、URLの生の文字列（エンコードされたまま）から抽出する
+    const rawSrcKey = tmpUrl.substring(tmpIndex)
+    const srcKey = decodeURIComponent(rawSrcKey)
     const destKey = srcKey.replace(/^tmp\//, "")
-    const bucketName = process.env.R2_BUCKET_NAME || "fashion-images"
+    const bucketName = process.env.R2_BUCKET_NAME!
 
     await r2.send(
       new CopyObjectCommand({
         Bucket: bucketName,
-        CopySource: `${bucketName}/${srcKey}`,
+        // Cloudflare R2で最も確実にコピーが成功する形式（バケット名 / 生のエンコードされたキー）
+        CopySource: `${bucketName}/${rawSrcKey}`,
         Key: destKey,
       })
     )
