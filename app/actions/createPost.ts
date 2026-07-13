@@ -20,7 +20,7 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
     if (tmpIndex === -1) return tmpUrl
     
     const srcKey = decodeURIComponent(tmpUrl.substring(tmpIndex))
-    const destKey = srcKey.replace(/^tmp\//, "posts/")
+    const destKey = srcKey.replace(/^tmp\//, "")
     const bucketName = process.env.R2_BUCKET_NAME || "fashion-images"
 
     await r2.send(
