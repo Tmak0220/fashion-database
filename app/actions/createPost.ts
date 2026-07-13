@@ -16,21 +16,24 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
   if (!tmpUrl.includes("/tmp/")) return tmpUrl
 
   try {
-    const urlObj = new URL(tmpUrl)
-    const srcKey = decodeURIComponent(urlObj.pathname).replace(/^\//, "")
+    const tmpIndex = tmpUrl.indexOf("tmp/")
+    if (tmpIndex === -1) return tmpUrl
+    
+    const srcKey = decodeURIComponent(tmpUrl.substring(tmpIndex))
     const destKey = srcKey.replace(/^tmp\//, "posts/")
+    const bucketName = process.env.R2_BUCKET_NAME || "fashion-images"
 
     await r2.send(
       new CopyObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
-        CopySource: `${process.env.R2_BUCKET_NAME}/${srcKey}`,
+        Bucket: bucketName,
+        CopySource: `${bucketName}/${srcKey}`,
         Key: destKey,
       })
     )
 
     await r2.send(
       new DeleteObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
+        Bucket: bucketName,
         Key: srcKey,
       })
     )
