@@ -103,3 +103,55 @@ export async function createPost(input: any, userId: string) {
     throw new Error(err.message)
   }
 }
+
+export async function updatePost(postId: string, input: any, userId: string) {
+  try {
+    if (!input.title?.trim()) throw new Error("タイトルは必須です")
+    if (!input.imageUrls?.length) throw new Error("画像は1枚以上必要です")
+
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const permanentImageUrls = await Promise.all(
+      input.imageUrls.map((url: string) => moveToPermanentStorage(url))
+    )
+
+    const updatePayload = {
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      image_urls: permanentImageUrls,
+      brand_slug: input.brandSlug || null,
+      designer_slug: input.designerSlug || null,
+      collection_slug: input.collectionSlug,
+      season_slug: input.seasonSlug,
+      season: input.season || null,
+      year: input.year ? parseInt(input.year, 10) : null,
+    }
+
+    const { error: postError } = await supabaseAdmin
+      .from("posts")
+      .update(updatePayload)
+      .eq("id", postId)
+      .eq("user_id", userId)
+
+    if (postError) throw postError
+
+    await supabaseAdmin.from("post_tags").delete().eq("post_id", postId)
+    
+    if (input.selectedTags?.length > 0) {
+      const tagPayload = input.selectedTags.map((tagId: string) => ({
+        post_id: postId,
+        tag_id: tagId,
+      }))
+      const { error: tagError } = await supabaseAdmin.from("post_tags").insert(tagPayload)
+      if (tagError) throw new Error("タグの紐付けに失敗しました")
+    }
+
+    return { success: true, imageUrls: permanentImageUrls }
+  } catch (err: any) {
+    console.error("UpdatePost Error:", err.message)
+    throw new Error(err.message)
+  }
+}

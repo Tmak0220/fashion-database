@@ -7,6 +7,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import EditLoading from "./loading"
 import { compressImage } from "@/lib/imageCompression"
+import { updatePost } from "@/app/actions/createPost"
 
 type Post = {
   id: string
@@ -29,18 +30,6 @@ type Tag = {
 type StatusMessage = {
   text: string
   type: "error" | "success"
-}
-
-function finalizeImageUrl(tmpUrl: string): string {
-  if (!tmpUrl.includes("/tmp/")) return tmpUrl
-  
-  const match = tmpUrl.match(/tmp\/.+$/)
-  if (!match) return tmpUrl
-  
-  const srcKey = decodeURIComponent(match[0])
-  const destKey = srcKey.replace(/^tmp\//, "")
-  
-  return `https://images.fashdb.com/${destKey}`
 }
 
 export default function EditPostPage() {
@@ -313,10 +302,6 @@ export default function EditPostPage() {
 
     setSaving(true)
     
-    const yearValue = year ? parseInt(year, 10) : null
-    const seasonValue = season || null
-    const seasonSlug = (yearValue && season) ? `${yearValue}-${season}` : null
-    
     let finalBrandSlug = brandSlug.trim().toLowerCase() || null
     let finalDesignerSlug = designerSlug.trim() || null
 
@@ -332,47 +317,30 @@ export default function EditPostPage() {
       if (d?.slug) finalDesignerSlug = d.slug
     }
 
-    const finalCollectionSlug = seasonSlug 
-      ? (finalBrandSlug ? `${finalBrandSlug}-${seasonSlug}` : seasonSlug) 
-      : null
-
     try {
-      const finalImageUrls = imageUrls.map(url => finalizeImageUrl(url))
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("ログインしてください")
 
-      const { error: postError } = await supabase
-        .from("posts")
-        .update({
+      // 新しく追記したサーバーアクションを呼び出し、画像移動とDB更新処理を委ねる
+      const result = await updatePost(
+        postId,
+        {
           title,
           description,
-          brand_slug: finalBrandSlug,
-          designer_slug: finalDesignerSlug,
-          collection_slug: finalCollectionSlug,
-          season_slug: seasonSlug,
+          brandSlug: finalBrandSlug,
+          designerSlug: finalDesignerSlug,
+          collectionSlug: collectionSlug || null,
+          seasonSlug: seasonSlug || null,
           season: season,
-          year: yearValue,
-          image_urls: finalImageUrls,
-        })
-        .eq("id", postId)
+          year: year,
+          imageUrls: imageUrls,
+          selectedTags: selectedTags,
+        },
+        user.id
+      )
 
-      if (postError) throw postError
-
-      await supabase.from("post_tags").delete().eq("post_id", postId)
-      
-      if (selectedTags.length > 0) {
-        const { error: insertError } = await supabase.from("post_tags").insert(
-          selectedTags.map((tagId) => ({ post_id: postId, tag_id: tagId }))
-        )
-        
-        if (insertError) {
-          console.error("タグ保存エラー:", insertError)
-          setStatusMessage({ text: "タグの保存に失敗しました。", type: "error" })
-          setSaving(false)
-          return
-        }
-      }
-
-      initialImageUrlsRef.current = finalImageUrls
-      setImageUrls(finalImageUrls)
+      initialImageUrlsRef.current = result.imageUrls
+      setImageUrls(result.imageUrls)
 
       setStatusMessage({ text: "投稿を更新しました", type: "success" })
       
