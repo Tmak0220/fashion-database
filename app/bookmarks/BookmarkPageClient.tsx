@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 import BookmarkLoading from "./loading"
@@ -26,7 +26,7 @@ type FilterType = "all" | "brand" | "designer" | "tag"
 
 export default function BookmarkPageClient() {
   const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
-  const [isPlusMember, setIsPlusMember] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAuthChecked, setIsAuthChecked] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
@@ -41,28 +41,14 @@ export default function BookmarkPageClient() {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      setIsPlusMember(false)
+      setIsAuthenticated(false)
       setIsAuthChecked(true)
       return
     }
 
     setCurrentUserId(user.id)
 
-    const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-    const { data: memberData } = await supabase
-      .from("users")
-      .select("plus_member, plus_members, is_active")
-      .eq("id", user.id)
-      .maybeSingle()
-    
-    const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-    const memberStatus = isAdmin || hasValidFlag
-    setIsPlusMember(memberStatus)
-
-    if (!memberStatus) {
-      setIsAuthChecked(true)
-      return
-    }
+    setIsAuthenticated(true)
 
     const { data, error } = await supabase
       .from("bookmarks")
@@ -191,13 +177,13 @@ export default function BookmarkPageClient() {
     return <BookmarkLoading />
   }
 
-  if (!isPlusMember) {
+  if (!isAuthenticated) {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[60vh]">
         <div className="max-w-md w-full p-8 border border-border bg-surface rounded-2xl shadow-xl">
-          <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">MEMBER限定機能</h1>
-          <p className="mt-4 text-xs text-muted leading-relaxed">アーカイブを保存し、ブランドやタグごとに一覧管理できる機能です。利用にはMEMBER登録が必要です。</p>
-          <Link href="/members" className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800">MEMBERに登録する</Link>
+          <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">ログインが必要です</h1>
+          <p className="mt-4 text-xs text-muted leading-relaxed">ブックマークを利用するにはログインしてください。</p>
+          <Link href="/login" className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800">ログインする</Link>
           <Link href="/" className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300">トップページに戻る</Link>
         </div>
       </main>

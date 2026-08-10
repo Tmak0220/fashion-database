@@ -52,6 +52,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+:where(a, button, input, textarea, select, [role="button"]):focus-visible {
+  outline: 2px solid var(--foreground) !important;
+  outline-offset: 3px;
+}
+
 .type-brand {
   font-family: var(--font-bodoni), "Didot", "Bodoni MT", serif;
   font-weight: 500;

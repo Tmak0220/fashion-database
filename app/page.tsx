@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic"
 
 import type { Metadata } from "next"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import PostFeed from "@/components/PostFeed"
 import CardSection from "@/components/CardSection"
 import SectionHeading from "@/components/SectionHeading"
+import { getRequestLocale, localizedAlternates } from "@/lib/locale-server"
+import { translateText } from "@/lib/i18n"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "FASHION DATABASE - ファッションデータベース",
     description: "ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。",
+    alternates: await localizedAlternates("/"),
   }
 }
 
@@ -21,7 +24,10 @@ const navigationItems = [
   { id: "groups", name: "GROUPS", name_ja: "ブランドグループ", slug: "groups" },
 ]
 
-export default function Home() {
+export default async function Home() {
+  const locale = await getRequestLocale()
+  const t = (text: string) => translateText(text, locale)
+
   return (
     <main className="min-h-screen">
       <section className="p-6 sm:p-10 md:p-14 lg:p-16 pb-0 sm:pb-0 md:pb-0 lg:pb-0">
@@ -42,7 +48,7 @@ export default function Home() {
             Fashion Database
           </h1>
           <p className="mt-2 text-sm sm:text-base md:text-lg tracking-[0.08em] text-muted">
-            ファッションデータベース
+            {t("ファッションデータベース")}
           </p>
         </div>
       </section>

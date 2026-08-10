@@ -7,7 +7,7 @@ type DrawerProps = {
   isOpen: boolean
   onClose: () => void
   title: string
-  subtitle?: string
+  subtitle?: React.ReactNode
   children: React.ReactNode
 }
 
@@ -95,9 +95,7 @@ export default function Drawer({
             )}
 
             <div className="text-[14px] md:text-sm leading-[2] tracking-[0.02em] text-foreground/80 prose prose-sm max-w-none">
-              <ReactMarkdown>
-                {children as string}
-              </ReactMarkdown>
+              {typeof children === "string" ? <ReactMarkdown>{children}</ReactMarkdown> : children}
             </div>
           </div>
         </div>

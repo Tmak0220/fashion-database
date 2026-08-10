@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 type Props = {
   params: Promise<{
@@ -28,9 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${countryName}のブランド一覧 - FASHION DATABASE`,
     description: `ファッションデータベースに登録されているブランドの中から、${countryName}を拠点とするブランドのアーカイブを閲覧できます。`,
-    alternates: {
-      canonical: `${SITE_URL}/brands/${region}/${country}`,
-    },
+    alternates: await localizedAlternates(`/brands/${region}/${country}`),
   }
 }
 

@@ -1,9 +1,10 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type Post = {
   id: string
@@ -152,12 +153,18 @@ export default function PostFeed() {
 
               <Link href={postHref} className="block group">
                 <div>
-                  <h2 className="text-xl font-medium group-hover:text-neutral-600 transition duration-200">
-                    {post.title}
-                  </h2>
-                  <p className="mt-2 text-subtle leading-7 line-clamp-2">
-                    {post.description}
-                  </p>
+                  <AutoTranslatedText
+                    text={post.title}
+                    as="h2"
+                    showControls={false}
+                    className="text-xl font-medium group-hover:text-neutral-600 transition duration-200"
+                  />
+                  <AutoTranslatedText
+                    text={post.description}
+                    as="p"
+                    showControls={false}
+                    className="mt-2 text-subtle leading-7 line-clamp-2"
+                  />
                 </div>
               </Link>
             </div>

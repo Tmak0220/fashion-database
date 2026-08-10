@@ -87,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  return [
+  const unlocalizedEntries: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date() },
     { url: `${baseUrl}/brands`, lastModified: new Date() },
     { url: `${baseUrl}/designers`, lastModified: new Date() },
@@ -104,4 +104,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...collectionSeasonUrls,
     ...seasonUrls,
   ];
+
+  return unlocalizedEntries.flatMap((entry) => {
+    const pathname = new URL(entry.url).pathname.replace(/^\/$/, "")
+    const languages = {
+      ja: `${baseUrl}${pathname}`,
+      en: `${baseUrl}/en${pathname}`,
+    }
+
+    return (["ja", "en"] as const).map((locale) => ({
+      ...entry,
+      url: languages[locale],
+      alternates: { languages },
+    }))
+  })
 }

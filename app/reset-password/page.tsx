@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react"
 import { supabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
+import { useLocale } from "@/context/LocaleContext"
 
 type StatusMessage = {
   text: string
@@ -11,6 +12,7 @@ type StatusMessage = {
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const { t, localizePath } = useLocale()
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
@@ -30,7 +32,7 @@ export default function ResetPasswordPage() {
     } else {
       setStatusMessage({ text: "パスワードが正常に更新されました。画面を切り替えています...", type: "success" })
       setTimeout(() => {
-        router.push("/auth")
+        router.push(localizePath("/login"))
       }, 2000)
     }
   }
@@ -43,7 +45,7 @@ export default function ResetPasswordPage() {
             Reset Password
           </h1>
           <p className="text-xs tracking-[0.12em] text-muted font-medium uppercase">
-            新しいパスワードの設定
+            {t("新しいパスワードの設定")}
           </p>
         </div>
 
@@ -73,7 +75,7 @@ export default function ResetPasswordPage() {
             disabled={loading}
             className="w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
           >
-            {loading ? "アップデート中..." : "パスワードを更新"}
+            {t(loading ? "アップデート中..." : "パスワードを更新")}
           </button>
         </form>
       </div>

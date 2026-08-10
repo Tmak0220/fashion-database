@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -13,7 +13,7 @@ export default function Header() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const { locale, setLocale, t } = useLocale()
+  const { locale, setLocale, localizePath, t } = useLocale()
 
   useEffect(() => {
     const getUser = async () => {
@@ -40,7 +40,9 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!search.trim()) return
-    router.push(`/search?q=${encodeURIComponent(search)}`)
+    const query = search.trim()
+    setSearch("")
+    router.push(`${localizePath("/search")}?q=${encodeURIComponent(query)}`)
   }
 
   const currentQuery = searchParams.toString()
@@ -49,7 +51,7 @@ export default function Header() {
   return (
     <header className="border-b border-border px-4 py-4 md:px-10 md:py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-8 bg-background w-full overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-8 w-full md:w-auto">
-        <Link href="/" className="type-brand text-xl md:text-2xl text-foreground tracking-wide font-medium text-center sm:text-left block shrink-0">
+        <Link href={localizePath("/")} className="type-brand text-xl md:text-2xl text-foreground tracking-wide font-medium text-center sm:text-left block shrink-0">
           FASHION DATABASE
         </Link>
 
@@ -73,12 +75,12 @@ export default function Header() {
       <div className="flex items-center justify-center md:justify-end gap-6 md:gap-8 text-xs text-foreground pt-2 md:pt-0 border-t border-border/40 md:border-t-0 w-full md:w-auto">
         {email ? (
           <>
-            <Link href="/mypage" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
+            <Link href={localizePath("/mypage")} className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
               <User size={20} strokeWidth={1.5} />
               <span className="font-medium tracking-wider text-[10px] md:text-xs">{t("マイページ")}</span>
             </Link>
 
-            <Link href="/bookmarks" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
+            <Link href={localizePath("/bookmarks")} className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
               <Folder size={20} strokeWidth={1.5} />
               <span className="font-medium tracking-wider text-[10px] md:text-xs">{t("ブックマーク")}</span>
             </Link>
@@ -93,7 +95,7 @@ export default function Header() {
         ) : (
           <div className="flex items-center text-foreground py-1">
             <Link 
-              href={`/login?redirectTo=${encodeURIComponent(returnTo)}`} 
+              href={`${localizePath("/login")}?redirectTo=${encodeURIComponent(returnTo)}`}
               className="type-ui text-[11px] tracking-[0.14em] hover:opacity-60 transition-opacity uppercase font-medium"
             >
               SIGN IN

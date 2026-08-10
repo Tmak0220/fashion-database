@@ -10,6 +10,7 @@ import { Suspense } from "react"
 import { AuthListener } from "@/components/AuthListener"
 import { LocaleProvider } from "@/context/LocaleContext"
 import { SITE_URL } from "@/lib/site"
+import { getRequestLocale } from "@/lib/locale-server"
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni",
@@ -50,16 +51,25 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    languages: {
+      ja: "/",
+      en: "/en",
+      "x-default": "/",
+    },
+  },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getRequestLocale()
+
   return (
     <html
-      lang="ja"
+      lang={locale}
       className={`
         ${bodoniModa.variable}
         ${notoSerifJP.variable}

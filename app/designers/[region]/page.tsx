@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 type Props = {
   params: Promise<{ region: string }>
@@ -28,9 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${regionName}のデザイナー一覧 - FASHION DATABASE`,
     description: `${regionName}に属するデザイナーや国別のアーカイブを閲覧できます。`,
-    alternates: {
-      canonical: `${SITE_URL}/designers/${region}`,
-    },
+    alternates: await localizedAlternates(`/designers/${region}`),
   }
 }
 

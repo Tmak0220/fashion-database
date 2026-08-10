@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { supabase } from "@/lib/supabase"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 
 export default async function AllSeasonsPage() {
   const { data: collectionsResult } = await supabase

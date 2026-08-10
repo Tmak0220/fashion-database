@@ -1,4 +1,7 @@
-import Link from "next/link"
+"use client"
+
+import Link from "@/components/LocalizedLink"
+import { useLocale } from "@/context/LocaleContext"
 
 const FOOTER_LINKS = [
   { href: "/guide", label: "使い方" },
@@ -9,16 +12,17 @@ const FOOTER_LINKS = [
 ]
 
 export default function Footer() {
+  const { localizePath, t } = useLocale()
   return (
     <footer className="border-t border-border mt-24 px-4 py-8 md:px-10 md:py-10">
       <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-8 gap-y-4">
         {FOOTER_LINKS.map((link) => (
           <Link
             key={link.href}
-            href={link.href}
+            href={localizePath(link.href)}
             className="text-xs tracking-[0.08em] text-muted transition-colors hover:text-foreground whitespace-nowrap"
           >
-            {link.label}
+            {t(link.label)}
           </Link>
         ))}
       </div>

@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { supabase } from "@/lib/supabase"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
+import { useLocale } from "@/context/LocaleContext"
 
 type StatusMessage = {
   text: string
@@ -10,6 +11,7 @@ type StatusMessage = {
 }
 
 export default function ForgotPasswordPage() {
+  const { t, localizePath } = useLocale()
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -22,7 +24,7 @@ export default function ForgotPasswordPage() {
     setStatusMessage(null)
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}${localizePath("/reset-password")}`,
     })
 
     if (error) {
@@ -41,20 +43,20 @@ export default function ForgotPasswordPage() {
             Forgot Password
           </h1>
           <p className="text-xs tracking-[0.12em] text-muted font-medium uppercase">
-            {sent ? "EMAIL SENT" : "パスワードの再設定"}
+            {sent ? "EMAIL SENT" : t("パスワードの再設定")}
           </p>
         </div>
 
         <div className="mt-12">
           {sent ? (
             <p className="text-sm text-foreground leading-relaxed">
-              再設定用のリンクを登録メールアドレスに送信しました。<br />
-              受信トレイを確認してください。
+              {t("再設定用のリンクを登録メールアドレスに送信しました。")}<br />
+              {t("受信トレイを確認してください。")}
             </p>
           ) : (
             <div className="flex flex-col gap-4">
               <p className="text-sm text-subtle mb-4">
-                登録時のメールアドレスを入力してください。パスワード再設定用のリンクをお送りします。
+                {t("登録時のメールアドレスを入力してください。パスワード再設定用のリンクをお送りします。")}
               </p>
               <input
                 type="email"
@@ -81,17 +83,17 @@ export default function ForgotPasswordPage() {
                 disabled={loading}
                 className="w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 disabled:opacity-50"
               >
-                {loading ? "SENDING..." : "再設定リンクを送信"}
+                {loading ? "SENDING..." : t("再設定リンクを送信")}
               </button>
             </div>
           )}
 
           <div className="mt-8 text-center">
-            <Link 
-              href="/auth" 
+            <Link
+              href="/login"
               className="text-xs tracking-[0.06em] text-subtle hover:text-foreground transition-colors"
             >
-              ログイン画面に戻る
+              {t("ログイン画面に戻る")}
             </Link>
           </div>
         </div>

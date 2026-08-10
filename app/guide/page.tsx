@@ -5,13 +5,13 @@ import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import PageLayout from "@/components/PageLayout"
 import ContentRenderer from "@/components/ContentRenderer"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "使い方 - FASHION DATABASE",
     description: "ファッションデータベースの使い方や投稿ガイドライン、ルールについてご確認いただけます。",
-    alternates: { canonical: `${SITE_URL}/guide` },
+    alternates: await localizedAlternates("/guide"),
   }
 }
 

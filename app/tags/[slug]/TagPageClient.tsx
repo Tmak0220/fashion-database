@@ -1,9 +1,10 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 import TagsLoading from "./loading"
 
 type Tag = {
@@ -276,31 +277,6 @@ export default function TagPageClient({ slug = "" }: Props) {
         )
       )}
 
-      {false && (
-        <div className="fixed top-20 bottom-0 left-0 right-0 z-40 flex items-center justify-center p-4 bg-transparent pointer-events-auto">
-          <div className="max-w-sm w-full h-fit p-6 sm:p-8 border border-border bg-white rounded-2xl shadow-2xl text-center">
-            <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
-              MEMBER限定コンテンツ
-            </h2>
-            <p className="mt-3 text-xs text-muted leading-relaxed">
-              アーカイブの詳細や解説の閲覧、およびすべての機能を利用するにはMEMBER登録が必要です。
-            </p>
-            <Link
-              href="/members"
-              className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
-            >
-              MEMBERに登録する
-            </Link>
-            <Link 
-              href="/" 
-              className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
-            >
-              トップページに戻る
-            </Link>
-          </div>
-        </div>
-      )}
-
       <div className="mt-20">
         <section className="space-y-24">
           {posts.length > 0 && groupedPosts.length === 0 && (
@@ -345,11 +321,7 @@ export default function TagPageClient({ slug = "" }: Props) {
                       </div>
                       
                       {post.title && (
-                        <p className={`text-xs sm:text-sm font-medium leading-snug text-foreground ${
-                          ""
-                        }`}>
-                          {post.title}
-                        </p>
+                        <AutoTranslatedText text={post.title} as="p" showControls={false} className="text-xs sm:text-sm font-medium leading-snug text-foreground" />
                       )}
                     </article>
                   )

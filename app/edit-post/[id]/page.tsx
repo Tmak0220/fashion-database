@@ -3,11 +3,12 @@
 import { useEffect, useState, useLayoutEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import { supabase } from "@/lib/supabase"
 import EditLoading from "./loading"
 import { compressImage } from "@/lib/imageCompression"
 import { updatePost } from "@/app/actions/createPost"
+import { useLocale } from "@/context/LocaleContext"
 
 type Post = {
   id: string
@@ -33,6 +34,7 @@ type StatusMessage = {
 }
 
 export default function EditPostPage() {
+  const { localizePath } = useLocale()
   const params = useParams()
   const router = useRouter()
   const postId = params.id as string
@@ -95,18 +97,6 @@ export default function EditPostPage() {
 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        setIsAuthorized(false)
-        setIsAuthChecked(true)
-        return
-      }
-
-      const { data: profile } = await supabase
-        .from("users")
-        .select("plus_member")
-        .eq("id", user.id)
-        .single()
-
-      if (!profile?.plus_member) {
         setIsAuthorized(false)
         setIsAuthChecked(true)
         return
@@ -345,7 +335,7 @@ export default function EditPostPage() {
       setStatusMessage({ text: "投稿を更新しました", type: "success" })
       
       setTimeout(() => {
-        router.push("/mypage")
+        router.push(localizePath("/mypage"))
       }, 1000)
 
     } catch (postError: any) {
@@ -382,7 +372,7 @@ export default function EditPostPage() {
       setStatusMessage({ text: "投稿と画像を削除しました", type: "success" })
       
       setTimeout(() => {
-        router.push("/mypage")
+        router.push(localizePath("/mypage"))
       }, 1000)
     } catch (err: any) {
       console.error(err)
@@ -401,16 +391,16 @@ export default function EditPostPage() {
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[60vh]">
         <div className="max-w-md w-full p-8 border border-border bg-surface rounded-2xl shadow-xl">
           <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
-            MEMBER限定機能
+            編集権限がありません
           </h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            投稿の編集、管理および削除機能利用するには、投稿を所有しているMEMBERアカウントでのログインが必要です。
+            投稿を所有しているアカウントでログインしてください。
           </p>
           <Link
-            href="/members"
+            href="/login"
             className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
           >
-            MEMBERに登録する
+            ログインする
           </Link>
           <Link 
             href="/" 

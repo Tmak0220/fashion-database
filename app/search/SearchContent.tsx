@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import SearchLoading from "./loading" 
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type Brand = {
   id: string
@@ -159,31 +160,6 @@ export default function SearchContent() {
       <p className="mt-2 text-sm sm:text-base tracking-[0.1em] text-muted font-medium break-all">
         "{query}"
       </p>
-
-      {false && (
-        <div className="fixed top-20 bottom-0 left-0 right-0 z-40 flex items-center justify-center p-4 bg-transparent pointer-events-auto">
-          <div className="max-w-sm w-full h-fit p-6 sm:p-8 border border-border bg-white rounded-2xl shadow-2xl text-center">
-            <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
-              MEMBER限定コンテンツ
-            </h2>
-            <p className="mt-3 text-xs text-muted leading-relaxed">
-              アーカイブの詳細や解説の閲覧、およびすべての機能を利用するにはMEMBER登録が必要です。
-            </p>
-            <Link
-              href="/members"
-              className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
-            >
-              MEMBERに登録する
-            </Link>
-            <Link 
-              href="/" 
-              className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
-            >
-              トップページに戻る
-            </Link>
-          </div>
-        </div>
-      )}
 
       <div className="mt-12 sm:mt-16 space-y-16 sm:space-y-20">
         <section>
@@ -350,9 +326,7 @@ export default function SearchContent() {
                     </div>
                     {post.title && (
                       <div className="px-0.5 sm:px-1">
-                        <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-1 sm:line-clamp-2">
-                          {post.title}
-                        </p>
+                        <AutoTranslatedText text={post.title} as="p" showControls={false} className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-1 sm:line-clamp-2" />
                       </div>
                     )}
                   </article>

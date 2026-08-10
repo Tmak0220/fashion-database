@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -51,12 +51,7 @@ export default function UserPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setCurrentUserId(user.id)
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member")
-          .eq("id", user.id)
-          .single()
-        setIsPlusMember(memberData?.plus_member || false)
+        setIsPlusMember(true)
       }
 
       const { data: profileData } = await supabase

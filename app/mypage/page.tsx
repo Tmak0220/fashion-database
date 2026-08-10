@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import { useLocale } from "@/context/LocaleContext"
 
 import ProfileForm from "@/components/ProfileForm"
 import AvatarUpload from "@/components/AvatarUpload"
@@ -54,6 +55,7 @@ type StatusMessage = {
 }
 
 export default function MyPage() {
+  const { localizePath } = useLocale()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -91,6 +93,7 @@ export default function MyPage() {
   
   const [confirmType, setConfirmType] = useState<"deactivate" | "delete" | null>(null)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState("")
 
   const handleDeactivate = async () => {
     setProcessingAccount(true)
@@ -104,7 +107,7 @@ export default function MyPage() {
       return
     }
     await supabase.auth.signOut()
-    router.push("/")
+    router.push(localizePath("/"))
   }
 
   const handleDeleteAccount = async () => {
@@ -120,7 +123,7 @@ export default function MyPage() {
       return
     }
     await supabase.auth.signOut()
-    router.push("/")
+    router.push(localizePath("/"))
   }
 
   useEffect(() => {
@@ -128,7 +131,7 @@ export default function MyPage() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        router.push("/login")
+        router.push(localizePath("/login"))
         return
       }
 
@@ -193,7 +196,7 @@ export default function MyPage() {
     }
 
     fetchProfile()
-  }, [router])
+  }, [localizePath, router])
 
   if (loading || !profile) {
     return <MyPageLoading />
@@ -209,7 +212,7 @@ export default function MyPage() {
         </div>
 
         <div className="mt-10 sm:mt-8">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+          <div>
             <div>
               <h1 className="type-display text-3xl sm:text-4xl md:text-5xl text-foreground break-words leading-tight">
                 Profile
@@ -219,66 +222,6 @@ export default function MyPage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-end gap-3">
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => { setConfirmType("deactivate"); setStatusMessage(null); }}
-                  disabled={processingAccount}
-                  className={`px-4 py-2 text-sm border rounded-full transition-colors disabled:opacity-50 ${
-                    confirmType === "deactivate" ? "bg-foreground text-background border-foreground" : "border-border hover:bg-foreground hover:text-background"
-                  }`}
-                >
-                  アカウント停止
-                </button>
-
-                <button
-                  onClick={() => { setConfirmType("delete"); setStatusMessage(null); }}
-                  disabled={processingAccount}
-                  className={`px-4 py-2 text-sm border rounded-full transition-colors disabled:opacity-50 ${
-                    confirmType === "delete" ? "bg-red-600 text-white border-red-600" : "border-red-500 text-red-600 hover:bg-red-600 hover:text-white"
-                  }`}
-                >
-                  アカウント削除
-                </button>
-              </div>
-
-              {confirmType && (
-                <div className="w-full max-w-xs p-4 rounded-xl border border-border bg-surface text-xs space-y-3 animate-in fade-in duration-200">
-                  <p className="text-muted leading-relaxed whitespace-pre-line">
-                    {confirmType === "deactivate" 
-                      ? "アカウントを停止しますか？\n再ログインでいつでも復帰できます。"
-                      : "アカウントを完全に削除します。\n投稿データ等はすべて消去され、復元できません。"}
-                  </p>
-                  <div className="flex gap-2 justify-end">
-                    <button 
-                      onClick={() => setConfirmType(null)}
-                      className="px-3 py-1.5 border border-border rounded-lg hover:bg-neutral-50"
-                    >
-                      キャンセル
-                    </button>
-                    <button 
-                      onClick={confirmType === "deactivate" ? handleDeactivate : handleDeleteAccount}
-                      disabled={processingAccount}
-                      className={`px-3 py-1.5 text-white rounded-lg disabled:opacity-50 ${
-                        confirmType === "deactivate" ? "bg-black" : "bg-red-600"
-                      }`}
-                    >
-                      {processingAccount ? "処理中..." : "実行する"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {statusMessage && (
-                <div className={`text-xs p-3 rounded-xl border w-full max-w-xs ${
-                  statusMessage.type === "error" 
-                    ? "text-red-500 bg-red-50/50 border-red-200" 
-                    : "text-foreground bg-neutral-50 border-border"
-                }`}>
-                  {statusMessage.text}
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
@@ -294,7 +237,7 @@ export default function MyPage() {
 
           <div className="flex flex-col">
             <p className="type-label text-[11px] tracking-[0.12em] text-subtle">POSTS</p>
-            <p className="mt-2 text-2xl font-medium">{profile.plus_member ? posts.length : "—"}</p>
+            <p className="mt-2 text-2xl font-medium">{posts.length}</p>
           </div>
 
           <Link 
@@ -313,17 +256,10 @@ export default function MyPage() {
             <p className="mt-2 text-2xl font-medium">{followingCount}</p>
           </Link>
 
-          {profile.plus_member ? (
-            <Link href="/bookmarks" className="flex flex-col hover:opacity-60 transition-opacity">
-              <p className="type-label text-[11px] tracking-[0.12em] text-subtle">BOOKMARKS</p>
-              <p className="mt-2 text-2xl font-medium">{bookmarksCount}</p>
-            </Link>
-          ) : (
-            <div className="flex flex-col opacity-40 cursor-not-allowed">
-              <p className="type-label text-[11px] tracking-[0.12em] text-subtle">BOOKMARKS</p>
-              <p className="mt-2 text-sm font-semibold tracking-[0.05em] text-subtle pt-1.5">MEMBER限定</p>
-            </div>
-          )}
+          <Link href="/bookmarks" className="flex flex-col hover:opacity-60 transition-opacity">
+            <p className="type-label text-[11px] tracking-[0.12em] text-subtle">BOOKMARKS</p>
+            <p className="mt-2 text-2xl font-medium">{bookmarksCount}</p>
+          </Link>
         </div>
 
         <div className="mt-12 sm:mt-14">
@@ -417,8 +353,7 @@ export default function MyPage() {
           )}
         </div>
 
-        {profile.plus_member && (
-          <div className="border-t border-border pt-14 pb-14">
+        <div className="border-t border-border pt-14 pb-14">
             <div className="flex flex-col mb-10">
               <h2 className="type-display text-xl sm:text-2xl md:text-3xl text-foreground break-words leading-tight">
                 My Posts
@@ -467,8 +402,72 @@ export default function MyPage() {
                 )
               })}
             </div>
-          </div>
-        )}
+        </div>
+
+        <div className="border-t border-border/60 pt-8 pb-14">
+          <details className="group max-w-xl">
+            <summary className="cursor-pointer list-none text-[11px] tracking-[0.12em] text-subtle hover:text-muted transition-colors">
+              アカウント管理
+            </summary>
+            <div className="mt-6 rounded-2xl border border-border/70 bg-surface p-5 sm:p-6">
+              <p className="text-xs leading-6 text-muted">
+                一時停止するとデータを残したままログアウトします。再ログインすると利用を再開できます。
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  onClick={() => { setConfirmType("deactivate"); setDeleteConfirmation(""); setStatusMessage(null) }}
+                  disabled={processingAccount}
+                  className="text-xs text-muted underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+                >
+                  アカウントを一時停止
+                </button>
+                <button
+                  onClick={() => { setConfirmType("delete"); setDeleteConfirmation(""); setStatusMessage(null) }}
+                  disabled={processingAccount}
+                  className="text-xs text-subtle underline underline-offset-4 hover:text-red-600 disabled:opacity-50"
+                >
+                  アカウントを削除
+                </button>
+              </div>
+
+              {confirmType && (
+                <div className="mt-6 border-t border-border pt-5 text-xs space-y-4">
+                  <p className="text-muted leading-6 whitespace-pre-line">
+                    {confirmType === "deactivate"
+                      ? "データを残したままアカウントを一時停止し、ログアウトします。\n再ログインすると利用を再開できます。"
+                      : "投稿、プロフィール、保存情報を完全に削除します。\nこの操作は取り消せません。続けるには「削除」と入力してください。"}
+                  </p>
+                  {confirmType === "delete" && (
+                    <input
+                      value={deleteConfirmation}
+                      onChange={(e) => setDeleteConfirmation(e.target.value)}
+                      placeholder="削除"
+                      className="w-full max-w-xs rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-red-300"
+                    />
+                  )}
+                  <div className="flex gap-2">
+                    <button onClick={() => { setConfirmType(null); setDeleteConfirmation("") }} className="rounded-lg border border-border px-3 py-2 text-muted hover:text-foreground">
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={confirmType === "deactivate" ? handleDeactivate : handleDeleteAccount}
+                      disabled={processingAccount || (confirmType === "delete" && deleteConfirmation !== "削除")}
+                      className={`rounded-lg px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40 ${confirmType === "delete" ? "bg-red-600" : "bg-foreground"}`}
+                    >
+                      {processingAccount ? "処理中..." : confirmType === "delete" ? "完全に削除する" : "一時停止する"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {statusMessage && (
+                <div className={`mt-5 text-xs rounded-xl border p-3 ${statusMessage.type === "error" ? "border-red-200 bg-red-50/50 text-red-600" : "border-border text-foreground"}`}>
+                  {statusMessage.text}
+                </div>
+              )}
+            </div>
+          </details>
+        </div>
       </section>
     </main>
   )

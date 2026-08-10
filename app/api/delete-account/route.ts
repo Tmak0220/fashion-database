@@ -2,18 +2,21 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { r2 } from "@/lib/r2";
+import { createClient as createServerClient } from "@/lib/supabase-server";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const { userId } = await req.json();
+    const supabase = await createServerClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const userId = user?.id;
 
-    if (!userId) {
-      return NextResponse.json({ error: "No userId" }, { status: 400 });
+    if (userError || !userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { data: posts } = await admin
@@ -44,13 +47,10 @@ export async function POST(req: Request) {
             })
           );
         })
-        .filter((p): p is Promise<any> => p !== null);
+        .filter((promise) => promise !== null);
 
       await Promise.all(deletePromises);
     }
-
-    const { error: authError } = await admin.auth.admin.deleteUser(userId);
-    if (authError) throw authError;
 
     const { error: dbError } = await admin
       .from("users")
@@ -58,6 +58,9 @@ export async function POST(req: Request) {
       .eq("id", userId);
 
     if (dbError) throw dbError;
+
+    const { error: authError } = await admin.auth.admin.deleteUser(userId);
+    if (authError) throw authError;
 
     return NextResponse.json({ success: true });
   } catch (error) {

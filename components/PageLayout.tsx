@@ -1,5 +1,8 @@
-import Link from "next/link"
+"use client"
+
+import Link from "@/components/LocalizedLink"
 import React from "react"
+import { useLocale } from "@/context/LocaleContext"
 
 type BreadcrumbItem = {
   label: string
@@ -19,6 +22,7 @@ export default function PageLayout({
   breadcrumbs,
   children,
 }: Props) {
+  const { t } = useLocale()
   const shouldRenderBreadcrumbs = breadcrumbs === undefined || breadcrumbs.length > 0
 
   return (
@@ -34,10 +38,10 @@ export default function PageLayout({
                     href={item.href}
                     className="hover:text-black transition-colors duration-300"
                   >
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 ) : (
-                  <span className="text-black">{item.label}</span>
+                  <span className="text-black">{t(item.label)}</span>
                 )}
               </React.Fragment>
             ))
@@ -47,11 +51,11 @@ export default function PageLayout({
                 href="/"
                 className="hover:text-black transition-colors duration-300"
               >
-                ファッションデータベース
+                {t("ファッションデータベース")}
               </Link>
               <span>＞</span>
               <span className="text-black">
-                {subtitle ?? title}
+                {t(subtitle ?? title)}
               </span>
             </>
           )}
@@ -64,7 +68,7 @@ export default function PageLayout({
         </h1>
         {subtitle && (
           <p className="mt-3 text-lg sm:text-xl tracking-[0.04em] text-muted">
-            {subtitle}
+            {t(subtitle)}
           </p>
         )}
       </header>

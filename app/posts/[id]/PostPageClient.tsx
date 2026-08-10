@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 import PostLoading from "./loading"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type RelatedPost = {
   id: string
@@ -66,7 +67,6 @@ export default function PostPageClient({ id }: Props) {
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [isPlusMember, setIsPlusMember] = useState(false)
   const [liked, setLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [following, setFollowing] = useState(false)
@@ -81,18 +81,8 @@ export default function PostPageClient({ id }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       const userId = user?.id || null
 
-      let plusMemberStatus = false
       if (user) {
         setCurrentUserId(userId)
-        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        plusMemberStatus = isAdmin || hasValidFlag
-        setIsPlusMember(plusMemberStatus)
       }
 
       const { data: rawPost, error } = await supabase
@@ -206,9 +196,9 @@ export default function PostPageClient({ id }: Props) {
     fetchPost()
   }, [id])
   
-  const requirePlus = () => {
-    if (!currentUserId || !isPlusMember) {
-      setStatusMessage({ text: "本機能の利用にはMEMBER登録が必要です。", type: "error" })
+  const requireAuth = () => {
+    if (!currentUserId) {
+      setStatusMessage({ text: "ログインしてください", type: "error" })
       return false
     }
     return true
@@ -216,7 +206,7 @@ export default function PostPageClient({ id }: Props) {
 
   const handleLike = async () => {
     setStatusMessage(null)
-    if (!requirePlus() || !currentUserId || likeLoading) return
+    if (!requireAuth() || !currentUserId || likeLoading) return
     setLikeLoading(true)
 
     if (liked) {
@@ -233,7 +223,7 @@ export default function PostPageClient({ id }: Props) {
 
   const handleFollow = async () => {
     setStatusMessage(null)
-    if (!requirePlus() || !currentUserId || !post?.users?.id || followLoading) return
+    if (!requireAuth() || !currentUserId || !post?.users?.id || followLoading) return
     setFollowLoading(true)
 
     if (following) {
@@ -248,7 +238,7 @@ export default function PostPageClient({ id }: Props) {
 
   const handleBookmark = async () => {
     setStatusMessage(null)
-    if (!requirePlus() || !currentUserId || bookmarkLoading) return
+    if (!requireAuth() || !currentUserId || bookmarkLoading) return
     setBookmarkLoading(true)
 
     if (bookmarked) {
@@ -306,31 +296,6 @@ export default function PostPageClient({ id }: Props) {
         </div>
 
         <div className="relative">
-          {false && (
-            <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] flex flex-col items-center justify-center text-center px-4">
-              <div className="max-w-sm w-full p-6 sm:p-8 border border-border bg-surface rounded-2xl shadow-xl">
-                <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
-                  MEMBER限定コンテンツ
-                </h2>
-                <p className="mt-3 text-xs text-muted leading-relaxed">
-                  アーカイブの詳細や解説の閲覧、およびすべての機能を利用するにはMEMBER登録が必要です。
-                </p>
-                <Link
-                  href="/members"
-                  className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800"
-                >
-                  MEMBERに登録する
-                </Link>
-                <Link 
-                  href="/" 
-                  className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-300"
-                >
-                  トップページに戻る
-                </Link>
-              </div>
-            </div>
-          )}
-
           <div>
             {post.users?.id ? (
               <Link 
@@ -370,9 +335,11 @@ export default function PostPageClient({ id }: Props) {
             )}
 
             <div className="mt-8 sm:mt-10">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug">
-                {post.title}
-              </h1>
+              <AutoTranslatedText
+                text={post.title}
+                as="h1"
+                className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug"
+              />
 
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 {post.brands && (
@@ -421,9 +388,11 @@ export default function PostPageClient({ id }: Props) {
               </div>
 
               {post.description && (
-                <p className="mt-6 text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted whitespace-pre-line">
-                  {post.description}
-                </p>
+                <AutoTranslatedText
+                  text={post.description}
+                  as="p"
+                  className="mt-6 text-[14px] sm:text-[15px] leading-7 sm:leading-8 text-muted whitespace-pre-line"
+                />
               )}
             </div>
 

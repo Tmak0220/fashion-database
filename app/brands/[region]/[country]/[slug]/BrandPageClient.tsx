@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
@@ -69,13 +69,10 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         if (!isMounted) return
         setCurrentUserId(session.user.id)
         
-        const [memberData, followStatus] = await Promise.all([
-          supabase.from("users").select("plus_member").eq("id", session.user.id).single(),
-          supabase.from("brand_follows").select("id").eq("user_id", session.user.id).eq("brand_slug", slug).maybeSingle()
-        ])
+        const followStatus = await supabase.from("brand_follows").select("id").eq("user_id", session.user.id).eq("brand_slug", slug).maybeSingle()
 
         if (isMounted) {
-          setIsPlusMember(memberData.data?.plus_member || false)
+          setIsPlusMember(true)
           setFollowing(!!followStatus.data)
         }
       } else {

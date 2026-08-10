@@ -1,67 +1,40 @@
 "use client"
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react"
-import { englishTranslations, type Locale, translateText } from "@/lib/i18n"
+import { createContext, useCallback, useContext, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { type Locale, translateText } from "@/lib/i18n"
 
-type LocaleValue = { locale: Locale; setLocale: (locale: Locale) => void; t: (text: string) => string }
+type LocaleValue = {
+  locale: Locale
+  setLocale: (locale: Locale) => void
+  t: (text: string) => string
+  localizePath: (path: string) => string
+}
 const LocaleContext = createContext<LocaleValue | null>(null)
 
-function localize(root: ParentNode, locale: Locale) {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-  const nodes: Text[] = []
-  while (walker.nextNode()) nodes.push(walker.currentNode as Text)
-  nodes.forEach((node) => {
-    const original = node.parentElement?.dataset.i18nOriginal ?? node.nodeValue ?? ""
-    if (node.parentElement && !node.parentElement.dataset.i18nOriginal && englishTranslations[original.trim()]) {
-      node.parentElement.dataset.i18nOriginal = original
-    }
-    if (englishTranslations[original.trim()]) node.nodeValue = translateText(original, locale)
-  })
-
-  root.querySelectorAll?.<HTMLElement>("[placeholder], [aria-label], [title]").forEach((element) => {
-    for (const attribute of ["placeholder", "aria-label", "title"] as const) {
-      const value = element.getAttribute(attribute)
-      if (!value) continue
-      const key = `i18n${attribute.replace("-", "")}`
-      const original = element.dataset[key] ?? value
-      if (englishTranslations[original.trim()]) {
-        element.dataset[key] = original
-        element.setAttribute(attribute, translateText(original, locale))
-      }
-    }
-  })
-}
-
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, updateLocale] = useState<Locale>(() => {
-    if (typeof window === "undefined") return "ja"
-    const saved = localStorage.getItem("fashdb-locale")
-    return saved === "en" || saved === "ja" ? saved : navigator.language.startsWith("ja") ? "ja" : "en"
-  })
+  const pathname = usePathname()
+  const router = useRouter()
+  const pathLocale: Locale = pathname === "/en" || pathname.startsWith("/en/") ? "en" : "ja"
+  const locale = pathLocale
+
+  const localizePath = useCallback((path: string) => {
+    if (!path.startsWith("/") || path.startsWith("/api/")) return path
+    const withoutLocale = path.replace(/^\/(ja|en)(?=\/|$)/, "") || "/"
+    return locale === "en" ? `/en${withoutLocale === "/" ? "" : withoutLocale}` : withoutLocale
+  }, [locale])
 
   const setLocale = useCallback((next: Locale) => {
-    updateLocale(next)
-    localStorage.setItem("fashdb-locale", next)
-    document.documentElement.lang = next
-    localize(document.body, next)
-  }, [])
+    const withoutLocale = pathname.replace(/^\/(ja|en)(?=\/|$)/, "") || "/"
+    const query = window.location.search
+    router.push(`${next === "en" ? "/en" : ""}${withoutLocale === "/" ? "/" : withoutLocale}${query}`)
+  }, [pathname, router])
 
   useEffect(() => {
-    document.documentElement.lang = locale
-    localize(document.body, locale)
-  }, [locale])
+    document.documentElement.lang = pathLocale
+  }, [pathLocale])
 
-  useEffect(() => {
-    const observer = new MutationObserver((changes) => {
-      changes.forEach((change) => change.addedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) localize(node as Element, locale)
-      }))
-    })
-    observer.observe(document.body, { childList: true, subtree: true })
-    return () => observer.disconnect()
-  }, [locale])
-
-  return <LocaleContext.Provider value={{ locale, setLocale, t: (text) => translateText(text, locale) }}>{children}</LocaleContext.Provider>
+  return <LocaleContext.Provider value={{ locale, setLocale, localizePath, t: (text) => translateText(text, locale) }}>{children}</LocaleContext.Provider>
 }
 
 export function useLocale() {

@@ -3,6 +3,8 @@
 import { useState, FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import Link from "@/components/LocalizedLink"
+import { useLocale } from "@/context/LocaleContext"
 
 type StatusMessage = {
   text: string
@@ -11,6 +13,7 @@ type StatusMessage = {
 
 export default function LoginPageClient() {
   const router = useRouter()
+  const { t, localizePath } = useLocale()
   
   const [step, setStep] = useState<"auth" | "profile">("auth")
   const [createdUserId, setCreatedUserId] = useState<string | null>(null)
@@ -57,8 +60,13 @@ export default function LoginPageClient() {
       return
     }
 
+    await supabase
+      .from("users")
+      .update({ is_active: true, updated_at: new Date().toISOString() })
+      .eq("id", user.id)
+
     setLoginLoading(false)
-    router.push("/")
+    router.push(localizePath("/"))
     router.refresh()
   }
 
@@ -131,7 +139,7 @@ export default function LoginPageClient() {
     }
 
     setProfileLoading(false)
-    router.push("/")
+    router.push(localizePath("/"))
     router.refresh()
   }
 
@@ -145,7 +153,7 @@ export default function LoginPageClient() {
               <div>
                 <div className="flex flex-col gap-2">
                   <h1 className="type-brand text-3xl md:text-4xl tracking-[0.14em] pr-[0.14em]">LOGIN</h1>
-                  <p className="text-xs tracking-[0.12em] text-muted font-medium">ユーザーログイン</p>
+                  <p className="text-xs tracking-[0.12em] text-muted font-medium">{t("ユーザーログイン")}</p>
                 </div>
                 <div className="mt-12 flex flex-col gap-4">
                   <input
@@ -171,8 +179,11 @@ export default function LoginPageClient() {
                 disabled={loginLoading}
                 className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
               >
-                ログイン
+                {t("ログイン")}
               </button>
+              <Link href="/forgot-password" className="mt-4 text-center text-xs text-subtle hover:text-foreground transition-colors">
+                {t("パスワードを忘れた方")}
+              </Link>
             </form>
 
             <div className="border-b border-border md:border-b-0 md:border-r opacity-60" />
@@ -181,7 +192,7 @@ export default function LoginPageClient() {
               <div>
                 <div className="flex flex-col gap-2">
                   <h1 className="type-brand text-3xl md:text-4xl tracking-[0.14em] pr-[0.14em]">SIGN UP</h1>
-                  <p className="text-xs tracking-[0.12em] text-muted font-medium">新規アカウント登録</p>
+                  <p className="text-xs tracking-[0.12em] text-muted font-medium">{t("新規アカウント登録")}</p>
                 </div>
                 <div className="mt-12 flex flex-col gap-4">
                   <input
@@ -207,7 +218,7 @@ export default function LoginPageClient() {
                 disabled={signupLoading}
                 className="type-ui mt-10 w-full border border-border rounded-xl px-6 py-4 text-sm tracking-[0.1em] bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors disabled:opacity-50"
               >
-                新規登録
+                {t("新規登録")}
               </button>
             </form>
           </div>
@@ -216,7 +227,7 @@ export default function LoginPageClient() {
             <div className="space-y-8">
               <div className="flex flex-col gap-2">
                 <h1 className="type-brand text-3xl md:text-4xl tracking-[0.14em] pr-[0.14em]">WELCOME</h1>
-                <p className="text-xs tracking-[0.12em] text-muted font-medium">アカウントの初期設定を行います</p>
+                <p className="text-xs tracking-[0.12em] text-muted font-medium">{t("アカウントの初期設定を行います")}</p>
               </div>
 
               <div>

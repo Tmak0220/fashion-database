@@ -1,44 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { createCheckoutSession } from "@/app/members/actions"
-
-type StatusMessage = {
-  text: string
-  type: "error" | "success"
-}
+import { useLocale } from "@/context/LocaleContext"
 
 export default function MembersPage() {
-  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
-
-  const handleCheckout = async () => {
-    try {
-      setStatusMessage(null)
-      const currentOrigin = window.location.origin
-      
-      const data = await createCheckoutSession(currentOrigin)
-
-      if (data.error) {
-        if (data.error === "Unauthorized") {
-          setStatusMessage({
-            text: "ログインセッションが切れたか、ログインしていません。もう一度ログインし直してください。",
-            type: "error"
-          })
-        } else {
-          setStatusMessage({ text: "決済ページの読み込みに失敗しました", type: "error" })
-        }
-        return
-      }
-
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch (error) {
-      console.log(error)
-      setStatusMessage({ text: "通信エラーが発生しました", type: "error" })
-    }
-  }
-
+  const { t } = useLocale()
   const plans = [
     {
       name: "FREE",
@@ -49,7 +14,7 @@ export default function MembersPage() {
       features: [
         "ブランド・デザイナー情報の閲覧（無制限）",
         "画像・タイトル・詳細解説の閲覧（無制限）",
-        "投稿・保存・フォローを除くアーカイブ閲覧機能"
+        "画像投稿・いいね・ブックマーク・フォロー"
       ],
       button: "現在のプラン",
       disabled: true,
@@ -57,16 +22,15 @@ export default function MembersPage() {
     {
       name: "PLUS",
       nameJa: "PLUS MEMBER",
-      price: "¥580",
+      price: "—",
       period: "/月",
-      description: "すべてのアーカイブと機能がご利用いただける上位プラン",
+      description: "将来追加する便利機能のためのプラン（現在準備中）",
       features: [
-        "広告非表示と先行公開コンテンツ",
-        "自身のアーカイブ画像の投稿（無制限）",
-        "インタラクション機能（お気に入り・ブックマーク・ユーザーフォロー）の利用"
+        "基本機能を制限しない追加機能を検討中",
+        "提供内容が決まり次第、このページでお知らせします"
       ],
-      button: "PLUSに登録",
-      disabled: false,
+      button: "準備中",
+      disabled: true,
       highlight: true,
     },
   ]
@@ -81,22 +45,12 @@ export default function MembersPage() {
           MEMBERSHIP
         </h1>
         <p className="mt-2 text-xs sm:text-sm tracking-[0.12em] text-muted font-medium">
-          メンバーシップ
+          {t("メンバーシップ")}
         </p>
         <p className="mt-6 sm:mt-8 text-xs sm:text-[14px] md:text-[15px] leading-relaxed sm:leading-7 md:leading-8 text-muted">
-          ファッションデータベースをより深く利用するためのメンバーシッププランです。
+          {t("閲覧・投稿・保存・フォローなどの基本機能は無料で利用できます。PLUSは現在、新しい便利機能を検討中です。")}
         </p>
       </div>
-
-      {statusMessage && (
-        <div className={`mt-8 sm:mt-12 text-xs p-4 rounded-xl border ${
-          statusMessage.type === "error" 
-            ? "text-red-500 bg-red-50/50 border-red-200" 
-            : "text-foreground bg-neutral-50 border-border"
-        }`}>
-          {statusMessage.text}
-        </div>
-      )}
 
       <section className="mt-8 sm:mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {plans.map((plan) => (
@@ -109,7 +63,7 @@ export default function MembersPage() {
           >
             <div>
               <div>
-                <p className="type-label text-[10px] sm:text-[11px] text-subtle tracking-[0.12em] font-medium">{plan.nameJa}</p>
+                <p className="type-label text-[10px] sm:text-[11px] text-subtle tracking-[0.12em] font-medium">{t(plan.nameJa)}</p>
                 <h2 className="mt-2 sm:mt-4 text-3xl sm:text-4xl font-medium tracking-[0.02em]">{plan.name}</h2>
               </div>
 
@@ -118,30 +72,23 @@ export default function MembersPage() {
                 <span className="pb-0.5 text-xs sm:text-sm text-muted font-medium">{plan.period}</span>
               </div>
 
-              <p className="mt-4 text-xs sm:text-sm text-muted leading-relaxed">{plan.description}</p>
+              <p className="mt-4 text-xs sm:text-sm text-muted leading-relaxed">{t(plan.description)}</p>
             </div>
 
             <div>
               <div className="mt-8 sm:mt-10">
                 {plan.disabled ? (
                   <div className="w-full border border-border rounded-xl px-5 py-3.5 text-center text-xs sm:text-sm text-subtle bg-neutral-50 font-medium">
-                    {plan.button}
+                    {t(plan.button)}
                   </div>
-                ) : (
-                  <button
-                    onClick={handleCheckout}
-                    className="block w-full border border-black bg-black text-white rounded-xl px-5 py-3.5 text-center text-xs sm:text-sm tracking-[0.08em] font-medium transition hover:bg-neutral-800 active:scale-[0.99]"
-                  >
-                    {plan.button}
-                  </button>
-                )}
+                ) : null}
               </div>
 
               <div className="mt-8 sm:mt-10 space-y-4 sm:space-y-5 border-t border-dashed border-border pt-6 sm:pt-8">
                 {plan.features.map((feature) => (
                   <div key={feature} className="flex items-start gap-2.5 sm:gap-3">
                     <div className="mt-[6px] sm:mt-[7px] h-[4px] w-[4px] sm:h-[5px] sm:w-[5px] rounded-full bg-foreground shrink-0" />
-                    <p className="text-[11px] sm:text-xs md:text-sm leading-relaxed text-muted">{feature}</p>
+                    <p className="text-[11px] sm:text-xs md:text-sm leading-relaxed text-muted">{t(feature)}</p>
                   </div>
                 ))}
               </div>

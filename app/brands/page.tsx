@@ -6,13 +6,13 @@ import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 import SectionHeading from "@/components/SectionHeading"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "ブランド一覧 - FASHION DATABASE",
     description: "ファッションデータベースに登録されているブランドを、地域・国別に探すことができます。",
-    alternates: { canonical: `${SITE_URL}/brands` },
+    alternates: await localizedAlternates("/brands"),
   }
 }
 

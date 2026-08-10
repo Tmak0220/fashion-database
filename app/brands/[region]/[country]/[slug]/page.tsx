@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import BrandPageClient from "./BrandPageClient"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 type Props = {
   params: Promise<{
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/brands/${region}/${country}/${slug}` },
+    alternates: await localizedAlternates(`/brands/${region}/${country}/${slug}`),
   }
 }
 

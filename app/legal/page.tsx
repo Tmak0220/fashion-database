@@ -5,13 +5,13 @@ import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import PageLayout from "@/components/PageLayout"
 import ContentRenderer from "@/components/ContentRenderer"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "特定商取引法に基づく表記 - FASHION DATABASE",
     description: "ファッションデータベースの特定商取引法に基づく表記についてご確認いただけます。",
-    alternates: { canonical: `${SITE_URL}/legal` },
+    alternates: await localizedAlternates("/legal"),
   }
 }
 

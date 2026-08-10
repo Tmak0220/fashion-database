@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import { supabase } from "@/lib/supabase"
 import { compressImage } from "@/lib/imageCompression"
 

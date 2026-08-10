@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 
 type Brand = {
   id: string | number

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
@@ -69,13 +69,10 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
         if (!isMounted) return
         setCurrentUserId(session.user.id)
         
-        const [memberData, followStatus] = await Promise.all([
-          supabase.from("users").select("plus_member").eq("id", session.user.id).single(),
-          supabase.from("designer_follows").select("id").eq("user_id", session.user.id).eq("designer_slug", slug).maybeSingle()
-        ])
+        const followStatus = await supabase.from("designer_follows").select("id").eq("user_id", session.user.id).eq("designer_slug", slug).maybeSingle()
 
         if (isMounted) {
-          setIsPlusMember(memberData.data?.plus_member || false)
+          setIsPlusMember(true)
           setFollowing(!!followStatus.data)
         }
       } else {

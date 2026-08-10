@@ -1,7 +1,8 @@
 "use client"
 
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import { SITE_URL } from "@/lib/site"
+import { useLocale } from "@/context/LocaleContext"
 
 type Item = {
   label: string
@@ -13,14 +14,15 @@ type Props = {
 }
 
 export default function Breadcrumb({ items }: Props) {
+  const { t, localizePath } = useLocale()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: items.map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      name: item.label,
-      item: item.href ? `${SITE_URL}${item.href}` : undefined,
+      name: t(item.label),
+      item: item.href ? `${SITE_URL}${localizePath(item.href)}` : undefined,
     })),
   }
 
@@ -39,10 +41,10 @@ export default function Breadcrumb({ items }: Props) {
             <div key={index} className="flex items-center gap-2">
               {item.href && !isLast ? (
                 <Link href={item.href} className="hover:text-black transition">
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               ) : (
-                <span className="text-black">{item.label}</span>
+                <span className="text-black">{t(item.label)}</span>
               )}
               {!isLast && <span aria-hidden="true" className="select-none">＞</span>}
             </div>

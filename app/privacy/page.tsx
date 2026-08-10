@@ -5,13 +5,13 @@ import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import PageLayout from "@/components/PageLayout"
 import ContentRenderer from "@/components/ContentRenderer"
-import { SITE_URL } from "@/lib/site"
+import { localizedAlternates } from "@/lib/locale-server"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "プライバシーポリシー - FASHION DATABASE",
     description: "ファッションデータベースのプライバシーポリシーについてご確認いただけます。",
-    alternates: { canonical: `${SITE_URL}/privacy` },
+    alternates: await localizedAlternates("/privacy"),
   }
 }
 

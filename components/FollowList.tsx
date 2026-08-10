@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/LocalizedLink"
 import { supabase } from "@/lib/supabase"
 
 type Props = {
@@ -28,21 +28,7 @@ export default function FollowList({ userId, type }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user) {
-        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-        
-        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        const memberStatus = isAdmin || hasValidFlag
-        setIsPlusMember(memberStatus)
-
-        if (!memberStatus) {
-          setLoading(false)
-          return
-        }
+        setIsPlusMember(true)
       } else {
         setIsPlusMember(false)
         setLoading(false)

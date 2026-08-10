@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Drawer from "./Drawer"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type Props = {
   title: string
@@ -46,7 +47,7 @@ export default function HistoryDrawerItem({ title, content }: Props) {
             leading-relaxed
           "
         >
-          {title}
+          <AutoTranslatedText text={title} showControls={false} />
         </span>
   
         <div
@@ -66,9 +67,9 @@ export default function HistoryDrawerItem({ title, content }: Props) {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="HISTORY"
-        subtitle={title}
+        subtitle={<AutoTranslatedText text={title} showControls={false} />}
       >
-        {content}
+        <AutoTranslatedText text={content} as="span" showControls />
       </Drawer>
     </>
   )

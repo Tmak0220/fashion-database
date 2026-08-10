@@ -1,4 +1,7 @@
-import Link from "next/link"
+"use client"
+
+import Link from "@/components/LocalizedLink"
+import { useLocale } from "@/context/LocaleContext"
 
 type Props = {
   href: string
@@ -13,9 +16,10 @@ export default function DirectoryCard({
   nameJa,
   uppercase = false,
 }: Props) {
+  const { localizePath } = useLocale()
   return (
     <Link
-      href={href}
+      href={localizePath(href)}
       className="
         group
         flex
