@@ -4,12 +4,13 @@ import type { Metadata } from "next"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import GroupPageClient from "./GroupPageClient"
+import { SITE_URL } from "@/lib/site"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "グループ一覧 - FASHION DATABASE",
     description: "ファッション大手（LVMH、ケリング等）の傘下・ブランド相関図。",
-    alternates: { canonical: "https://fashdb.com/groups" },
+    alternates: { canonical: `${SITE_URL}/groups` },
   }
 }
 

@@ -134,7 +134,7 @@ export default function PostFeed() {
               </Link>
             </div>
 
-            <div className={`space-y-3 ${!isPlusMember ? "select-none pointer-events-none filter blur-[5px] opacity-50" : ""}`}>
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
                 {post.users?.avatar_url && (
                   <Image

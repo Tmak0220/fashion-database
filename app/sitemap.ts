@@ -1,8 +1,9 @@
 import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
+import { SITE_URL } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://fashdb.com";
+  const baseUrl = SITE_URL;
 
   const [
     { data: brands },

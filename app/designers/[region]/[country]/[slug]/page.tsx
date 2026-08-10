@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import DesignerPageClient from "./DesignerPageClient"
+import { SITE_URL } from "@/lib/site"
 
 type Props = {
   params: Promise<{
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: `https://fashdb.com/designers/${region}/${country}/${slug}` },
+    alternates: { canonical: `${SITE_URL}/designers/${region}/${country}/${slug}` },
   }
 }
 

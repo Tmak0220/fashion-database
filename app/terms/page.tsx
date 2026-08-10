@@ -5,12 +5,13 @@ import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import PageLayout from "@/components/PageLayout"
 import ContentRenderer from "@/components/ContentRenderer"
+import { SITE_URL } from "@/lib/site"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "利用規約 - FASHION DATABASE",
     description: "ファッションデータベースの利用規約についてご確認いただけます。",
-    alternates: { canonical: "https://fashdb.com/terms" },
+    alternates: { canonical: `${SITE_URL}/terms` },
   }
 }
 

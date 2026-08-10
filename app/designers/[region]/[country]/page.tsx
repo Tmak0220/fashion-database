@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
+import { SITE_URL } from "@/lib/site"
 
 type Props = {
   params: Promise<{
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${countryName}のデザイナー一覧 - FASHION DATABASE`,
     description: `ファッションデータベースに登録されているデザイナーの中から、${countryName}を拠点とするデザイナーのアーカイブを閲覧できます。`,
     alternates: {
-      canonical: `https://fashdb.com/designers/${region}/${country}`,
+      canonical: `${SITE_URL}/designers/${region}/${country}`,
     },
   }
 }

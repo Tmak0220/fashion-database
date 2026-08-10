@@ -8,6 +8,8 @@ import { AuthModalProvider } from "@/context/AuthModalContext"
 import AuthModal from "@/components/AuthModal"
 import { Suspense } from "react"
 import { AuthListener } from "@/components/AuthListener"
+import { LocaleProvider } from "@/context/LocaleContext"
+import { SITE_URL } from "@/lib/site"
 
 const bodoniModa = Bodoni_Moda({
   variable: "--font-bodoni",
@@ -23,19 +25,20 @@ const notoSerifJP = Noto_Serif_JP({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://fashdb.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "ファッションデータベース",
     template: "%s | ファッションデータベース",
   },
-  description: "ブランド・デザイナー・コレクションをまとめたファッションデータベース",
+  description: "ブランド・デザイナー・コレクションをまとめた日英対応のファッションデータベース / A bilingual archive of fashion brands, designers, and collections.",
   keywords: ["ファッション", "ブランド", "デザイナー", "コレクション", "モード", "ラグジュアリー", "fashion", "designer", "brand", "collection"],
   openGraph: {
     title: "ファッションデータベース",
     description: "ブランド・デザイナー・コレクションをまとめたファッションデータベース",
-    url: "https://fashdb.com",
+    url: SITE_URL,
     siteName: "ファッションデータベース",
     locale: "ja_JP",
+    alternateLocale: ["en_US"],
     type: "website",
   },
   twitter: {
@@ -87,6 +90,7 @@ export default function RootLayout({
           bg-background
         "
       >
+        <LocaleProvider>
         <AuthListener />
         <AuthModalProvider>
           <Suspense fallback={<div className="h-[81px] bg-background border-b border-border" />}>
@@ -98,6 +102,7 @@ export default function RootLayout({
           <Footer />
           <AuthModal />
         </AuthModalProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

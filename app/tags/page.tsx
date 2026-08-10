@@ -272,7 +272,7 @@ export default function TagPageClient({ slug = "" }: Props) {
       )}
 
       {/* 修正点: top-20 (ヘッダーの高さ分) を空けて固定することでヘッダーを殺さないように変更 */}
-      {!isPlusMember && (
+      {false && (
         <div className="fixed top-20 bottom-0 left-0 right-0 z-40 flex items-center justify-center p-4 bg-transparent pointer-events-auto">
           <div className="max-w-sm w-full h-fit p-6 sm:p-8 border border-border bg-white rounded-2xl shadow-2xl text-center">
             <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
@@ -306,7 +306,7 @@ export default function TagPageClient({ slug = "" }: Props) {
           {groupedPosts.map((group) => (
             <section key={group.tag.slug} className="space-y-8">
               <div className="border-b border-border pb-3">
-                {isPlusMember ? (
+                {true ? (
                   <Link href={`/tags/${group.tag.slug}`} className="inline-block hover:opacity-60 transition duration-200">
                     <h2 className="type-brand text-2xl tracking-[0.08em] font-medium text-foreground">
                       {group.tag.name.toUpperCase()}
@@ -331,7 +331,7 @@ export default function TagPageClient({ slug = "" }: Props) {
                         {post.image_urls?.[0] && (
                           <Image
                             src={post.image_urls[0]}
-                            alt={isPlusMember ? (post.title || "") : ""}
+                            alt={post.title || ""}
                             fill
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             priority
@@ -341,7 +341,7 @@ export default function TagPageClient({ slug = "" }: Props) {
                       </div>
                       {post.title && (
                         <p className={`text-xs sm:text-sm font-medium leading-snug text-foreground ${
-                          !isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : ""
+                          ""
                         }`}>
                           {post.title}
                         </p>
@@ -349,7 +349,7 @@ export default function TagPageClient({ slug = "" }: Props) {
                     </article>
                   )
 
-                  return isPlusMember ? (
+                  return true ? (
                     <Link 
                       key={`${group.tag.slug}-${post.id}`} 
                       href={`/posts/archive-${post.id}`} 

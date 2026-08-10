@@ -86,7 +86,7 @@ export default function CollectionPageClient({ brandSlug, seasonSlug, initialPos
         </div>
       </section>
 
-      {!isPlusMember && (
+      {false && (
         <div className="fixed top-20 bottom-0 left-0 right-0 z-40 flex items-center justify-center p-4 bg-transparent pointer-events-auto">
           <div className="max-w-sm w-full h-fit p-6 sm:p-8 border border-border bg-white rounded-2xl shadow-2xl text-center">
             <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
@@ -139,7 +139,7 @@ export default function CollectionPageClient({ brandSlug, seasonSlug, initialPos
                     {post.image_urls?.[0] && (
                       <Image
                         src={post.image_urls[0]}
-                        alt={isPlusMember ? (post.title || "") : ""}
+                        alt={post.title || ""}
                         fill
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-[1.025]"
@@ -152,7 +152,7 @@ export default function CollectionPageClient({ brandSlug, seasonSlug, initialPos
                     </span>
                     {post.title && (
                       <p className={`text-[13px] font-normal tracking-wide text-foreground line-clamp-1 transition-colors ${
-                        !isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : "group-hover:text-subtle"
+                        "group-hover:text-subtle"
                       }`}>
                         {post.title}
                       </p>
@@ -161,7 +161,7 @@ export default function CollectionPageClient({ brandSlug, seasonSlug, initialPos
                 </article>
               )
 
-              return isPlusMember ? (
+              return true ? (
                 <Link key={post.id} href={`/posts/${post.id}`} className="group block">
                   {content}
                 </Link>

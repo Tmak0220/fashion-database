@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { User, Folder } from "lucide-react"
+import { useLocale } from "@/context/LocaleContext"
 
 export default function Header() {
   const router = useRouter()
@@ -12,6 +13,7 @@ export default function Header() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState<string | null>(null)
   const [search, setSearch] = useState("")
+  const { locale, setLocale, t } = useLocale()
 
   useEffect(() => {
     const getUser = async () => {
@@ -54,7 +56,7 @@ export default function Header() {
         <form onSubmit={handleSearch} className="flex items-center gap-2 w-full sm:w-auto">
           <input
             type="text"
-            placeholder="ブランド名、デザイナー名など"
+            placeholder={t("ブランド名、デザイナー名など")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:w-48 md:w-64 border border-border rounded-xl px-4 py-2 text-sm bg-background text-foreground focus:outline-none focus:border-neutral-400 transition min-w-0"
@@ -63,7 +65,7 @@ export default function Header() {
             type="submit"
             className="border border-border rounded-xl px-4 md:px-5 py-2 text-xs tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white hover:border-black transition shrink-0"
           >
-            検索
+            {t("検索")}
           </button>
         </form>
       </div>
@@ -73,19 +75,19 @@ export default function Header() {
           <>
             <Link href="/mypage" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
               <User size={20} strokeWidth={1.5} />
-              <span className="font-medium tracking-wider text-[10px] md:text-xs">マイページ</span>
+              <span className="font-medium tracking-wider text-[10px] md:text-xs">{t("マイページ")}</span>
             </Link>
 
             <Link href="/bookmarks" className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
               <Folder size={20} strokeWidth={1.5} />
-              <span className="font-medium tracking-wider text-[10px] md:text-xs">ブックマーク</span>
+              <span className="font-medium tracking-wider text-[10px] md:text-xs">{t("ブックマーク")}</span>
             </Link>
 
             <button
               onClick={handleLogout}
               className="ml-2 border border-border rounded-xl px-3.5 py-1.5 text-xs tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white hover:border-black transition"
             >
-              ログアウト
+              {t("ログアウト")}
             </button>
           </>
         ) : (
@@ -98,6 +100,14 @@ export default function Header() {
             </Link>
           </div>
         )}
+        <div className="flex items-center rounded-full border border-border p-0.5" aria-label="Language">
+          {(["ja", "en"] as const).map((value) => (
+            <button key={value} type="button" onClick={() => setLocale(value)} aria-pressed={locale === value}
+              className={`rounded-full px-2.5 py-1 text-[10px] tracking-wider transition ${locale === value ? "bg-foreground text-background" : "text-muted hover:text-foreground"}`}>
+              {value === "ja" ? "日本語" : "EN"}
+            </button>
+          ))}
+        </div>
       </div>
     </header>
   )

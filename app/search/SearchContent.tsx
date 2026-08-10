@@ -160,7 +160,7 @@ export default function SearchContent() {
         "{query}"
       </p>
 
-      {!isPlusMember && (
+      {false && (
         <div className="fixed top-20 bottom-0 left-0 right-0 z-40 flex items-center justify-center p-4 bg-transparent pointer-events-auto">
           <div className="max-w-sm w-full h-fit p-6 sm:p-8 border border-border bg-white rounded-2xl shadow-2xl text-center">
             <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
@@ -287,7 +287,7 @@ export default function SearchContent() {
                         <div className="w-full h-full rounded-full border border-border bg-neutral-50" />
                       )}
                     </div>
-                    <div className={`flex flex-col min-w-0 ${!isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : ""}`}>
+                    <div className="flex flex-col min-w-0">
                       <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                         {user.display_name || user.username || "名称非公開"}
                       </p>
@@ -300,7 +300,7 @@ export default function SearchContent() {
                   </div>
                 )
 
-                return isPlusMember ? (
+                return true ? (
                   <Link
                     key={user.id}
                     href={`/users/${user.username}`}
@@ -341,7 +341,7 @@ export default function SearchContent() {
                       {post.image_urls?.[0] && (
                         <Image
                           src={post.image_urls[0]}
-                          alt={isPlusMember ? (post.title || "") : ""}
+                          alt={post.title || ""}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                           className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
@@ -349,7 +349,7 @@ export default function SearchContent() {
                       )}
                     </div>
                     {post.title && (
-                      <div className={`px-0.5 sm:px-1 ${!isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : ""}`}>
+                      <div className="px-0.5 sm:px-1">
                         <p className="text-xs sm:text-sm font-medium text-foreground leading-snug group-hover:text-neutral-600 transition duration-200 break-words line-clamp-1 sm:line-clamp-2">
                           {post.title}
                         </p>
@@ -358,7 +358,7 @@ export default function SearchContent() {
                   </article>
                 )
 
-                return isPlusMember ? (
+                return true ? (
                   <Link key={post.id} href={`/posts/${slugPrefix}-${post.id}`} className="block group">
                     {content}
                   </Link>

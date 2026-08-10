@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
+import { SITE_URL } from "@/lib/site"
 
 type Props = {
   params: Promise<{ region: string }>
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${regionName}のブランド一覧 - FASHION DATABASE`,
     description: `${regionName}に属するブランドや国別のアーカイブを閲覧できます。`,
     alternates: {
-      canonical: `https://fashdb.com/brands/${region}`,
+      canonical: `${SITE_URL}/brands/${region}`,
     },
   }
 }

@@ -306,7 +306,7 @@ export default function PostPageClient({ id }: Props) {
         </div>
 
         <div className="relative">
-          {!isPlusMember && (
+          {false && (
             <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[6px] flex flex-col items-center justify-center text-center px-4">
               <div className="max-w-sm w-full p-6 sm:p-8 border border-border bg-surface rounded-2xl shadow-xl">
                 <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
@@ -331,7 +331,7 @@ export default function PostPageClient({ id }: Props) {
             </div>
           )}
 
-          <div className={!isPlusMember ? "select-none pointer-events-none filter blur-[2px]" : ""}>
+          <div>
             {post.users?.id ? (
               <Link 
                 href={`/users/${post.users.username}`}
@@ -524,7 +524,7 @@ export default function PostPageClient({ id }: Props) {
                     {rPost.image_urls?.[0] ? (
                       <Image
                         src={rPost.image_urls[0]}
-                        alt={isPlusMember ? (rPost.title || "") : ""}
+                        alt={rPost.title || ""}
                         fill
                         sizes="(max-width: 768px) 50vw, 25vw"
                         className="object-cover transition duration-500 group-hover:scale-[1.03]"
@@ -534,7 +534,7 @@ export default function PostPageClient({ id }: Props) {
                     )}
                   </div>
                   <h3 className={`text-xs sm:text-sm font-medium text-foreground line-clamp-1 group-hover:text-neutral-600 transition ${
-                    !isPlusMember ? "filter blur-[4px] select-none pointer-events-none" : ""
+                    ""
                   }`}>
                     {rPost.title}
                   </h3>

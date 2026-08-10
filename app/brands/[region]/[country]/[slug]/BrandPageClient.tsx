@@ -237,7 +237,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
                     )}
                   </div>
                   {post.title && (
-                    <p className={`text-sm tracking-[0.02em] text-foreground truncate ${!isPlusMember ? "select-none pointer-events-none filter blur-[4px] opacity-60" : ""}`}>
+                    <p className="text-sm tracking-[0.02em] text-foreground truncate">
                       {post.title}
                     </p>
                   )}

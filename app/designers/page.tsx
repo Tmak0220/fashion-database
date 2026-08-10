@@ -6,13 +6,14 @@ import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 import SectionHeading from "@/components/SectionHeading"
+import { SITE_URL } from "@/lib/site"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "デザイナー一覧 - FASHION DATABASE",
     description:
       "ファッションデータベースに登録されているデザイナーを、地域・国別に探すことができます。",
-    alternates: { canonical: "https://fashdb.com/designers" },
+    alternates: { canonical: `${SITE_URL}/designers` },
   }
 }
 
