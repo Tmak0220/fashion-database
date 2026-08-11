@@ -56,7 +56,6 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [historyItems, setHistoryItems] = useState<BrandHistoryItem[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [isPlusMember, setIsPlusMember] = useState(false)
   const [following, setFollowing] = useState(false)
   const [followersCount, setFollowersCount] = useState(0)
   const [followLoading, setFollowLoading] = useState(false)
@@ -72,13 +71,11 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         const followStatus = await supabase.from("brand_follows").select("id").eq("user_id", session.user.id).eq("brand_slug", slug).maybeSingle()
 
         if (isMounted) {
-          setIsPlusMember(true)
           setFollowing(!!followStatus.data)
         }
       } else {
         if (isMounted) {
           setCurrentUserId(null)
-          setIsPlusMember(false)
           setFollowing(false)
         }
       }
@@ -128,7 +125,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
   }, [slug, brand])
 
   const handleFollow = async () => {
-    if (!currentUserId || !isPlusMember) {
+    if (!currentUserId) {
       openAuthModal()
       return
     }

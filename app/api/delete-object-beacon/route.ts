@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { createClient } from "@/lib/supabase-server"
+import { getR2KeyFromUrl, isOwnedTemporaryKey } from "@/lib/r2-keys"
 
 const r2 = new S3Client({
   region: "auto",
@@ -12,20 +14,21 @@ const r2 = new S3Client({
 
 export async function POST(request: Request) {
   try {
-    const { urls } = await request.json()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    if (!urls || !Array.isArray(urls)) {
+    const body = (await request.json().catch(() => null)) as { urls?: unknown } | null
+    const urls = body?.urls
+
+    if (!Array.isArray(urls) || urls.length > 20 || urls.some((url) => typeof url !== "string")) {
       return NextResponse.json({ error: "URLs array is required" }, { status: 400 })
     }
 
     for (const url of urls) {
       try {
-        const urlObj = new URL(url)
-        let key = decodeURIComponent(urlObj.pathname.slice(1))
-
-        if (key.includes("?")) {
-          key = key.split("?")[0]
-        }
+        const key = getR2KeyFromUrl(url)
+        if (!isOwnedTemporaryKey(key, user.id)) continue
 
         const deleteCommand = new DeleteObjectCommand({
           Bucket: process.env.R2_BUCKET_NAME,

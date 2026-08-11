@@ -6,6 +6,7 @@ export const englishTranslations: Record<string, string> = {
   "ファッションデータベース": "Fashion Database",
   "ブランド名、デザイナー名など": "Search brands, designers, and more",
   "検索": "Search",
+  "閉じる": "Close",
   "マイページ": "My page",
   "ブックマーク": "Bookmarks",
   "ログアウト": "Sign out",
@@ -138,6 +139,12 @@ export const englishTranslations: Record<string, string> = {
   "基本機能を制限しない追加機能を検討中": "Additional features that will not restrict the free core experience are under consideration",
   "提供内容が決まり次第、このページでお知らせします": "Details will be announced on this page once decided",
   "準備中": "Coming later",
+  "ログインが必要です": "Sign in required",
+  "この機能は無料アカウントで利用できます。ログインするか、新規登録してください。": "This feature is available with a free account. Sign in or create an account to continue.",
+  "無料アカウントを新規登録": "Create a free account",
+  "フォロー情報を確認するには、無料アカウントでログインしてください。": "Sign in with a free account to view follow information.",
+  "フォロー中の投稿を見るには、無料アカウントでログインしてください。": "Sign in with a free account to view posts from people you follow.",
+  "ログインまたは新規登録": "Sign in or create an account",
 }
 
 export function translateText(value: string, locale: Locale) {

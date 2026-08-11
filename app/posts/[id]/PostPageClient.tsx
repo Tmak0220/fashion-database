@@ -6,6 +6,7 @@ import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 import PostLoading from "./loading"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
+import { useLocale } from "@/context/LocaleContext"
 
 type RelatedPost = {
   id: string
@@ -63,6 +64,7 @@ type StatusMessage = {
 }
 
 export default function PostPageClient({ id }: Props) {
+  const { localizePath } = useLocale()
   const [post, setPost] = useState<Post | null>(null)
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,7 +132,7 @@ export default function PostPageClient({ id }: Props) {
       setPost(combinedPost)
 
       const slugPrefix = combinedPost.brands?.slug || "archive"
-      const expectedPath = `/posts/${slugPrefix}-${id}`
+      const expectedPath = localizePath(`/posts/${slugPrefix}-${id}`)
       if (window.location.pathname !== expectedPath) {
         window.history.replaceState(null, "", expectedPath)
       }
@@ -194,7 +196,7 @@ export default function PostPageClient({ id }: Props) {
     }
 
     fetchPost()
-  }, [id])
+  }, [id, localizePath])
   
   const requireAuth = () => {
     if (!currentUserId) {
@@ -264,7 +266,7 @@ export default function PostPageClient({ id }: Props) {
         setBookmarked(true)
       }
     }
-    bookmarkLoading && setBookmarkLoading(false)
+    setBookmarkLoading(false)
   }
 
   if (loading) {
@@ -374,7 +376,7 @@ export default function PostPageClient({ id }: Props) {
                     {post.year} {post.season}
                   </Link>
                 )}
-                {post.post_tags?.map((pt: any) => (
+                {post.post_tags?.map((pt) => (
                   pt.tags?.slug && pt.tags?.name ? (
                     <Link
                       key={pt.tags.slug}

@@ -149,7 +149,7 @@ export default function LoginPageClient() {
         
         {step === "auth" ? (
           <div className="flex flex-col md:flex-row items-stretch gap-16 md:gap-0">
-            <form onSubmit={handleLogin} className="flex-1 md:pr-16 flex flex-col justify-between">
+            <form onSubmit={handleLogin} className="relative flex-1 md:pr-16 flex flex-col justify-between">
               <div>
                 <div className="flex flex-col gap-2">
                   <h1 className="type-brand text-3xl md:text-4xl tracking-[0.14em] pr-[0.14em]">LOGIN</h1>
@@ -181,7 +181,7 @@ export default function LoginPageClient() {
               >
                 {t("ログイン")}
               </button>
-              <Link href="/forgot-password" className="mt-4 text-center text-xs text-subtle hover:text-foreground transition-colors">
+              <Link href="/forgot-password" className="absolute -bottom-8 left-0 right-0 md:right-16 text-center text-xs text-subtle hover:text-foreground transition-colors">
                 {t("パスワードを忘れた方")}
               </Link>
             </form>

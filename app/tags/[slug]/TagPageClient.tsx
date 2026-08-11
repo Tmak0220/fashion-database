@@ -66,30 +66,11 @@ export default function TagPageClient({ slug = "" }: Props) {
   const [tag, setTag] = useState<Tag | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
-  const [isPlusMember, setIsPlusMember] = useState(false)
 
   const isAllTagsMode = !slug
 
   useEffect(() => {
-    const checkMemberStatus = async (user: any) => {
-      if (user) {
-        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        setIsPlusMember(isAdmin || hasValidFlag)
-      } else {
-        setIsPlusMember(false)
-      }
-    }
-
     const fetchTagsAndPosts = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      await checkMemberStatus(user)
-
       let postIds: string[] = []
 
       if (isAllTagsMode) {
@@ -186,17 +167,6 @@ export default function TagPageClient({ slug = "" }: Props) {
 
     fetchTagsAndPosts()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
-        setIsPlusMember(false)
-      } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        await checkMemberStatus(session?.user)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
   }, [slug, isAllTagsMode])
 
   const groupedPosts = useMemo<GroupedPosts[]>(() => {

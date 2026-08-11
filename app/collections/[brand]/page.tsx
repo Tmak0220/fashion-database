@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
+import Image from "next/image"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { supabase } from "@/lib/supabase"
 import CollectionButton from "@/components/CollectionButton"
@@ -31,30 +32,11 @@ export default function BrandPage({ params }: Props) {
   const [posts, setPosts] = useState<Post[]>([])
   const [uniqueSeasons, setUniqueSeasons] = useState<SeasonItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [isPlusMember, setIsPlusMember] = useState(false)
 
   useEffect(() => {
-    const checkMemberStatus = async (user: any) => {
-      if (user) {
-        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        setIsPlusMember(isAdmin || hasValidFlag)
-      } else {
-        setIsPlusMember(false)
-      }
-    }
-
     const initData = async () => {
       const { brand: resolvedBrand } = await params
       setBrand(resolvedBrand)
-
-      const { data: authData } = await supabase.auth.getUser()
-      await checkMemberStatus(authData?.user)
 
       const { data: postsResult } = await supabase
         .from("posts")
@@ -89,17 +71,6 @@ export default function BrandPage({ params }: Props) {
 
     initData()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
-        setIsPlusMember(false)
-      } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        await checkMemberStatus(session?.user)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
   }, [params])
 
   if (loading) {
@@ -145,7 +116,7 @@ export default function BrandPage({ params }: Props) {
                 <CollectionButton
                   key={item.id}
                   collection={{
-                    id: item.id as any,
+                    id: item.id,
                     year: item.year,
                     season: item.season,
                   }}
@@ -180,11 +151,13 @@ export default function BrandPage({ params }: Props) {
             {posts.map((post) => {
               const content = (
                 <article className="space-y-4">
-                  <div className="overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
-                    <img
+                  <div className="relative overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
+                    <Image
                       src={post.image_urls?.[0]}
-                      alt=""
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.025]"
+                      alt={post.title || "Archive image"}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-[1.025]"
                     />
                   </div>
                   <div className="space-y-1 px-1">
@@ -200,15 +173,7 @@ export default function BrandPage({ params }: Props) {
                 </article>
               )
 
-              return true ? (
-                <Link key={post.id} href={`/posts/${post.id}`} className="group block">
-                  {content}
-                </Link>
-              ) : (
-                <div key={post.id} className="block">
-                  {content}
-                </div>
-              )
+              return <Link key={post.id} href={`/posts/${post.id}`} className="group block">{content}</Link>
             })}
           </div>
         )}

@@ -85,7 +85,7 @@ export default async function Page({ params }: Props) {
     .neq("slug", designer.slug)
 
   const sanitizedRelatedDesigners = (relatedDesigners || [])
-    .sort(() => 0.5 - Math.random())
+    .sort((a, b) => a.slug.localeCompare(b.slug))
     .slice(0, 4)
     .map((d) => ({ ...d, region_slug: region, country_slug: country }))
 

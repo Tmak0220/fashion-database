@@ -2,6 +2,8 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { S3Client, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { createClient as createServerClient } from "@/lib/supabase-server"
+import { getR2KeyFromUrl, getR2PublicUrl, isOwnedPostKey, isOwnedTemporaryKey } from "@/lib/r2-keys"
 
 const r2 = new S3Client({
   region: "auto",
@@ -12,22 +14,34 @@ const r2 = new S3Client({
   },
 })
 
-async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
-  if (!tmpUrl.includes("/tmp/")) return tmpUrl
+type PostInput = {
+  title?: string
+  description?: string
+  imageUrls?: string[]
+  brandSlug?: string | null
+  designerSlug?: string | null
+  collectionSlug?: string | null
+  seasonSlug?: string | null
+  season?: string
+  year?: string
+  selectedTags?: string[]
+}
 
+async function moveToPermanentStorage(tmpUrl: string, userId: string): Promise<string> {
   try {
-    const tmpIndex = tmpUrl.indexOf("tmp/")
-    if (tmpIndex === -1) return tmpUrl
-    
-    const rawSrcKey = tmpUrl.substring(tmpIndex)
-    const srcKey = decodeURIComponent(rawSrcKey)
-    const destKey = srcKey.replace(/^tmp\//, "")
+    const srcKey = getR2KeyFromUrl(tmpUrl)
+    if (!srcKey.startsWith("tmp/")) {
+      if (!isOwnedPostKey(srcKey, userId)) throw new Error("Post image does not belong to this user")
+      return tmpUrl
+    }
+    if (!isOwnedTemporaryKey(srcKey, userId)) throw new Error("Temporary image does not belong to this user")
+    const destKey = srcKey.replace(/^tmp\//, "posts/")
     const bucketName = process.env.R2_BUCKET_NAME!
 
     await r2.send(
       new CopyObjectCommand({
         Bucket: bucketName,
-        CopySource: `${bucketName}/${rawSrcKey}`,
+        CopySource: `${bucketName}/${srcKey}`,
         Key: destKey,
       })
     )
@@ -39,15 +53,14 @@ async function moveToPermanentStorage(tmpUrl: string): Promise<string> {
       })
     )
 
-    const baseUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "") || "https://images.fashdb.com"
-    return `${baseUrl}/${destKey}`
+    return `${getR2PublicUrl()}/${destKey}`
   } catch (err) {
     console.error(`Failed to move file to permanent storage: ${tmpUrl}`, err)
-    return tmpUrl.replace("https://pub-cbac5457ba7f4798b615bfeb837627d3.r2.dev", "https://images.fashdb.com")
+    throw new Error("画像の保存に失敗しました")
   }
 }
 
-export async function createPost(input: any, userId: string) {
+export async function createPost(input: PostInput) {
   try {
     if (!input.title?.trim()) throw new Error("タイトルは必須です")
     if (!input.imageUrls?.length) throw new Error("画像は1枚以上必要です")
@@ -57,11 +70,13 @@ export async function createPost(input: any, userId: string) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const currentUserId = userId
-    if (!currentUserId) throw new Error("ユーザー認証に失敗しました")
+    const serverClient = await createServerClient()
+    const { data: { user } } = await serverClient.auth.getUser()
+    if (!user) throw new Error("ユーザー認証に失敗しました")
+    const currentUserId = user.id
 
     const permanentImageUrls = await Promise.all(
-      input.imageUrls.map((url: string) => moveToPermanentStorage(url))
+      input.imageUrls.map((url) => moveToPermanentStorage(url, currentUserId))
     )
 
     const insertPayload = {
@@ -87,8 +102,9 @@ export async function createPost(input: any, userId: string) {
 
     if (postError) throw new Error(`投稿の保存に失敗しました: ${postError.message}`)
 
-    if (input.selectedTags?.length > 0) {
-      const tagPayload = input.selectedTags.map((tagId: string) => ({
+    const selectedTags = input.selectedTags ?? []
+    if (selectedTags.length > 0) {
+      const tagPayload = selectedTags.map((tagId: string) => ({
         post_id: post.id,
         tag_id: tagId,
       }))
@@ -98,13 +114,14 @@ export async function createPost(input: any, userId: string) {
     }
 
     return post
-  } catch (err: any) {
-    console.error("CreatePost Error:", err.message)
-    throw new Error(err.message)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "投稿の作成に失敗しました"
+    console.error("CreatePost Error:", message)
+    throw new Error(message)
   }
 }
 
-export async function updatePost(postId: string, input: any, userId: string) {
+export async function updatePost(postId: string, input: PostInput) {
   try {
     if (!input.title?.trim()) throw new Error("タイトルは必須です")
     if (!input.imageUrls?.length) throw new Error("画像は1枚以上必要です")
@@ -114,8 +131,20 @@ export async function updatePost(postId: string, input: any, userId: string) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    const serverClient = await createServerClient()
+    const { data: { user } } = await serverClient.auth.getUser()
+    if (!user) throw new Error("ユーザー認証に失敗しました")
+
+    const { data: ownedPost } = await supabaseAdmin
+      .from("posts")
+      .select("id")
+      .eq("id", postId)
+      .eq("user_id", user.id)
+      .maybeSingle()
+    if (!ownedPost) throw new Error("投稿の編集権限がありません")
+
     const permanentImageUrls = await Promise.all(
-      input.imageUrls.map((url: string) => moveToPermanentStorage(url))
+      input.imageUrls.map((url) => moveToPermanentStorage(url, user.id))
     )
 
     const updatePayload = {
@@ -134,14 +163,15 @@ export async function updatePost(postId: string, input: any, userId: string) {
       .from("posts")
       .update(updatePayload)
       .eq("id", postId)
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
 
     if (postError) throw postError
 
     await supabaseAdmin.from("post_tags").delete().eq("post_id", postId)
     
-    if (input.selectedTags?.length > 0) {
-      const tagPayload = input.selectedTags.map((tagId: string) => ({
+    const selectedTags = input.selectedTags ?? []
+    if (selectedTags.length > 0) {
+      const tagPayload = selectedTags.map((tagId: string) => ({
         post_id: postId,
         tag_id: tagId,
       }))
@@ -150,8 +180,9 @@ export async function updatePost(postId: string, input: any, userId: string) {
     }
 
     return { success: true, imageUrls: permanentImageUrls }
-  } catch (err: any) {
-    console.error("UpdatePost Error:", err.message)
-    throw new Error(err.message)
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "投稿の更新に失敗しました"
+    console.error("UpdatePost Error:", message)
+    throw new Error(message)
   }
 }

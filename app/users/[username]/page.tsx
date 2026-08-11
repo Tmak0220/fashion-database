@@ -35,7 +35,6 @@ export default function UserPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [isPlusMember, setIsPlusMember] = useState(false)
   const [following, setFollowing] = useState(false)
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
@@ -51,7 +50,6 @@ export default function UserPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setCurrentUserId(user.id)
-        setIsPlusMember(true)
       }
 
       const { data: profileData } = await supabase
@@ -109,7 +107,7 @@ export default function UserPage() {
   }, [username])
 
   const handleFollow = async () => {
-    if (!currentUserId || !isPlusMember) {
+    if (!currentUserId) {
       openAuthModal()
       return
     }

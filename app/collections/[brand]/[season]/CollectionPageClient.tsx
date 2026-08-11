@@ -1,9 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
 import Image from "next/image"
-import { supabase } from "@/lib/supabase"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type Post = {
@@ -19,44 +17,7 @@ type Props = {
 }
 
 export default function CollectionPageClient({ brandSlug, seasonSlug, initialPosts }: Props) {
-  const [isPlusMember, setIsPlusMember] = useState(false)
   const displayTitle = `${brandSlug} ${seasonSlug}`
-
-  useEffect(() => {
-    const checkMemberStatus = async (user: any) => {
-      if (user) {
-        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        setIsPlusMember(isAdmin || hasValidFlag)
-      } else {
-        setIsPlusMember(false)
-      }
-    }
-
-    const initAuth = async () => {
-      const { data: userResult } = await supabase.auth.getUser()
-      await checkMemberStatus(userResult?.user)
-    }
-
-    initAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
-        setIsPlusMember(false)
-      } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        await checkMemberStatus(session?.user)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
 
   return (
     <main className="p-10 md:p-14 lg:p-16 max-w-7xl mx-auto w-full min-h-screen">

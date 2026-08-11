@@ -63,6 +63,7 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
     try {
       const formData = new FormData()
       formData.append("file", fileToUpload)
+      formData.append("purpose", "avatar")
 
       const res = await fetch("/api/upload", {
         method: "POST",
@@ -120,7 +121,7 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
     }
   }
 
-  const AvatarInner = () => (
+  const avatarInner = (
     <>
       {avatarUrl ? (
         <Image
@@ -155,10 +156,10 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
       <div className="group relative w-48 h-48 rounded-full overflow-hidden border border-border bg-surface flex items-center justify-center">
         {username ? (
           <Link href={`/users/${username}`} className="absolute inset-0 w-full h-full flex items-center justify-center">
-            <AvatarInner />
+            {avatarInner}
           </Link>
         ) : (
-          <AvatarInner />
+          avatarInner
         )}
       </div>
 

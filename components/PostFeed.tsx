@@ -24,36 +24,9 @@ type Post = {
 export default function PostFeed() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
-  const [isPlusMember, setIsPlusMember] = useState(false)
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const isAdmin = 
-          user?.user_metadata?.role === "admin" || 
-          user?.role === "admin" ||
-          user?.app_metadata?.role === "admin"
-
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-
-        const hasValidFlag = 
-          memberData?.plus_member === true || 
-          memberData?.plus_members === true || 
-          memberData?.is_active === true
-
-        if (isAdmin || hasValidFlag) {
-          setIsPlusMember(true)
-        } else {
-          setIsPlusMember(false)
-        }
-      }
-
       const { data, error } = await supabase
         .from("posts")
         .select(`
@@ -79,15 +52,6 @@ export default function PostFeed() {
 
     fetchPosts()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        window.location.reload()
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
   }, [])
 
   if (loading) {

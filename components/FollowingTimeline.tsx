@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
+import { useLocale } from "@/context/LocaleContext"
 
 type Props = {
   currentUserId: string
@@ -24,9 +25,10 @@ type TimelinePost = {
 }
 
 export default function FollowingTimeline({ currentUserId }: Props) {
+  const { t } = useLocale()
   const [posts, setPosts] = useState<TimelinePost[]>([])
   const [loading, setLoading] = useState(true)
-  const [isPlusMember, setIsPlusMember] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     const fetchTimeline = async () => {
@@ -35,9 +37,9 @@ export default function FollowingTimeline({ currentUserId }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        setIsPlusMember(true)
+        setIsAuthenticated(true)
       } else {
-        setIsPlusMember(false)
+        setIsAuthenticated(false)
         setLoading(false)
         return
       }
@@ -133,21 +135,21 @@ export default function FollowingTimeline({ currentUserId }: Props) {
     )
   }
 
-  if (!isPlusMember) {
+  if (!isAuthenticated) {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[50vh]">
         <div className="max-w-md w-full p-8 border border-border bg-white rounded-2xl shadow-xl">
           <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
-            MEMBER限定機能
+            {t("ログインが必要です")}
           </h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            フォローしているユーザーたちの最新の投稿をタイムライン形式でまとめてチェックできる機能です。本機能の利用にはMEMBER登録が必要です。
+            {t("フォロー中の投稿を見るには、無料アカウントでログインしてください。")}
           </p>
           <Link
-            href="/members"
+            href="/login"
             className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-200 hover:bg-neutral-800"
           >
-            MEMBERに登録する
+            {t("ログインまたは新規登録")}
           </Link>
           <Link 
             href="/" 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
 import { supabase } from "@/lib/supabase"
+import { useLocale } from "@/context/LocaleContext"
 
 type Props = {
   userId: string
@@ -16,10 +17,13 @@ type UserData = {
   avatar_url: string | null
 }
 
+type FollowRow = { user_data: UserData | UserData[] | null }
+
 export default function FollowList({ userId, type }: Props) {
+  const { t } = useLocale()
   const [list, setList] = useState<UserData[]>([])
   const [loading, setLoading] = useState(true)
-  const [isPlusMember, setIsPlusMember] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     const checkMemberAndFetchData = async () => {
@@ -28,9 +32,9 @@ export default function FollowList({ userId, type }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (user) {
-        setIsPlusMember(true)
+        setIsAuthenticated(true)
       } else {
-        setIsPlusMember(false)
+        setIsAuthenticated(false)
         setLoading(false)
         return
       }
@@ -57,8 +61,8 @@ export default function FollowList({ userId, type }: Props) {
         return
       }
 
-      const formattedData = (data || [])
-        .map((item: any) => item.user_data)
+      const formattedData = ((data || []) as FollowRow[])
+        .map((item) => Array.isArray(item.user_data) ? item.user_data[0] : item.user_data)
         .filter((user): user is UserData => !!user)
 
       setList(formattedData)
@@ -86,27 +90,27 @@ export default function FollowList({ userId, type }: Props) {
     )
   }
 
-  if (!isPlusMember) {
+  if (!isAuthenticated) {
     return (
       <main className="max-w-6xl mx-auto p-10 md:p-14 lg:p-16 text-center flex flex-col items-center justify-center min-h-[50vh]">
         <div className="max-w-md w-full p-8 border border-border bg-white rounded-2xl shadow-xl">
           <h1 className="text-base font-semibold tracking-[0.05em] text-foreground uppercase">
-            MEMBER限定機能
+            {t("ログインが必要です")}
           </h1>
           <p className="mt-4 text-xs text-muted leading-relaxed">
-            フォローしているユーザーや、自身をフォローしているユーザーの一ラーを確認できる機能です。本機能の利用にはMEMBER登録が必要です。
+            {t("フォロー情報を確認するには、無料アカウントでログインしてください。")}
           </p>
           <Link
-            href="/members"
+            href="/login"
             className="mt-8 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-200 hover:bg-neutral-800"
           >
-            MEMBERに登録する
+            {t("ログインまたは新規登録")}
           </Link>
           <Link 
             href="/" 
             className="mt-4 inline-block text-[11px] text-subtle hover:text-foreground transition-colors duration-200"
           >
-            トップページに戻る
+            {t("トップページに戻る")}
           </Link>
         </div>
       </main>
@@ -116,7 +120,7 @@ export default function FollowList({ userId, type }: Props) {
   if (list.length === 0) {
     return (
       <div className="p-12 text-center text-sm text-subtle border border-dashed rounded-2xl max-w-2xl mx-auto mt-6">
-        {type === "followers" ? "フォロワーはまだいません。" : "フォロー中のユーザーはまだいません。"}
+        {t(type === "followers" ? "フォロワーはまだいません。" : "フォロー中のユーザーはまだいません。")}
       </div>
     )
   }
@@ -147,7 +151,7 @@ export default function FollowList({ userId, type }: Props) {
               </p>
             )}
             <p className={`text-xs truncate ${user.display_name ? "text-subtle group-hover:text-zinc-300" : "font-semibold text-base leading-tight"}`}>
-              {user.username ? `@${user.username}` : "名称非公開"}
+              {user.username ? `@${user.username}` : t("名称非公開")}
             </p>
           </div>
         </Link>

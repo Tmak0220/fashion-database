@@ -1,10 +1,14 @@
 import type { Metadata } from "next"
 import ContactForm from "@/components/ContactForm"
-import { getRequestLocale } from "@/lib/locale-server"
+import { getRequestLocale, localizedAlternates } from "@/lib/locale-server"
 import { translateText } from "@/lib/i18n"
 
-export const metadata: Metadata = {
-  title: "コンタクト - FASHION DATABASE",
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale()
+  return {
+    title: locale === "en" ? "Contact - FASHION DATABASE" : "お問い合わせ - FASHION DATABASE",
+    alternates: await localizedAlternates("/contact"),
+  }
 }
 
 export default async function ContactPage() {

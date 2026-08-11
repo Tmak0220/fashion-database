@@ -9,9 +9,12 @@ import { getRequestLocale, localizedAlternates } from "@/lib/locale-server"
 import { translateText } from "@/lib/i18n"
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale()
   return {
-    title: "FASHION DATABASE - ファッションデータベース",
-    description: "ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。",
+    title: locale === "en" ? "FASHION DATABASE - Fashion Archive" : "FASHION DATABASE - ファッションデータベース",
+    description: locale === "en"
+      ? "A structured archive for fashion collections, runway, vintage pieces, and historical references."
+      : "ファッションコレクション、ランウェイ、ヴィンテージ、歴史的資料のための構造化アーカイブプロジェクト。",
     alternates: await localizedAlternates("/"),
   }
 }

@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuthModal } from "@/context/AuthModalContext"
+import Link from "@/components/LocalizedLink"
+import { useLocale } from "@/context/LocaleContext"
 
 type StatusMessage = {
   text: string
@@ -13,11 +15,49 @@ type StatusMessage = {
 export default function AuthModal() {
   const router = useRouter()
   const { isOpen, closeAuthModal } = useAuthModal()
+  const { t } = useLocale()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
+  const dialogRef = useRef<HTMLFormElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    emailRef.current?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeAuthModal()
+        return
+      }
+      if (event.key !== "Tab") return
+
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), a[href]'
+      )
+      if (!focusable?.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+      previouslyFocused?.focus()
+    }
+  }, [isOpen, closeAuthModal])
 
   if (!isOpen) return null
 
@@ -72,30 +112,36 @@ export default function AuthModal() {
       />
       
       <form 
+        ref={dialogRef}
         onSubmit={handleModalLogin}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
         className="relative bg-white border border-border w-full max-w-sm p-6 sm:p-8 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200"
       >
         <button 
           type="button"
           onClick={closeAuthModal}
+          aria-label={t("閉じる")}
           className="absolute top-5 right-5 text-subtle hover:text-foreground text-xs p-1 transition-colors"
         >
           ✕
         </button>
 
         <div className="text-center">
-          <h2 className="text-base font-semibold tracking-[0.05em] text-foreground">
-            MEMBER限定機能
+          <h2 id="auth-modal-title" className="text-base font-semibold tracking-[0.05em] text-foreground">
+            {t("ログインが必要です")}
           </h2>
           <p className="mt-3 text-xs text-muted leading-relaxed">
-            アーカイブの詳細や解説の閲覧、およびすべての機能を利用するにはMEMBER登録が必要です。
+            {t("この機能は無料アカウントで利用できます。ログインするか、新規登録してください。")}
           </p>
         </div>
 
         <div className="mt-8 flex flex-col gap-3.5">
           <input
+            ref={emailRef}
             type="email"
-            placeholder="メールアドレス"
+            placeholder={t("メールアドレス")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -104,7 +150,7 @@ export default function AuthModal() {
 
           <input
             type="password"
-            placeholder="パスワード"
+            placeholder={t("パスワード")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -127,12 +173,16 @@ export default function AuthModal() {
           disabled={loading}
           className="mt-6 block w-full text-center bg-black text-white font-medium rounded-xl px-4 py-3 text-[12px] transition-colors duration-300 hover:bg-neutral-800 disabled:opacity-50"
         >
-          {loading ? "ログイン中..." : "ログインする"}
+          {t(loading ? "ログイン中..." : "ログインする")}
         </button>
 
-        <p className="mt-4 text-center text-[10px] text-subtle leading-relaxed">
-          アカウントをお持ちでない場合は、トップページのメンバーシップ登録から新規登録を行ってください。
-        </p>
+        <Link
+          href="/login"
+          onClick={closeAuthModal}
+          className="mt-4 block text-center text-[11px] text-subtle underline underline-offset-4 hover:text-foreground transition-colors"
+        >
+          {t("無料アカウントを新規登録")}
+        </Link>
       </form>
     </div>
   )

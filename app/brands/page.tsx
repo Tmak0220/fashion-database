@@ -6,12 +6,13 @@ import PageLayout from "@/components/PageLayout"
 import CardSection from "@/components/CardSection"
 import HistoryDrawerItem from "@/components/HistoryDrawerItem"
 import SectionHeading from "@/components/SectionHeading"
-import { localizedAlternates } from "@/lib/locale-server"
+import { getRequestLocale, localizedAlternates } from "@/lib/locale-server"
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale()
   return {
-    title: "ブランド一覧 - FASHION DATABASE",
-    description: "ファッションデータベースに登録されているブランドを、地域・国別に探すことができます。",
+    title: locale === "en" ? "Brand Directory - FASHION DATABASE" : "ブランド一覧 - FASHION DATABASE",
+    description: locale === "en" ? "Browse fashion brands by region and country." : "ファッションデータベースに登録されているブランドを、地域・国別に探すことができます。",
     alternates: await localizedAlternates("/brands"),
   }
 }
@@ -38,7 +39,7 @@ export default async function BrandsPage() {
       title: item.title,
       content: item.content,
       sort_order: item.sort_order ?? 0,
-      type: item.type as any,
+      type: item.type as HistoryItem["type"],
     }))
     .sort((a, b) => a.sort_order - b.sort_order)
 

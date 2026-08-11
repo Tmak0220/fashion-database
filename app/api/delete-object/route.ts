@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { createClient } from "@/lib/supabase-server"
+import { getR2KeyFromUrl, isOwnedAvatarKey, isOwnedTemporaryKey } from "@/lib/r2-keys"
 
 const r2 = new S3Client({
   region: "auto",
@@ -12,18 +14,20 @@ const r2 = new S3Client({
 
 export async function POST(request: Request) {
   try {
-    const { url } = await request.json()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    if (!url) {
+    const body = (await request.json().catch(() => null)) as { url?: unknown } | null
+    const url = body?.url
+
+    if (typeof url !== "string") {
       return NextResponse.json({ error: "URL is required" }, { status: 400 })
     }
 
-    const urlObj = new URL(url)
-    
-    let key = decodeURIComponent(urlObj.pathname.slice(1))
-
-    if (key.includes("?")) {
-      key = key.split("?")[0]
+    const key = getR2KeyFromUrl(url)
+    if (!isOwnedTemporaryKey(key, user.id) && !isOwnedAvatarKey(key, user.id)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const deleteCommand = new DeleteObjectCommand({

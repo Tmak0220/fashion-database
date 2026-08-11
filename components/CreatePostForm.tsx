@@ -56,7 +56,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       const urls = imageUrlsRef.current
       if (urls.length > 0) {
         const blob = new Blob([JSON.stringify({ urls })], { type: "application/json" })
-        navigator.sendBeacon("/api/delete-objects-beacon", blob)
+        navigator.sendBeacon("/api/delete-object-beacon", blob)
       }
     }
 
@@ -141,7 +141,7 @@ export default function CreatePostForm({ onPostCreated }: Props) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("ログインしてください")
       
-      await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags }, user.id)
+      await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags })
       
       setStatusMessage({ text: "投稿が完了しました", type: "success" })
 

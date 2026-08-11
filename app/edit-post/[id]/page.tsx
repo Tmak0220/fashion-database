@@ -79,7 +79,7 @@ export default function EditPostPage() {
       
       if (abandonedUrls.length > 0) {
         const blob = new Blob([JSON.stringify({ urls: abandonedUrls })], { type: "application/json" })
-        navigator.sendBeacon("/api/delete-objects-beacon", blob)
+        navigator.sendBeacon("/api/delete-object-beacon", blob)
       }
     }
 
@@ -325,8 +325,7 @@ export default function EditPostPage() {
           year: year,
           imageUrls: imageUrls,
           selectedTags: selectedTags,
-        },
-        user.id
+        }
       )
 
       initialImageUrlsRef.current = result.imageUrls

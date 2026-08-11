@@ -4,12 +4,13 @@ import type { Metadata } from "next"
 import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import CollectionsPageClient from "./CollectionPageClient"
-import { localizedAlternates } from "@/lib/locale-server"
+import { getRequestLocale, localizedAlternates } from "@/lib/locale-server"
 
 export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale()
   return {
-    title: "コレクションアーカイブ - FASHION DATABASE",
-    description: "年代別のシーズンコレクションおよびブランド別ランウェイの構造化アーカイブ。ファッション史をタイムラインで俯瞰できます。",
+    title: locale === "en" ? "Collection Archive - FASHION DATABASE" : "コレクションアーカイブ - FASHION DATABASE",
+    description: locale === "en" ? "Explore seasonal collections and brand runway archives across fashion history." : "年代別のシーズンコレクションおよびブランド別ランウェイの構造化アーカイブ。ファッション史をタイムラインで俯瞰できます。",
     alternates: await localizedAlternates("/collections"),
   }
 }

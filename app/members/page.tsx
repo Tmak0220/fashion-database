@@ -69,7 +69,7 @@ export default function MembersPage() {
 
               <div className="mt-8 sm:mt-10 flex items-end gap-1.5">
                 <span className="text-4xl sm:text-5xl font-medium leading-none tracking-tight">{plan.price}</span>
-                <span className="pb-0.5 text-xs sm:text-sm text-muted font-medium">{plan.period}</span>
+                <span className="pb-0.5 text-xs sm:text-sm text-muted font-medium">{t(plan.period)}</span>
               </div>
 
               <p className="mt-4 text-xs sm:text-sm text-muted leading-relaxed">{t(plan.description)}</p>

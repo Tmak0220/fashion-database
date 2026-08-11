@@ -49,43 +49,6 @@ export default function SearchContent() {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(false)
-  const [isPlusMember, setIsPlusMember] = useState(false)
-
-  useEffect(() => {
-    const checkMemberStatus = async (user: any) => {
-      if (user) {
-        const isAdmin = user?.user_metadata?.role === "admin" || user?.role === "admin" || user?.app_metadata?.role === "admin"
-        const { data: memberData } = await supabase
-          .from("users")
-          .select("plus_member, plus_members, is_active")
-          .eq("id", user.id)
-          .maybeSingle()
-        const hasValidFlag = memberData?.plus_member === true || memberData?.plus_members === true || memberData?.is_active === true
-        setIsPlusMember(isAdmin || hasValidFlag)
-      } else {
-        setIsPlusMember(false)
-      }
-    }
-
-    const initAuth = async () => {
-      const { data: sessionData } = await supabase.auth.getSession()
-      await checkMemberStatus(sessionData?.session?.user)
-    }
-
-    initAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_OUT") {
-        setIsPlusMember(false)
-      } else if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-        await checkMemberStatus(session?.user)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
 
   useEffect(() => {
     const fetchResults = async () => {

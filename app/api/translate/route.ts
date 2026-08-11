@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { checkRateLimit, getClientAddress } from "@/lib/rate-limit"
 
 type GoogleTranslation = {
   translatedText: string
@@ -32,6 +33,14 @@ export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin")
   if (origin && new URL(origin).host !== request.headers.get("host")) {
     return NextResponse.json({ error: "Invalid origin." }, { status: 403 })
+  }
+
+  const rateLimit = checkRateLimit(`translate:${getClientAddress(request)}`, 100, 10 * 60 * 1000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    )
   }
 
   const body = (await request.json().catch(() => null)) as { texts?: unknown; target?: unknown } | null

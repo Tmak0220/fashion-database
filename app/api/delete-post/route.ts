@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { createClient } from "@supabase/supabase-js"
+import { createClient as createServerClient } from "@/lib/supabase-server"
+import { getR2KeyFromUrl } from "@/lib/r2-keys"
 
 const s3 = new S3Client({
   region: "auto",
@@ -11,18 +13,26 @@ const s3 = new S3Client({
   },
 })
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function POST(req: NextRequest) {
   try {
-    const { postId } = await req.json()
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const { data: post, error: postFetchError } = await supabase
+    const body = (await req.json().catch(() => null)) as { postId?: unknown } | null
+    const postId = body?.postId
+    if (typeof postId !== "string" || !postId) {
+      return NextResponse.json({ error: "Post ID is required" }, { status: 400 })
+    }
+
+    const { data: post, error: postFetchError } = await supabaseAdmin
       .from("posts")
-      .select("*")
+      .select("id, user_id, image_urls")
       .eq("id", postId)
       .single()
 
@@ -33,28 +43,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const isAdmin = user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin"
+    if (post.user_id !== user.id && !isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const imageUrls: string[] = post.image_urls || []
 
     for (const imageUrl of imageUrls) {
-      let key = ""
-      if (imageUrl.includes(".r2.dev/")) {
-        key = imageUrl.split(".r2.dev/")[1]
-      } else {
-        const urlParts = imageUrl.split("/")
-        key = urlParts[urlParts.length - 1]
+      try {
+        const key = getR2KeyFromUrl(imageUrl)
+        await s3.send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET_NAME!, Key: key }))
+      } catch (error) {
+        console.error("Skipping invalid image URL during post deletion", error)
       }
-
-      if (!key) continue
-
-      await s3.send(
-        new DeleteObjectCommand({
-          Bucket: process.env.R2_BUCKET_NAME!,
-          Key: decodeURIComponent(key),
-        })
-      )
     }
 
-    const { error: tagError } = await supabase
+    const { error: tagError } = await supabaseAdmin
       .from("post_tags")
       .delete()
       .eq("post_id", postId)
@@ -63,7 +68,7 @@ export async function POST(req: NextRequest) {
       throw tagError
     }
 
-    const { error: deletePostError } = await supabase
+    const { error: deletePostError } = await supabaseAdmin
       .from("posts")
       .delete()
       .eq("id", postId)

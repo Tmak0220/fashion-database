@@ -2,7 +2,7 @@ import Link from "@/components/LocalizedLink"
 
 type Props = {
   collection: {
-    id: number
+    id: number | string
     year: number | string
     season: string
     label?: string | null
