@@ -16,7 +16,36 @@ type Designer = {
   name: string
   name_ja: string | null
   slug: string
-  designer_histories?: any[]
+  designer_histories?: DesignerHistorySource[]
+}
+
+type DesignerHistorySource = {
+  title?: string | null
+  content: string | null
+  sort_order: number | null
+}
+
+type DesignerBrand = {
+  id: number
+  start_year: number
+  end_year: number | null
+  content: string | null
+  line?: "mens" | "womens" | "both" | null
+  brands: {
+    name: string
+    slug: string
+    name_ja: string
+    region_slug: string
+    country_slug: string
+  } | null
+}
+
+type Collection = {
+  id: number
+  year: number
+  season: string
+  label?: string | null
+  brands: { slug: string } | null
 }
 
 type RelatedDesigner = {
@@ -51,8 +80,8 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
   const params = useParams()
   const slug = params.slug as string
   const { openAuthModal } = useAuthModal()
-  const [brands, setBrands] = useState<any[]>([])
-  const [collections, setCollections] = useState<any[]>([])
+  const [brands, setBrands] = useState<DesignerBrand[]>([])
+  const [collections, setCollections] = useState<Collection[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [historyItems, setHistoryItems] = useState<DesignerHistoryItem[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -94,7 +123,7 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
       const histories = designer.designer_histories || []
       if (histories.length > 0) {
         setHistoryItems(
-          histories.map((item: any) => ({
+          histories.map((item) => ({
             title: item.title || `${designer.name_ja || designer.name} について`,
             content: item.content || "",
             sort_order: Number(item.sort_order) || 0,
@@ -107,14 +136,17 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
 
       const [brandsRes, collectionsRes, postsRes, followCountRes] = await Promise.all([
         supabase.from("brand_designers").select("*, brands!brand_designers_brand_id_fkey (*)").eq("designer_id", designer.id).order("start_year", { ascending: true }),
-        supabase.from("collections").select("*").eq("designer_id", designer.id).order("year", { ascending: true }),
+        supabase.from("collections").select("id, year, season, label, brands!collections_brand_id_fkey(slug)").eq("designer_id", designer.id).order("year", { ascending: true }),
         supabase.from("posts").select("id, image_urls, title, brands!posts_brand_id_fkey(slug)").eq("designer_id", designer.id).order("created_at", { ascending: false }),
         supabase.from("designer_follows").select("*", { count: "exact", head: true }).eq("designer_id", designer.id)
       ])
 
       if (isMounted) {
-        setBrands(brandsRes.data || [])
-        setCollections(collectionsRes.data || [])
+        setBrands((brandsRes.data || []) as unknown as DesignerBrand[])
+        setCollections((collectionsRes.data || []).map((collection) => ({
+          ...collection,
+          brands: Array.isArray(collection.brands) ? collection.brands[0] || null : collection.brands,
+        })))
         setPosts((postsRes.data || []).map((post) => ({
           ...post,
           brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
@@ -196,8 +228,12 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
       <section className="mt-28 sm:mt-36">
         <SectionHeading title="Collections" titleJa="コレクション" className="mb-8" />
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
-          {collections.map((collection) => (
-            <CollectionButton key={collection.id} collection={collection} />
+          {collections.map((collection) => collection.brands && (
+            <CollectionButton
+              key={collection.id}
+              collection={collection}
+              href={`/collections/${collection.brands.slug}/${collection.year}-${collection.season.toLowerCase()}`}
+            />
           ))}
         </div>
       </section>

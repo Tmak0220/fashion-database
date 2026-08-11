@@ -27,6 +27,25 @@ const getGridClasses = (slug: string) => {
   }
 }
 
+type CountryGroup = {
+  country_name: string
+  country_name_ja: string
+  brands: Array<{
+    id: string | number
+    name: string
+    slug: string
+    country_slug: string
+    region_slug: string
+  }>
+}
+
+type RelatedCountry = { id: string | number; name: string; name_ja: string | null }
+type RelatedRegion = { slug: string }
+
+function firstRelation<T>(value: T | T[] | null): T | null {
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
 export default async function GroupsPage() {
   const [groupsResult, brandsResult] = await Promise.all([
     supabase.from("groups").select("*").order("id"),
@@ -50,13 +69,15 @@ export default async function GroupsPage() {
 
   const formattedGroups = rawGroups.map((group) => {
     const groupBrands = rawBrands.filter((b) => b.group_slug === group.slug)
-    const countries: Record<string, any> = {}
+    const countries: Record<string, CountryGroup> = {}
 
-    groupBrands.forEach((brand: any) => {
-      const countryId = brand.countries?.id || "unknown"
-      const countryName = brand.countries?.name || "UNKNOWN"
-      const countryNameJa = brand.countries?.name_ja || "不明"
-      const regionSlug = brand.regions?.slug || "unknown"
+    groupBrands.forEach((brand) => {
+      const country = firstRelation(brand.countries as unknown as RelatedCountry | RelatedCountry[] | null)
+      const region = firstRelation(brand.regions as unknown as RelatedRegion | RelatedRegion[] | null)
+      const countryId = String(country?.id || "unknown")
+      const countryName = country?.name || "UNKNOWN"
+      const countryNameJa = country?.name_ja || "不明"
+      const regionSlug = region?.slug || "unknown"
 
       if (!countries[countryId]) {
         countries[countryId] = {

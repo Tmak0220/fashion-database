@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
+import Image from "next/image"
 import { supabase } from "@/lib/supabase"
 import { useLocale } from "@/context/LocaleContext"
 
@@ -134,9 +135,11 @@ export default function FollowList({ userId, type }: Props) {
           className="flex items-center gap-4 border border-border rounded-2xl p-4 hover:bg-black hover:text-white transition group active:scale-[0.99]"
         >
           {user.avatar_url ? (
-            <img
+            <Image
               src={user.avatar_url}
               alt=""
+              width={48}
+              height={48}
               className="w-12 h-12 rounded-full object-cover border border-border"
             />
           ) : (

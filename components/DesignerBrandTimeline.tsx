@@ -10,7 +10,7 @@ type Brand = {
   id: number
   start_year: number
   end_year: number | null
-  description: string | null
+  content: string | null
   line?: BrandLine | null
   brands: { // 👈 Supabaseのリレーション結果を想定
     name: string
@@ -94,13 +94,7 @@ function buildTimelineRows(brands: Brand[]): TimelineRow[] {
   )
 }
 
-function BrandEntry({
-  brand,
-  centered = false,
-}: {
-  brand: Brand
-  centered?: boolean
-}) {
+function BrandEntry({ brand }: { brand: Brand }) {
   const [isExpanded, setIsExpanded] = useState(false)
   if (!brand.brands) return null
 
@@ -122,7 +116,7 @@ function BrandEntry({
         </p>
       </Link>
 
-      {brand.description && (
+      {brand.content && (
         <div className="w-full flex flex-col items-center">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -143,7 +137,7 @@ function BrandEntry({
           >
             <div className="overflow-hidden min-h-0 w-full">
               <p className="text-xs sm:text-[13px] text-foreground/80 leading-[2.1] tracking-wide text-center whitespace-pre-wrap px-4 sm:px-0">
-                {brand.description}
+                {brand.content}
               </p>
             </div>
           </div>
@@ -163,7 +157,7 @@ export default function DesignerBrandTimeline({ brands }: Props) {
         <SectionHeading title="Brands" titleJa="担当ブランド" />
         <div className="mt-14 space-y-16">
           {sortedBrands(brands).map((brand) => (
-            <BrandEntry key={brand.id} brand={brand} centered />
+            <BrandEntry key={brand.id} brand={brand} />
           ))}
         </div>
       </section>
@@ -190,7 +184,7 @@ export default function DesignerBrandTimeline({ brands }: Props) {
           if (row.kind === "both") {
             return (
               <div key={`both-${row.brand.id}`} className="text-center">
-                <BrandEntry brand={row.brand} centered />
+                <BrandEntry brand={row.brand} />
               </div>
             )
           }
@@ -201,10 +195,10 @@ export default function DesignerBrandTimeline({ brands }: Props) {
               className="grid grid-cols-1 items-start gap-16 md:grid-cols-2 md:gap-24"
             >
               <div style={{ paddingTop: row.mens ? yearOffset(row.mens.start_year, row.anchorYear) : 0 }}>
-                {row.mens && <BrandEntry brand={row.mens} centered={false} />}
+                {row.mens && <BrandEntry brand={row.mens} />}
               </div>
               <div style={{ paddingTop: row.womens ? yearOffset(row.womens.start_year, row.anchorYear) : 0 }}>
-                {row.womens && <BrandEntry brand={row.womens} centered={false} />}
+                {row.womens && <BrandEntry brand={row.womens} />}
               </div>
             </div>
           )

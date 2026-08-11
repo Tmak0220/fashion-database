@@ -10,7 +10,7 @@ type Designer = {
   id: number
   start_year: number
   end_year: number
-  description: string | null
+  content: string | null
   line?: DesignerLine | null
   designers: {
     name: string
@@ -93,13 +93,7 @@ function buildTimelineRows(designers: Designer[]): TimelineRow[] {
   )
 }
 
-function DesignerEntry({
-  designer,
-  centered = false,
-}: {
-  designer: Designer
-  centered?: boolean
-}) {
+function DesignerEntry({ designer }: { designer: Designer }) {
   const [isExpanded, setIsExpanded] = useState(false)
   
   const align = "text-center flex flex-col items-center w-full"
@@ -122,7 +116,7 @@ function DesignerEntry({
         </p>
       </Link>
 
-      {designer.description && (
+      {designer.content && (
         <div className="w-full flex flex-col items-center">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -143,7 +137,7 @@ function DesignerEntry({
           >
             <div className="overflow-hidden min-h-0 w-full">
               <p className="text-xs sm:text-[13px] text-foreground/80 leading-[2.1] tracking-wide text-center whitespace-pre-wrap px-4 sm:px-0">
-                {designer.description}
+                {designer.content}
               </p>
             </div>
           </div>
@@ -163,11 +157,7 @@ export default function DesignerTimeline({ designers }: Props) {
         <SectionHeading title="Designers" titleJa="デザイナー" />
         <div className="mt-14 space-y-16">
           {sortedDesigners(designers).map((designer) => (
-            <DesignerEntry
-              key={designer.id}
-              designer={designer}
-              centered
-            />
+            <DesignerEntry key={designer.id} designer={designer} />
           ))}
         </div>
       </section>
@@ -194,10 +184,7 @@ export default function DesignerTimeline({ designers }: Props) {
           if (row.kind === "both") {
             return (
               <div key={`both-${row.designer.id}`} className="text-center">
-                <DesignerEntry
-                  designer={row.designer}
-                  centered
-                />
+                <DesignerEntry designer={row.designer} />
               </div>
             )
           }
@@ -209,18 +196,12 @@ export default function DesignerTimeline({ designers }: Props) {
             >
               <div style={{ paddingTop: row.mens ? yearOffset(row.mens.start_year, row.anchorYear) : 0 }}>
                 {row.mens && (
-                  <DesignerEntry
-                    designer={row.mens}
-                    centered={false}
-                  />
+                  <DesignerEntry designer={row.mens} />
                 )}
               </div>
               <div style={{ paddingTop: row.womens ? yearOffset(row.womens.start_year, row.anchorYear) : 0 }}>
                 {row.womens && (
-                  <DesignerEntry
-                    designer={row.womens}
-                    centered={false}
-                  />
+                  <DesignerEntry designer={row.womens} />
                 )}
               </div>
             </div>

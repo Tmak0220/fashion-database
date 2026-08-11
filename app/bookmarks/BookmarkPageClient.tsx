@@ -22,12 +22,18 @@ type BookmarkPost = {
 
 type FilterType = "all" | "brand" | "designer" | "tag"
 
+type RawPost = Omit<BookmarkPost["posts"], "brands" | "designers" | "tags"> & {
+  brands: BookmarkPost["posts"]["brands"] | BookmarkPost["posts"]["brands"][]
+  designers: BookmarkPost["posts"]["designers"] | BookmarkPost["posts"]["designers"][]
+}
+
+type RawBookmark = { id: string; posts: RawPost | RawPost[] | null }
+type RawPostTag = { tags: { name: string } | { name: string }[] | null }
+
 export default function BookmarkPageClient() {
   const [bookmarks, setBookmarks] = useState<BookmarkPost[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isAuthChecked, setIsAuthChecked] = useState(false)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-
   const [activeTab, setActiveTab] = useState<FilterType>("all")
   const [selectedSubItem, setSelectedSubItem] = useState<string>("すべて")
 
@@ -43,8 +49,6 @@ export default function BookmarkPageClient() {
       setIsAuthChecked(true)
       return
     }
-
-    setCurrentUserId(user.id)
 
     setIsAuthenticated(true)
 
@@ -73,10 +77,12 @@ export default function BookmarkPageClient() {
 
     if (data && data.length > 0) {
       const formattedData: BookmarkPost[] = await Promise.all(
-        data
-          .filter((item: any) => item.posts)
-          .map(async (item: any) => {
-            const rawPost = item.posts
+        (data as unknown as RawBookmark[])
+          .filter((item) => item.posts)
+          .map(async (item) => {
+            const rawPostRelation = item.posts
+            const rawPost = Array.isArray(rawPostRelation) ? rawPostRelation[0] : rawPostRelation
+            if (!rawPost) throw new Error("ブックマーク先の投稿が見つかりません")
             const brandInfo = Array.isArray(rawPost.brands) ? rawPost.brands[0] || null : rawPost.brands
             const designerInfo = Array.isArray(rawPost.designers) ? rawPost.designers[0] || null : rawPost.designers
             let tagNames: string[] = []
@@ -87,9 +93,12 @@ export default function BookmarkPageClient() {
               .eq("post_id", rawPost.id)
 
             if (postTagsData) {
-              tagNames = postTagsData
-                .map((pt: any) => pt.tags?.name)
-                .filter(Boolean) as string[]
+              tagNames = (postTagsData as unknown as RawPostTag[])
+                .map((postTag) => {
+                  const tag = Array.isArray(postTag.tags) ? postTag.tags[0] : postTag.tags
+                  return tag?.name
+                })
+                .filter((name): name is string => Boolean(name))
             }
 
             return {
@@ -115,12 +124,10 @@ export default function BookmarkPageClient() {
   }
 
   useEffect(() => {
+    // The first state update occurs after the asynchronous auth lookup.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBookmarks()
   }, [])
-
-  useEffect(() => {
-    setSelectedSubItem("すべて")
-  }, [activeTab])
 
   const handleSingleDelete = async (bookmarkId: string) => {
     if (actionLoading) return
@@ -220,7 +227,7 @@ export default function BookmarkPageClient() {
 
       <div className="mt-8 flex gap-6 border-b border-border text-sm overflow-x-auto no-scrollbar">
         {[ { id: "all", label: "すべて" }, { id: "brand", label: "ブランド別" }, { id: "designer", label: "デザイナー別" }, { id: "tag", label: "タグ別" } ].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id as FilterType)} className={`pb-3 font-medium tracking-wider transition-colors relative whitespace-nowrap ${activeTab === tab.id ? "text-foreground" : "text-subtle hover:text-foreground"}`}>
+          <button key={tab.id} onClick={() => { setActiveTab(tab.id as FilterType); setSelectedSubItem("すべて"); }} className={`pb-3 font-medium tracking-wider transition-colors relative whitespace-nowrap ${activeTab === tab.id ? "text-foreground" : "text-subtle hover:text-foreground"}`}>
             {tab.label}
             {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black" />}
           </button>

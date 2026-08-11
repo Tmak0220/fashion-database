@@ -46,6 +46,22 @@ export async function publishPendingEntity(formData: FormData) {
 
   const { error } = await admin.from(table).update(payload).eq("id", id).eq("status", "pending")
   if (error) throw new Error(error.message)
+
+  if (type === "brand") {
+    const { data: collections, error: collectionError } = await admin
+      .from("collections")
+      .select("id, year, season")
+      .eq("brand_id", id)
+    if (collectionError) throw new Error(collectionError.message)
+
+    for (const collection of collections || []) {
+      const { error: slugError } = await admin
+        .from("collections")
+        .update({ slug: `${slug}-${collection.year}-${collection.season}` })
+        .eq("id", collection.id)
+      if (slugError) throw new Error(slugError.message)
+    }
+  }
   revalidatePath("/admin/entities")
 }
 

@@ -16,7 +16,36 @@ type Brand = {
   name: string
   name_ja: string | null
   slug: string
-  brand_histories?: any[]
+  brand_histories?: BrandHistorySource[]
+}
+
+type BrandHistorySource = {
+  title?: string | null
+  content: string | null
+  sort_order: number | null
+}
+
+type BrandDesigner = {
+  id: number
+  start_year: number
+  end_year: number
+  content: string | null
+  line?: "mens" | "womens" | "both" | null
+  designers: {
+    name: string
+    slug: string
+    name_ja: string
+    description: string
+    region_slug: string
+    country_slug: string
+  }
+}
+
+type Collection = {
+  id: number
+  year: number
+  season: string
+  label?: string | null
 }
 
 type RelatedBrand = {
@@ -51,8 +80,8 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
   const params = useParams()
   const slug = params.slug as string
   const { openAuthModal } = useAuthModal()
-  const [designers, setDesigners] = useState<any[]>([])
-  const [collections, setCollections] = useState<any[]>([])
+  const [designers, setDesigners] = useState<BrandDesigner[]>([])
+  const [collections, setCollections] = useState<Collection[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [historyItems, setHistoryItems] = useState<BrandHistoryItem[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -94,7 +123,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       const histories = brand.brand_histories || []
       if (histories.length > 0) {
         setHistoryItems(
-          histories.map((item: any) => ({
+          histories.map((item) => ({
             title: item.title || `${brand.name_ja || brand.name} について`,
             content: item.content || "",
             sort_order: Number(item.sort_order) || 0,
@@ -113,8 +142,8 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       ])
 
       if (isMounted) {
-        setDesigners(designersRes.data || [])
-        setCollections(collectionsRes.data || [])
+        setDesigners((designersRes.data || []) as unknown as BrandDesigner[])
+        setCollections((collectionsRes.data || []) as Collection[])
         setPosts(postsRes.data || [])
         setFollowersCount(followCountRes.count || 0)
       }
@@ -194,7 +223,11 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         <SectionHeading title="Collections" titleJa="コレクション" className="mb-8" />
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5 sm:gap-3">
           {collections.map((collection) => (
-            <CollectionButton key={collection.id} collection={collection} />
+            <CollectionButton
+              key={collection.id}
+              collection={collection}
+              href={`/collections/${brand.slug}/${collection.year}-${collection.season.toLowerCase()}`}
+            />
           ))}
         </div>
       </section>

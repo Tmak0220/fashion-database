@@ -35,8 +35,8 @@ export async function createCheckoutSession(origin: string) {
     })
 
     return { url: session.url }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Stripe Session Creation Error:", error)
-    return { error: error.message || "Stripe Error" }
+    return { error: error instanceof Error ? error.message : "Stripe Error" }
   }
 }

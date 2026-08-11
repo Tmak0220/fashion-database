@@ -88,7 +88,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
       }
 
       if (postData) {
-        const formattedPosts: TimelinePost[] = postData.map((post: any) => {
+        const formattedPosts: TimelinePost[] = postData.map((post) => {
           const rawUser = Array.isArray(post.users) ? post.users[0] : post.users
           return {
             id: post.id,

@@ -67,6 +67,7 @@ export async function resolveEntity(
 export async function resolveCollection(
   admin: SupabaseClient,
   brand: ResolvedEntity,
+  designer: ResolvedEntity,
   yearValue: string | null | undefined,
   seasonValue: string | null | undefined
 ): Promise<ResolvedCollection> {
@@ -78,13 +79,53 @@ export async function resolveCollection(
 
   const { data, error } = await admin
     .from("collections")
-    .select("id, slug")
+    .select("id, slug, designer_id")
     .eq("brand_id", brand.id)
     .eq("year", year)
     .eq("season", season)
     .maybeSingle()
 
   if (error) throw new Error("コレクションの照合に失敗しました")
-  if (!data) return null
-  return { id: data.id, slug: data.slug }
+  if (data) {
+    if (designer && !data.designer_id) {
+      const { error: designerError } = await admin
+        .from("collections")
+        .update({ designer_id: designer.id })
+        .eq("id", data.id)
+        .is("designer_id", null)
+      if (designerError) throw new Error("コレクションのデザイナー紐付けに失敗しました")
+    }
+    return { id: data.id, slug: data.slug }
+  }
+
+  const slug = `${brand.slug}-${year}-${season}`
+  const { data: created, error: createError } = await admin
+    .from("collections")
+    .insert({
+      brand_id: brand.id,
+      designer_id: designer?.id ?? null,
+      year,
+      season,
+      slug,
+    })
+    .select("id, slug")
+    .single()
+
+  if (created) return { id: created.id, slug: created.slug }
+
+  // Two submissions for the same collection can arrive together. The unique
+  // index lets only one insert succeed, so reuse the row created by the winner.
+  if (createError?.code === "23505") {
+    const { data: concurrent, error: concurrentError } = await admin
+      .from("collections")
+      .select("id, slug")
+      .eq("brand_id", brand.id)
+      .eq("year", year)
+      .eq("season", season)
+      .maybeSingle()
+
+    if (!concurrentError && concurrent) return { id: concurrent.id, slug: concurrent.slug }
+  }
+
+  throw new Error(`コレクションを作成できませんでした: ${createError?.message ?? "unknown error"}`)
 }

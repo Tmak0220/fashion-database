@@ -54,8 +54,8 @@ export async function POST(req: Request) {
 
       if (!userId) {
         const customerId = subscription.customer as string
-        const { data: customerPost } = await stripe.customers.retrieve(customerId) as any
-        userId = customerPost?.metadata?.user_id
+        const customer = await stripe.customers.retrieve(customerId)
+        if (!customer.deleted) userId = customer.metadata?.user_id
       }
 
       if (!userId) {

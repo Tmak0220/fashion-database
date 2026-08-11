@@ -81,7 +81,7 @@ export async function createPost(input: PostInput) {
       resolveEntity(supabaseAdmin, "brands", input.brandSlug),
       resolveEntity(supabaseAdmin, "designers", input.designerSlug),
     ])
-    const collection = await resolveCollection(supabaseAdmin, brand, input.year, input.season)
+    const collection = await resolveCollection(supabaseAdmin, brand, designer, input.year, input.season)
 
     const insertPayload = {
       user_id: currentUserId,
@@ -151,7 +151,7 @@ export async function updatePost(postId: string, input: PostInput) {
       resolveEntity(supabaseAdmin, "brands", input.brandSlug),
       resolveEntity(supabaseAdmin, "designers", input.designerSlug),
     ])
-    const collection = await resolveCollection(supabaseAdmin, brand, input.year, input.season)
+    const collection = await resolveCollection(supabaseAdmin, brand, designer, input.year, input.season)
 
     const updatePayload = {
       title: input.title.trim(),

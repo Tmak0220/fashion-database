@@ -15,6 +15,25 @@ type Props = {
   }>
 }
 
+type HistoryRecord = {
+  title?: string | null
+  content: string | null
+  sort_order: number | null
+  key: string | null
+  lang: string | null
+  is_visible: boolean | null
+}
+
+type PlaceRecord = {
+  name: string
+  name_ja: string | null
+  slug: string
+}
+
+function firstRelation<T>(value: T | T[] | null): T | null {
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region, country, slug } = await params
   
@@ -30,14 +49,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!brand) return { title: "Brand Not Found" }
 
-  const histories = brand.brand_histories as any[] || []
+  const histories = (brand.brand_histories || []) as unknown as HistoryRecord[]
   const jaHistories = histories.filter(h => h.key === "brand" && h.lang === "ja" && h.is_visible === true)
-  const sortedHistories = jaHistories.sort((a, b) => a.sort_order - b.sort_order)
+  const sortedHistories = jaHistories.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const historyContent = sortedHistories[0]?.content
   
   const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) - FASHION DATABASE` : `${brand.name} - FASHION DATABASE`
   
-  const countryObj = brand.countries as any
+  const countryObj = firstRelation(brand.countries as unknown as PlaceRecord | PlaceRecord[] | null)
   const countryNameJa = countryObj ? (countryObj.name_ja || countryObj.name) : "不明"
   const description = historyContent 
     ? historyContent.slice(0, 120) 
@@ -66,9 +85,9 @@ export default async function Page({ params }: Props) {
 
   if (!brand) notFound()
 
-  const histories = brand.brand_histories as any[] || []
+  const histories = (brand.brand_histories || []) as unknown as HistoryRecord[]
   const jaHistories = histories.filter(h => h.key === "brand" && h.lang === "ja" && h.is_visible === true)
-  const sortedHistories = jaHistories.sort((a, b) => a.sort_order - b.sort_order)
+  const sortedHistories = jaHistories.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
   const brandWithHistories = {
     id: brand.id,
@@ -89,8 +108,8 @@ export default async function Page({ params }: Props) {
     .slice(0, 4)
     .map((b) => ({ ...b, region_slug: region, country_slug: country, image_url: null }))
 
-  const countryData = brand.countries as any
-  const regionData = brand.regions as any
+  const countryData = firstRelation(brand.countries as unknown as PlaceRecord | PlaceRecord[] | null)
+  const regionData = firstRelation(brand.regions as unknown as PlaceRecord | PlaceRecord[] | null)
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
@@ -113,7 +132,7 @@ export default async function Page({ params }: Props) {
       breadcrumbs={breadcrumbs}
     >
       <BrandPageClient 
-        brand={brandWithHistories as any} 
+        brand={brandWithHistories}
         relatedBrands={sanitizedRelatedBrands} 
       />
     </PageLayout>
