@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js"
 import { S3Client, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { createClient as createServerClient } from "@/lib/supabase-server"
 import { getR2KeyFromUrl, getR2PublicUrl, isOwnedPostKey, isOwnedTemporaryKey } from "@/lib/r2-keys"
+import { resolveEntity } from "@/lib/entity-resolution"
 
 const r2 = new S3Client({
   region: "auto",
@@ -78,19 +79,25 @@ export async function createPost(input: PostInput) {
     const permanentImageUrls = await Promise.all(
       input.imageUrls.map((url) => moveToPermanentStorage(url, currentUserId))
     )
+    const [brand, designer] = await Promise.all([
+      resolveEntity(supabaseAdmin, "brands", input.brandSlug),
+      resolveEntity(supabaseAdmin, "designers", input.designerSlug),
+    ])
 
     const insertPayload = {
       user_id: currentUserId,
       title: input.title.trim(),
       description: input.description?.trim() || null,
       image_urls: permanentImageUrls,
-      brand_slug: input.brandSlug?.trim() || null,
-      designer_slug: input.designerSlug?.trim() || null,
+      brand_id: brand?.id ?? null,
+      designer_id: designer?.id ?? null,
+      brand_slug: brand?.slug ?? null,
+      designer_slug: designer?.slug ?? null,
       season: input.season || null,
       year: input.year ? parseInt(input.year, 10) : null,
       season_slug: (input.season && input.year) ? `${input.year}-${input.season}` : null,
-      collection_slug: (input.season && input.year && input.brandSlug)
-        ? `${input.brandSlug.trim()}-${input.year}-${input.season}`
+      collection_slug: (input.season && input.year && brand)
+        ? `${brand.slug}-${input.year}-${input.season}`
         : null,
     }
 
@@ -146,13 +153,19 @@ export async function updatePost(postId: string, input: PostInput) {
     const permanentImageUrls = await Promise.all(
       input.imageUrls.map((url) => moveToPermanentStorage(url, user.id))
     )
+    const [brand, designer] = await Promise.all([
+      resolveEntity(supabaseAdmin, "brands", input.brandSlug),
+      resolveEntity(supabaseAdmin, "designers", input.designerSlug),
+    ])
 
     const updatePayload = {
       title: input.title.trim(),
       description: input.description?.trim() || null,
       image_urls: permanentImageUrls,
-      brand_slug: input.brandSlug || null,
-      designer_slug: input.designerSlug || null,
+      brand_id: brand?.id ?? null,
+      designer_id: designer?.id ?? null,
+      brand_slug: brand?.slug ?? null,
+      designer_slug: designer?.slug ?? null,
       collection_slug: input.collectionSlug,
       season_slug: input.seasonSlug,
       season: input.season || null,
