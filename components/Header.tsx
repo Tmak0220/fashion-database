@@ -97,69 +97,20 @@ export default function Header() {
   return (
     <>
       <header className="border-b border-border bg-background w-full">
-        <div className="hidden min-[1180px]:flex items-center justify-between gap-4 2xl:gap-8 px-5 2xl:px-10 py-6">
-          <div className="flex items-center gap-4 2xl:gap-8 min-w-0">
-            <Link href={localizePath("/")} className="type-brand text-xl 2xl:text-[1.65rem] text-foreground tracking-wide font-medium shrink-0 whitespace-nowrap">
-              FASHION DATABASE
-            </Link>
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder={t("ブランド名、デザイナー名など")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-48 2xl:w-64 border border-border rounded-xl px-4 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:border-neutral-400 transition"
-              />
-              <button type="submit" className="border border-border rounded-xl px-5 py-2.5 text-sm tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white hover:border-black transition shrink-0">
-                {t("検索")}
-              </button>
-            </form>
-          </div>
-
-          <div className="flex items-center justify-end gap-4 2xl:gap-7 text-xs text-foreground shrink-0">
-            {email ? (
-              <>
-                <Link href={localizePath("/mypage")} className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-                  <User size={22} strokeWidth={1.5} />
-                  <span className="font-medium tracking-wider text-xs whitespace-nowrap">{t("マイページ")}</span>
-                </Link>
-                <Link href={localizePath("/bookmarks")} className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-                  <Folder size={22} strokeWidth={1.5} />
-                  <span className="font-medium tracking-wider text-xs whitespace-nowrap">{t("ブックマーク")}</span>
-                </Link>
-                {isAdmin && (
-                  <Link href={localizePath("/admin/entities")} className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
-                    <Shield size={22} strokeWidth={1.5} />
-                    <span className="font-medium tracking-wider text-xs whitespace-nowrap">ADMIN</span>
-                  </Link>
-                )}
-                <button onClick={handleLogout} className="border border-border rounded-xl px-4 py-2 text-xs tracking-wider font-medium bg-surface text-foreground hover:bg-black hover:text-white hover:border-black transition whitespace-nowrap">
-                  {t("ログアウト")}
-                </button>
-              </>
-            ) : (
-              <Link href={`${localizePath("/login")}?redirectTo=${encodeURIComponent(returnTo)}`} className="type-ui text-xs tracking-[0.14em] hover:opacity-60 transition-opacity uppercase font-medium">
-                SIGN IN
-              </Link>
-            )}
-            {languageToggle()}
-          </div>
-        </div>
-
-        <div className="flex min-[1180px]:hidden h-[72px] items-center gap-2 sm:gap-4 px-3 sm:px-5">
+        <div className="flex h-[76px] items-center gap-2 sm:gap-4 px-3 sm:px-5 lg:px-7">
           <button type="button" onClick={() => setMenuOpen(true)} aria-label={t("メニューを開く")} aria-expanded={menuOpen} className="flex size-10 shrink-0 items-center justify-center rounded-xl hover:bg-surface transition-colors">
             <Menu size={23} strokeWidth={1.4} />
           </button>
-          <Link href={localizePath("/")} className="type-brand text-sm tracking-[0.14em] min-[430px]:text-xl md:text-2xl text-foreground font-medium shrink-0 whitespace-nowrap">
-            <span className="min-[430px]:hidden">FASHION DB</span>
-            <span className="hidden min-[430px]:inline">FASHION DATABASE</span>
+          <Link href={localizePath("/")} className="type-brand w-[132px] min-[600px]:w-[230px] text-lg min-[600px]:text-xl text-foreground font-medium shrink-0 whitespace-nowrap overflow-hidden">
+            <span className="min-[600px]:hidden">FASHION DB</span>
+            <span className="hidden min-[600px]:inline">FASHION DATABASE</span>
           </Link>
-          <form onSubmit={handleSearch} className="hidden lg:flex min-w-0 flex-1 items-center justify-end gap-2">
-            <input type="text" placeholder={t("ブランド名、デザイナー名など")} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full max-w-56 border border-border rounded-xl px-4 py-2 text-sm bg-background text-foreground focus:outline-none focus:border-neutral-400 transition" />
+          <form onSubmit={handleSearch} className="hidden md:flex min-w-0 flex-1 items-center gap-2">
+            <input type="text" placeholder={t("ブランド名、デザイナー名など")} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full max-w-64 border border-border rounded-xl px-4 py-2 text-sm bg-background text-foreground focus:outline-none focus:border-neutral-400 transition" />
             <button type="submit" className="border border-border rounded-xl px-4 py-2 text-sm bg-surface shrink-0">{t("検索")}</button>
           </form>
           <div className="ml-auto flex items-center gap-1.5 sm:gap-3 shrink-0">
-            <button type="button" onClick={() => setSearchOpen(true)} aria-label={t("検索")} className="lg:hidden flex size-10 items-center justify-center rounded-xl hover:bg-surface transition-colors">
+            <button type="button" onClick={() => setSearchOpen(true)} aria-label={t("検索")} className="md:hidden flex size-10 items-center justify-center rounded-xl hover:bg-surface transition-colors">
               <Search size={21} strokeWidth={1.4} />
             </button>
             {languageToggle(true)}
@@ -171,7 +122,7 @@ export default function Header() {
         <div className="fixed inset-0 z-[70]">
           <button type="button" aria-label={t("メニューを閉じる")} onClick={closeMenu} className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
           <aside className="absolute inset-y-0 left-0 flex w-[min(380px,88vw)] flex-col border-r border-border bg-surface shadow-2xl">
-            <div className="flex h-[72px] items-center justify-between border-b border-border px-5">
+            <div className="flex h-[76px] items-center justify-between border-b border-border px-5">
               <span className="type-brand text-lg">Menu</span>
               <button type="button" onClick={closeMenu} aria-label={t("閉じる")} className="flex size-10 items-center justify-center rounded-xl hover:bg-background"><X size={21} /></button>
             </div>
