@@ -91,7 +91,7 @@ export default function EditPostPage() {
         .from("posts")
         .select(`
           *,
-          users (id, username, avatar_url),
+          users:profiles!posts_user_id_fkey (id, username, avatar_url),
           brands!posts_brand_id_fkey (slug),
           designers!posts_designer_id_fkey (slug)
         `)

@@ -65,7 +65,7 @@ export default function ProfileForm({ userId, initialUsername, initialDisplayNam
     
     try {
       const { error } = await supabase
-        .from("users")
+        .from("profiles")
         .update({ 
           username: trimmedUsername, 
           display_name: trimmedDisplayName || null,

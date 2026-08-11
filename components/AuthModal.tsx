@@ -80,25 +80,6 @@ export default function AuthModal() {
       return
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      setLoading(false)
-      setStatusMessage({ text: "ユーザー情報の取得に失敗しました", type: "error" })
-      return
-    }
-
-    const { error: profileError } = await supabase
-      .from("users")
-      .upsert({
-        id: user.id,
-        email: user.email,
-      })
-
-    if (profileError) {
-      console.log(profileError)
-    }
-
     setLoading(false)
     closeAuthModal()
     router.refresh()

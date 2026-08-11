@@ -3,6 +3,7 @@ import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { createClient } from "@supabase/supabase-js"
 import { createClient as createServerClient } from "@/lib/supabase-server"
 import { getR2KeyFromUrl } from "@/lib/r2-keys"
+import { isAdminUser } from "@/lib/admin"
 
 const s3 = new S3Client({
   region: "auto",
@@ -43,8 +44,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const isAdmin = user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin"
-    if (post.user_id !== user.id && !isAdmin) {
+    if (post.user_id !== user.id && !isAdminUser(user)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

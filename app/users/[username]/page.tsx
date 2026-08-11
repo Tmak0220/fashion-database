@@ -53,7 +53,7 @@ export default function UserPage() {
       }
 
       const { data: profileData } = await supabase
-        .from("users")
+        .from("profiles")
         .select("id, username, display_name, bio, avatar_url")
         .eq("username", username)
         .maybeSingle()

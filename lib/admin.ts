@@ -1,21 +1,27 @@
 import "server-only"
 
 import { createClient as createAdminClient } from "@supabase/supabase-js"
+import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase-server"
 
-export async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export function isAdminUser(user: User | null): boolean {
+  if (!user) return false
+
   const configuredEmails = (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
-  const isAdmin = Boolean(user && (
+
+  return (
     user.app_metadata?.role === "admin" ||
-    user.user_metadata?.role === "admin" ||
-    (user.email && configuredEmails.includes(user.email.toLowerCase()))
-  ))
-  if (!user || !isAdmin) throw new Error("管理者権限が必要です")
+    Boolean(user.email && configuredEmails.includes(user.email.toLowerCase()))
+  )
+}
+
+export async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!isAdminUser(user)) throw new Error("管理者権限が必要です")
   return user
 }
 

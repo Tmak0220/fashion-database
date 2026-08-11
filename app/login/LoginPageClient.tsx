@@ -60,11 +60,6 @@ export default function LoginPageClient() {
       return
     }
 
-    await supabase
-      .from("users")
-      .update({ is_active: true, updated_at: new Date().toISOString() })
-      .eq("id", user.id)
-
     setLoginLoading(false)
     router.push(localizePath("/"))
     router.refresh()
@@ -117,16 +112,22 @@ export default function LoginPageClient() {
 
     const now = new Date().toISOString()
 
-    const { error } = await supabase
-      .from("users")
-      .upsert({
+    const [{ error: accountError }, { error: profileError }] = await Promise.all([
+      supabase.from("users").upsert({
         id: createdUserId,
         email: createdEmail,
+        created_at: now,
+        updated_at: now,
+      }),
+      supabase.from("profiles").upsert({
+        id: createdUserId,
         username: trimmedUsername,
         display_name: trimmedDisplayName || trimmedUsername,
         created_at: now,
         updated_at: now,
-      })
+      }),
+    ])
+    const error = accountError || profileError
 
     if (error) {
       setProfileLoading(false)

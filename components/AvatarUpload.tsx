@@ -85,7 +85,7 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
       const imageUrl = data.url
 
       const { error } = await supabase
-        .from("users")
+        .from("profiles")
         .update({ avatar_url: imageUrl })
         .eq("id", userId)
 

@@ -19,7 +19,6 @@ type Profile = {
   display_name: string | null
   bio: string | null
   avatar_url: string | null
-  plus_member: boolean
 }
 
 type Post = {
@@ -87,24 +86,9 @@ export default function MyPage() {
   const [followDesigners, setFollowDesigners] = useState<FollowDesigner[]>([])
   const [processingAccount, setProcessingAccount] = useState(false)
   
-  const [confirmType, setConfirmType] = useState<"deactivate" | "delete" | null>(null)
+  const [confirmType, setConfirmType] = useState<"delete" | null>(null)
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState("")
-
-  const handleDeactivate = async () => {
-    setProcessingAccount(true)
-    setStatusMessage(null)
-    
-    const { error } = await supabase.from("users").update({ is_active: false }).eq("id", profile?.id)
-    setProcessingAccount(false)
-    
-    if (error) {
-      setStatusMessage({ text: error.message, type: "error" })
-      return
-    }
-    await supabase.auth.signOut()
-    router.push(localizePath("/"))
-  }
 
   const handleDeleteAccount = async () => {
     setProcessingAccount(true)
@@ -131,12 +115,17 @@ export default function MyPage() {
         return
       }
 
-      const { data } = await supabase
-        .from("users")
-        .select("*")
+      const { data, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, username, display_name, bio, avatar_url")
         .eq("id", user.id)
         .single()
-      setProfile(data)
+      if (profileError || !data) {
+        setStatusMessage({ text: "プロフィールの取得に失敗しました", type: "error" })
+        setLoading(false)
+        return
+      }
+      setProfile({ ...data, email: user.email || "" })
 
       await fetchPosts(user.id)
 
@@ -152,13 +141,11 @@ export default function MyPage() {
         .eq("follower_id", user.id)
       setFollowingCount(following || 0)
 
-      if (data?.plus_member) {
-        const { count: bookmarks } = await supabase
-          .from("bookmarks")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-        setBookmarksCount(bookmarks || 0)
-      }
+      const { count: bookmarks } = await supabase
+        .from("bookmarks")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+      setBookmarksCount(bookmarks || 0)
 
       const { data: followBrandsData } = await supabase
         .from("brand_follows")
@@ -409,16 +396,9 @@ export default function MyPage() {
             </summary>
             <div className="mt-6 rounded-2xl border border-border/70 bg-surface p-5 sm:p-6">
               <p className="text-xs leading-6 text-muted">
-                一時停止するとデータを残したままログアウトします。再ログインすると利用を再開できます。
+                アカウントを削除すると、投稿・画像・プロフィール・保存情報がすべて削除されます。
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  onClick={() => { setConfirmType("deactivate"); setDeleteConfirmation(""); setStatusMessage(null) }}
-                  disabled={processingAccount}
-                  className="text-xs text-muted underline underline-offset-4 hover:text-foreground disabled:opacity-50"
-                >
-                  アカウントを一時停止
-                </button>
                 <button
                   onClick={() => { setConfirmType("delete"); setDeleteConfirmation(""); setStatusMessage(null) }}
                   disabled={processingAccount}
@@ -431,28 +411,25 @@ export default function MyPage() {
               {confirmType && (
                 <div className="mt-6 border-t border-border pt-5 text-xs space-y-4">
                   <p className="text-muted leading-6 whitespace-pre-line">
-                    {confirmType === "deactivate"
-                      ? "データを残したままアカウントを一時停止し、ログアウトします。\n再ログインすると利用を再開できます。"
-                      : "投稿、プロフィール、保存情報を完全に削除します。\nこの操作は取り消せません。続けるには「削除」と入力してください。"}
+                    投稿、画像、プロフィール、ブックマーク、いいね、フォロー情報を完全に削除します。
+                    {"\n"}この操作は取り消せません。続けるには「削除」と入力してください。
                   </p>
-                  {confirmType === "delete" && (
-                    <input
-                      value={deleteConfirmation}
-                      onChange={(e) => setDeleteConfirmation(e.target.value)}
-                      placeholder="削除"
-                      className="w-full max-w-xs rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-red-300"
-                    />
-                  )}
+                  <input
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    placeholder="削除"
+                    className="w-full max-w-xs rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-red-300"
+                  />
                   <div className="flex gap-2">
                     <button onClick={() => { setConfirmType(null); setDeleteConfirmation("") }} className="rounded-lg border border-border px-3 py-2 text-muted hover:text-foreground">
                       キャンセル
                     </button>
                     <button
-                      onClick={confirmType === "deactivate" ? handleDeactivate : handleDeleteAccount}
-                      disabled={processingAccount || (confirmType === "delete" && deleteConfirmation !== "削除")}
-                      className={`rounded-lg px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40 ${confirmType === "delete" ? "bg-red-600" : "bg-foreground"}`}
+                      onClick={handleDeleteAccount}
+                      disabled={processingAccount || deleteConfirmation !== "削除"}
+                      className="rounded-lg bg-red-600 px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      {processingAccount ? "処理中..." : confirmType === "delete" ? "完全に削除する" : "一時停止する"}
+                      {processingAccount ? "処理中..." : "完全に削除する"}
                     </button>
                   </div>
                 </div>

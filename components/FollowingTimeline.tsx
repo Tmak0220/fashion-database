@@ -71,7 +71,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
           image_urls,
           created_at,
           brands!posts_brand_id_fkey (slug),
-          users (
+          users:profiles!posts_user_id_fkey (
             id,
             username,
             display_name,

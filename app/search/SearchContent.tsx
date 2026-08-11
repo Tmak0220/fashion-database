@@ -78,7 +78,7 @@ export default function SearchContent() {
         const matchedBrandIds = brandsData?.map((brand) => brand.id) || []
 
         const { data: usersData } = await supabase
-          .from("users")
+          .from("profiles")
           .select("id, username, display_name, avatar_url")
           .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
           .limit(12)

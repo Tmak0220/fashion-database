@@ -90,7 +90,7 @@ export default function PostPageClient({ id }: Props) {
         .from("posts")
         .select(`
           *,
-          users (id, username, display_name, avatar_url),
+          users:profiles!posts_user_id_fkey (id, username, display_name, avatar_url),
           post_tags (tags (slug, name))
         `)
         .eq("id", id)
