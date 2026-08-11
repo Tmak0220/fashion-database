@@ -57,8 +57,16 @@ export default async function Home() {
       </section>
 
       <section className="px-6 mt-16 mb-28 sm:px-10 sm:mt-24 sm:mb-32 md:px-14 md:mt-28 md:mb-36 lg:px-16">
-        <div className="w-full bg-white/[0.2] backdrop-blur-[8px] rounded-3xl px-6 pt-5 pb-8 sm:px-8 sm:pt-6 sm:pb-9 md:px-10 md:pt-7 md:pb-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.01)] border border-white/[0.2]">
-          <div className="-mt-9 sm:-mt-10 md:-mt-11">
+        <div className="relative w-full overflow-hidden rounded-3xl border border-white/50 bg-white/25 p-4 shadow-[0_18px_60px_rgba(40,32,24,0.035)] backdrop-blur-xl sm:p-6 md:p-8">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.72),rgba(255,255,255,0.12)_44%,transparent_72%)]" />
+          <div className="relative mb-5 flex items-center gap-5 px-1 sm:mb-6">
+            <div className="shrink-0">
+              <p className="type-label text-[10px] !text-foreground/60 sm:text-[11px]">Explore the archive</p>
+              <p className="mt-1 text-[11px] tracking-[0.06em] text-muted">アーカイブから探す</p>
+            </div>
+            <div className="h-px flex-1 bg-border/70" />
+          </div>
+          <div className="relative">
             <CardSection
               items={navigationItems}
               basePath=""

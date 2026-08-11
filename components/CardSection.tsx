@@ -33,7 +33,7 @@ export default function CardSection({
   const isNavigation = variant === "navigation"
 
   return (
-    <section className={showHeading ? "mt-12 sm:mt-16" : "mt-12 sm:mt-14"}>
+    <section className={showHeading ? "mt-12 sm:mt-16" : "mt-0"}>
       {showHeading && title && titleJa && (
         <SectionHeading
           title={title}
@@ -45,11 +45,11 @@ export default function CardSection({
       <div
         className={
           isNavigation
-            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4"
+            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/70"
             : "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 max-w-7xl"
         }
       >
-        {items.map((item) => {
+        {items.map((item, index) => {
           const href = basePath
             ? `${basePath}/${item.slug}`
             : `/${item.slug}`
@@ -60,6 +60,7 @@ export default function CardSection({
               href={href}
               name={item.name}
               nameJa={item.name_ja}
+              index={index}
             />
           ) : (
             <DirectoryCard

@@ -40,12 +40,12 @@ export default function DirectoryCard({
         active:scale-[0.98]
       "
     >
-      <p className="type-label text-xs font-medium tracking-[0.12em] transition-colors group-hover:text-background">
+      <p className="type-label text-xs font-medium tracking-[0.12em] !text-foreground/70 transition-colors group-hover:!text-background">
         {uppercase ? name.toUpperCase() : name}
       </p>
 
       {nameJa && (
-        <p className="type-label-ja mt-1 text-xs text-muted transition-colors group-hover:text-background/80">
+        <p className="type-label-ja mt-1 text-xs !text-foreground/60 transition-colors group-hover:!text-background/80">
           {nameJa}
         </p>
       )}
