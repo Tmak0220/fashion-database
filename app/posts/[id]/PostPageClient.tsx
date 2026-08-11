@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase"
 import PostLoading from "./loading"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { useLocale } from "@/context/LocaleContext"
+import { useAuthModal } from "@/context/AuthModalContext"
 
 type RelatedPost = {
   id: string
@@ -57,13 +58,9 @@ type Props = {
   id: string
 }
 
-type StatusMessage = {
-  text: string
-  type: "error" | "success"
-}
-
 export default function PostPageClient({ id }: Props) {
   const { localizePath } = useLocale()
+  const { openAuthModal } = useAuthModal()
   const [post, setPost] = useState<Post | null>(null)
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,7 +72,6 @@ export default function PostPageClient({ id }: Props) {
   const [followLoading, setFollowLoading] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
-  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -140,15 +136,15 @@ export default function PostPageClient({ id }: Props) {
       let otherBrandFetched: RelatedPost[] = []
 
       if (rawPost.brand_id) {
-        let query = supabase
+        const query = supabase
           .from("posts")
           .select("id, title, image_urls, brands!posts_brand_id_fkey(slug)")
           .eq("brand_id", rawPost.brand_id)
           .neq("id", id)
         
-        if (userId) query = query.neq("user_id", userId)
-
-        const { data: bPosts } = await query.limit(10)
+        const relatedBrandQuery = userId ? query.neq("user_id", userId) : query
+        const { data: bPosts, error: sameBrandError } = await relatedBrandQuery.limit(10)
+        if (sameBrandError) console.error("Failed to load related brand posts", sameBrandError)
         if (bPosts && bPosts.length > 0) {
           sameBrandFetched = bPosts.map((item) => ({
             ...item,
@@ -165,8 +161,8 @@ export default function PostPageClient({ id }: Props) {
       
       if (rawPost.brand_id) otherQuery = otherQuery.neq("brand_id", rawPost.brand_id)
       if (userId) otherQuery = otherQuery.neq("user_id", userId)
-
-      const { data: oPosts } = await otherQuery.limit(20)
+      const { data: oPosts, error: otherPostsError } = await otherQuery.limit(20)
+      if (otherPostsError) console.error("Failed to load other related posts", otherPostsError)
       if (oPosts && oPosts.length > 0) {
         const neededOtherCount = 4 - sameBrandFetched.length
         otherBrandFetched = oPosts.map((item) => ({
@@ -205,14 +201,13 @@ export default function PostPageClient({ id }: Props) {
   
   const requireAuth = () => {
     if (!currentUserId) {
-      setStatusMessage({ text: "ログインしてください", type: "error" })
+      openAuthModal()
       return false
     }
     return true
   }
 
   const handleLike = async () => {
-    setStatusMessage(null)
     if (!requireAuth() || !currentUserId || likeLoading) return
     setLikeLoading(true)
 
@@ -229,7 +224,6 @@ export default function PostPageClient({ id }: Props) {
   }
 
   const handleFollow = async () => {
-    setStatusMessage(null)
     if (!requireAuth() || !currentUserId || !post?.users?.id || followLoading) return
     setFollowLoading(true)
 
@@ -244,7 +238,6 @@ export default function PostPageClient({ id }: Props) {
   }
 
   const handleBookmark = async () => {
-    setStatusMessage(null)
     if (!requireAuth() || !currentUserId || bookmarkLoading) return
     setBookmarkLoading(true)
 
@@ -279,15 +272,15 @@ export default function PostPageClient({ id }: Props) {
   }
 
   if (!post) {
-    return <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16 text-center text-sm text-muted">投稿が見つかりませんでした</main>
+    return <main className="max-w-[1280px] mx-auto px-[clamp(1.5rem,4vw,4rem)] py-[clamp(2rem,5vw,4rem)] text-center text-sm text-muted">投稿が見つかりませんでした</main>
   }
 
   const isOwnPost = currentUserId === post.user_id
 
   return (
-    <main className="max-w-6xl mx-auto p-6 sm:p-10 md:p-14 lg:p-16 space-y-16 sm:space-y-24">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        <div className="grid grid-cols-1 gap-4 sm:gap-6">
+    <main className="max-w-[1280px] mx-auto px-[clamp(1.5rem,4vw,4rem)] py-[clamp(2rem,5vw,4rem)] space-y-[clamp(4rem,8vw,6rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(2rem,4vw,4rem)] items-start">
+        <div className="grid w-full max-w-[560px] mx-auto grid-cols-1 gap-4 sm:gap-6">
           {post.image_urls?.map((url) => (
             <div key={url} className="relative w-full aspect-[4/5]">
               <Image
@@ -302,7 +295,7 @@ export default function PostPageClient({ id }: Props) {
           ))}
         </div>
 
-        <div className="relative">
+        <div className="relative w-full max-w-[620px] mx-auto">
           <div>
             {post.users?.id ? (
               <Link 
@@ -345,54 +338,78 @@ export default function PostPageClient({ id }: Props) {
               <AutoTranslatedText
                 text={post.title}
                 as="h1"
-                className="text-2xl sm:text-3xl lg:text-4xl font-medium leading-snug"
+                className="text-[clamp(1.75rem,3vw,2.5rem)] font-medium leading-[1.35]"
               />
 
-              <div className="mt-6 flex flex-wrap items-center gap-2">
+              <div className="mt-6 grid grid-cols-2 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.35fr)_minmax(0,1.25fr)_minmax(0,0.8fr)] gap-3">
                 {post.brands && (
-                  <Link
-                    href={`/brands/${post.brands.regions.slug}/${post.brands.countries.slug}/${post.brands.slug}`}
-                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
-                  >
-                    {post.brands.name}
-                  </Link>
+                  <div className="min-w-0">
+                    <span className="mb-2 block px-3 text-[8px] leading-none tracking-[0.14em] text-subtle uppercase">Brand</span>
+                    <Link
+                      href={`/brands/${post.brands.regions.slug}/${post.brands.countries.slug}/${post.brands.slug}`}
+                      className="flex min-h-10 min-w-0 items-center justify-center rounded-full border border-border/60 bg-surface px-4 py-2 text-foreground transition-colors hover:bg-background hover:border-border"
+                    >
+                      <span className="min-w-0 truncate text-xs leading-none">{post.brands.name}</span>
+                    </Link>
+                  </div>
                 )}
                 {post.designers && (
-                  <Link
-                    href={`/designers/${post.designers.regions.slug}/${post.designers.countries.slug}/${post.designers.slug}`}
-                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
-                  >
-                    {post.designers.name}
-                  </Link>
+                  <div className="min-w-0">
+                    <span className="mb-2 block px-3 text-[8px] leading-none tracking-[0.14em] text-subtle uppercase">Designer</span>
+                    <Link
+                      href={`/designers/${post.designers.regions.slug}/${post.designers.countries.slug}/${post.designers.slug}`}
+                      className="flex min-h-10 min-w-0 items-center justify-center rounded-full border border-border/60 bg-surface px-4 py-2 text-foreground transition-colors hover:bg-background hover:border-border"
+                    >
+                      <span className="min-w-0 truncate text-xs leading-none">{post.designers.name}</span>
+                    </Link>
+                  </div>
                 )}
                 {post.brands && post.year && post.season && (
-                  <Link
-                    href={`/collections/${post.brands.slug}/${post.year}-${post.season}`}
-                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
-                  >
-                    {post.brands.name} {post.year} {post.season}
-                  </Link>
+                  <div className="min-w-0">
+                    <span className="mb-2 block px-3 text-[8px] leading-none tracking-[0.14em] text-subtle uppercase">Collection</span>
+                    <Link
+                      href={`/collections/${post.brands.slug}/${post.year}-${post.season}`}
+                      className="flex min-h-10 min-w-0 items-center justify-center rounded-full border border-border/60 bg-surface px-2 py-2 text-foreground transition-colors hover:bg-background hover:border-border"
+                    >
+                      <span className="min-w-0 truncate text-[11px] leading-none">{post.brands.name} {post.year} {post.season.toUpperCase()}</span>
+                    </Link>
+                  </div>
                 )}
                 {post.year && post.season && (
-                  <Link
-                    href={`/collections/season/${post.year}-${post.season}`}
-                    className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
-                  >
-                    ALL BRANDS · {post.year} {post.season}
-                  </Link>
-                )}
-                {post.post_tags?.map((pt) => (
-                  pt.tags?.slug && pt.tags?.name ? (
+                  <div className="min-w-0">
+                    <span className="mb-2 block px-3 text-[8px] leading-none tracking-[0.14em] text-subtle uppercase">Season</span>
                     <Link
-                      key={pt.tags.slug}
-                      href={`/tags/${pt.tags.slug}`}
-                      className="text-neutral-400 text-xs hover:text-neutral-600 transition"
+                      href={`/collections/season/${post.year}-${post.season}`}
+                      className="flex min-h-10 min-w-0 items-center justify-center rounded-full border border-border/60 bg-surface px-4 py-2 text-foreground transition-colors hover:bg-background hover:border-border"
                     >
-                      #{pt.tags.name}
+                      <span className="text-xs leading-none whitespace-nowrap">{post.year} {post.season.toUpperCase()}</span>
                     </Link>
-                  ) : null
-                ))}
+                  </div>
+                )}
               </div>
+
+              {post.post_tags?.some((pt) => pt.tags?.slug && pt.tags?.name) && (
+                <div className="mt-5">
+                  <span className="mb-2 block px-3 text-[8px] leading-none tracking-[0.14em] text-subtle uppercase">
+                    Tags
+                  </span>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {post.post_tags.map((pt) => (
+                      pt.tags?.slug && pt.tags?.name ? (
+                      <Link
+                        key={pt.tags.slug}
+                        href={`/tags/${pt.tags.slug}`}
+                        aria-label={`${pt.tags.name}のタグを表示`}
+                        className="group/tag inline-flex min-h-9 items-center gap-1.5 rounded-full border border-foreground/20 bg-surface px-4 py-2 text-xs tracking-[0.05em] text-foreground shadow-[0_1px_2px_rgba(28,26,24,0.04)] transition-all duration-200 hover:bg-foreground hover:text-background hover:border-foreground"
+                      >
+                        <span className="text-subtle transition-colors group-hover/tag:text-background/60" aria-hidden="true">#</span>
+                        <span>{pt.tags.name}</span>
+                      </Link>
+                      ) : null
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {post.description && (
                 <AutoTranslatedText
@@ -408,8 +425,8 @@ export default function PostPageClient({ id }: Props) {
                 <button
                   onClick={handleLike}
                   disabled={likeLoading}
-                  title={liked ? "チェックを解除" : "チェックする"}
-                  className={`border rounded-xl px-4 py-3 text-xs font-medium transition duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shrink-0 ${
+                  aria-label={liked ? "いいねを解除" : "いいね"}
+                  className={`border rounded-xl min-h-12 min-w-12 px-3.5 py-2.5 text-xs font-medium transition duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shrink-0 ${
                     liked 
                       ? "bg-black text-white border-black" 
                       : "bg-surface text-foreground border-border hover:bg-neutral-50"
@@ -441,7 +458,7 @@ export default function PostPageClient({ id }: Props) {
                 <button
                   onClick={handleBookmark}
                   disabled={bookmarkLoading}
-                  className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] flex-1 min-w-[120px] ${
+                  className={`border rounded-xl min-h-12 px-5 py-2.5 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] flex-1 min-w-[120px] ${
                     bookmarked 
                       ? "bg-neutral-100 text-muted border-neutral-200" 
                       : "bg-surface text-foreground border-border hover:bg-neutral-50"
@@ -454,7 +471,7 @@ export default function PostPageClient({ id }: Props) {
                   <button
                     onClick={handleFollow}
                     disabled={followLoading}
-                    className={`border rounded-xl px-5 py-3 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] flex-1 min-w-[120px] ${
+                    className={`border rounded-xl min-h-12 px-5 py-2.5 text-xs tracking-wider font-medium transition duration-200 active:scale-[0.98] flex-1 min-w-[120px] ${
                       following 
                         ? "bg-neutral-50 text-subtle border-border" 
                         : "bg-surface text-foreground border-border hover:bg-neutral-50"
@@ -465,18 +482,6 @@ export default function PostPageClient({ id }: Props) {
                 )}
               </div>
 
-              {statusMessage && (
-                <div className={`text-xs p-4 rounded-xl border flex items-center justify-between gap-4 ${
-                  statusMessage.type === "error" 
-                    ? "text-red-500 bg-red-50/50 border-red-200" 
-                    : "text-foreground bg-neutral-50 border-border"
-                }`}>
-                  <span>{statusMessage.text}</span>
-                  <Link href="/members" className="underline font-semibold tracking-wider text-[11px] uppercase shrink-0 hover:opacity-80 transition">
-                    登録画面へ
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
         </div>

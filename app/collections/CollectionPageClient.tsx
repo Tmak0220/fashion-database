@@ -25,7 +25,7 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
     <div className="space-y-16">
       <section className="border border-border rounded-2xl bg-surface p-6 md:p-8">
         <div className="border-b border-border/60 pb-4 mb-6">
-          <h2 className="type-brand text-xl md:text-2xl font-medium text-foreground tracking-wide">
+          <h2 className="type-brand text-xl md:text-2xl text-foreground">
             TIMELINE
           </h2>
           <p className="text-xs text-muted font-medium mt-1 tracking-wider">
@@ -43,7 +43,7 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
                 href={`/collections/season/${season.slug}`}
                 className="flex flex-col items-center justify-center p-4 border border-border/40 rounded-xl bg-surface hover:bg-background transition-all duration-200 group text-center"
               >
-                <span className="text-sm font-mono font-bold tracking-wider text-foreground group-hover:text-muted">
+                <span className="type-ui text-base font-medium tabular-nums text-foreground group-hover:text-muted">
                   {season.slug.toUpperCase()}
                 </span>
                 {season.name_ja && (
@@ -59,8 +59,8 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
 
       <section className="border border-border rounded-2xl bg-surface p-6 md:p-8">
         <div className="border-b border-border/60 pb-4 mb-6">
-          <h2 className="type-brand text-xl md:text-2xl font-medium text-foreground tracking-wide">
-            BRANDSINDEX
+          <h2 className="type-brand text-xl md:text-2xl text-foreground">
+            BRANDS INDEX
           </h2>
           <p className="text-xs text-muted font-medium mt-1 tracking-wider">
             ブランドのコレクションアーカイブ
@@ -70,14 +70,16 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
         {initialBrands.length === 0 ? (
           <p className="text-sm text-muted">登録されているブランドがありません</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {initialBrands.map((brand) => (
               <Link
                 key={brand.id}
                 href={`/collections/${brand.slug}`}
-                className="text-sm font-medium tracking-wide text-foreground hover:text-muted hover:underline transition-all duration-200 block py-1.5 border-b border-border/10"
+                className="flex min-h-20 items-center justify-center rounded-xl border border-border/40 bg-surface p-4 text-center transition-all duration-200 hover:bg-background hover:border-border group"
               >
-                {brand.name}
+                <span className="type-ui text-sm md:text-base font-normal text-foreground group-hover:text-muted">
+                  {brand.name}
+                </span>
               </Link>
             ))}
           </div>

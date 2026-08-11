@@ -28,7 +28,7 @@ type Props = {
 }
 
 export default function BrandPage({ params }: Props) {
-  const [brand, setBrand] = useState<string>("")
+  const [brandName, setBrandName] = useState<string>("")
   const [posts, setPosts] = useState<Post[]>([])
   const [uniqueSeasons, setUniqueSeasons] = useState<SeasonItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,13 +36,14 @@ export default function BrandPage({ params }: Props) {
   useEffect(() => {
     const initData = async () => {
       const { brand: resolvedBrand } = await params
-      setBrand(resolvedBrand)
 
       const { data: brandRecord } = await supabase
         .from("brands")
-        .select("id")
+        .select("id, name")
         .eq("slug", resolvedBrand)
         .maybeSingle()
+
+      setBrandName(brandRecord?.name || resolvedBrand.replaceAll("-", " "))
 
       const { data: postsResult } = brandRecord ? await supabase
         .from("posts")
@@ -97,13 +98,13 @@ export default function BrandPage({ params }: Props) {
           COLLECTIONS
         </Link>
         <span>/</span>
-        <span className="text-muted font-medium">{brand}</span>
+        <span className="text-muted font-medium">{brandName}</span>
       </nav>
 
       <section className="border-b border-border/40 pb-14">
         <div>
           <h1 className="type-display text-5xl md:text-6xl font-light text-foreground uppercase tracking-tight">
-            {brand}
+            {brandName}
           </h1>
           <p className="text-[10px] tracking-[0.05em] text-subtle mt-2 font-normal">
             ブランド アーカイブ

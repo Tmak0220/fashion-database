@@ -15,18 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const getGridClasses = (slug: string) => {
-  switch (slug.toLowerCase()) {
-    case "lvmh": return "md:col-span-2 md:row-span-2 lg:col-span-2"
-    case "kering":
-    case "richemont": return "md:col-span-1 md:row-span-2"
-    case "prada":
-    case "swatch": return "md:col-span-1 md:row-span-1"
-    case "independent": return "md:col-span-2 lg:col-span-3"
-    default: return "md:col-span-1 md:row-span-1"
-  }
-}
-
 type CountryGroup = {
   country_name: string
   country_name_ja: string
@@ -39,7 +27,7 @@ type CountryGroup = {
   }>
 }
 
-type RelatedCountry = { id: string | number; name: string; name_ja: string | null }
+type RelatedCountry = { id: string | number; name: string; name_ja: string | null; slug: string }
 type RelatedRegion = { slug: string }
 
 function firstRelation<T>(value: T | T[] | null): T | null {
@@ -53,7 +41,7 @@ export default async function GroupsPage() {
       .from("brands")
       .select(`
         id, name, slug, group_slug,
-        countries (id, name, name_ja),
+        countries (id, name, name_ja, slug),
         regions (id, slug)
       `)
       .not("group_slug", "is", null)
@@ -75,6 +63,7 @@ export default async function GroupsPage() {
       const country = firstRelation(brand.countries as unknown as RelatedCountry | RelatedCountry[] | null)
       const region = firstRelation(brand.regions as unknown as RelatedRegion | RelatedRegion[] | null)
       const countryId = String(country?.id || "unknown")
+      const countrySlug = country?.slug || "unknown"
       const countryName = country?.name || "UNKNOWN"
       const countryNameJa = country?.name_ja || "不明"
       const regionSlug = region?.slug || "unknown"
@@ -91,7 +80,7 @@ export default async function GroupsPage() {
         id: brand.id,
         name: brand.name,
         slug: brand.slug,
-        country_slug: countryId,
+        country_slug: countrySlug,
         region_slug: regionSlug,
       })
     })
@@ -99,7 +88,6 @@ export default async function GroupsPage() {
     return {
       ...group,
       countries,
-      gridClasses: getGridClasses(group.slug),
     }
   })
 

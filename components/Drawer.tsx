@@ -84,14 +84,9 @@ export default function Drawer({
       >
         <header className="shrink-0 bg-surface border-b border-border/30">
           <div className="flex items-center justify-between px-5 py-4 md:px-8 md:py-5">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-subtle font-medium">
-                {title}
-              </span>
-              <span className="hidden sm:inline text-[9px] tabular-nums tracking-wider text-subtle" aria-live="polite">
-                {Math.round(readingProgress)}%
-              </span>
-            </div>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-subtle font-medium">
+              {title}
+            </span>
 
             <button
               ref={closeButtonRef}
