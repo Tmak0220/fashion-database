@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "@/components/LocalizedLink"
+import DirectoryCard from "@/components/cards/DirectoryCard"
 
 type Season = {
   id: number
@@ -38,20 +38,13 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {initialSeasons.map((season) => (
-              <Link
+              <DirectoryCard
                 key={season.id}
                 href={`/collections/season/${season.slug}`}
-                className="flex flex-col items-center justify-center p-4 border border-border/40 rounded-xl bg-surface hover:bg-background transition-all duration-200 group text-center"
-              >
-                <span className="type-ui text-base font-medium tabular-nums text-foreground group-hover:text-muted">
-                  {season.slug.replaceAll("-", " ").toUpperCase()}
-                </span>
-                {season.name_ja && (
-                  <span className="text-[11px] text-muted font-medium mt-1">
-                    {season.name_ja}
-                  </span>
-                )}
-              </Link>
+                name={season.slug.replaceAll("-", " ")}
+                nameJa={season.name_ja}
+                uppercase
+              />
             ))}
           </div>
         )}
@@ -72,15 +65,11 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {initialBrands.map((brand) => (
-              <Link
+              <DirectoryCard
                 key={brand.id}
                 href={`/collections/${brand.slug}`}
-                className="flex min-h-20 items-center justify-center rounded-xl border border-border/40 bg-surface p-4 text-center transition-all duration-200 hover:bg-background hover:border-border group"
-              >
-                <span className="type-ui text-sm md:text-base font-normal text-foreground group-hover:text-muted">
-                  {brand.name}
-                </span>
-              </Link>
+                name={brand.name}
+              />
             ))}
           </div>
         )}
