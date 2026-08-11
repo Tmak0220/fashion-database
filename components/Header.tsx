@@ -101,7 +101,7 @@ export default function Header() {
           <button type="button" onClick={() => setMenuOpen(true)} aria-label={t("メニューを開く")} aria-expanded={menuOpen} className="flex size-10 shrink-0 items-center justify-center rounded-xl hover:bg-surface transition-colors">
             <Menu size={23} strokeWidth={1.4} />
           </button>
-          <Link href={localizePath("/")} className="type-brand w-[132px] min-[600px]:w-[230px] text-lg min-[600px]:text-xl text-foreground font-medium shrink-0 whitespace-nowrap overflow-hidden">
+          <Link href={localizePath("/")} className="type-brand w-[132px] min-[600px]:w-[370px] text-lg min-[600px]:text-xl text-foreground font-medium shrink-0 whitespace-nowrap">
             <span className="min-[600px]:hidden">FASHION DB</span>
             <span className="hidden min-[600px]:inline">FASHION DATABASE</span>
           </Link>
