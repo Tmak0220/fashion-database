@@ -32,7 +32,7 @@ type Post = {
   id: string
   image_urls: string[]
   title: string | null
-  brand_slug: string | null
+  brands: { slug: string } | null
 }
 
 type DesignerHistoryItem = {
@@ -68,7 +68,7 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
         if (!isMounted) return
         setCurrentUserId(session.user.id)
         
-        const followStatus = await supabase.from("designer_follows").select("id").eq("user_id", session.user.id).eq("designer_slug", slug).maybeSingle()
+        const followStatus = await supabase.from("designer_follows").select("id").eq("user_id", session.user.id).eq("designer_id", designer.id).maybeSingle()
 
         if (isMounted) {
           setFollowing(!!followStatus.data)
@@ -85,7 +85,7 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [slug])
+  }, [designer.id])
 
   useEffect(() => {
     let isMounted = true
@@ -106,16 +106,19 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
       }
 
       const [brandsRes, collectionsRes, postsRes, followCountRes] = await Promise.all([
-        supabase.from("brand_designers").select("*, brands (*)").eq("designer_slug", slug).order("start_year", { ascending: true }),
-        supabase.from("collections").select("*").eq("designer_slug", slug).order("year", { ascending: true }),
-        supabase.from("posts").select("id, image_urls, title, brand_slug").eq("designer_slug", slug).order("created_at", { ascending: false }),
-        supabase.from("designer_follows").select("*", { count: "exact", head: true }).eq("designer_slug", slug)
+        supabase.from("brand_designers").select("*, brands!brand_designers_brand_id_fkey (*)").eq("designer_id", designer.id).order("start_year", { ascending: true }),
+        supabase.from("collections").select("*").eq("designer_id", designer.id).order("year", { ascending: true }),
+        supabase.from("posts").select("id, image_urls, title, brands!posts_brand_id_fkey(slug)").eq("designer_id", designer.id).order("created_at", { ascending: false }),
+        supabase.from("designer_follows").select("*", { count: "exact", head: true }).eq("designer_id", designer.id)
       ])
 
       if (isMounted) {
         setBrands(brandsRes.data || [])
         setCollections(collectionsRes.data || [])
-        setPosts(postsRes.data || [])
+        setPosts((postsRes.data || []).map((post) => ({
+          ...post,
+          brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
+        })))
         setFollowersCount(followCountRes.count || 0)
       }
     }
@@ -132,11 +135,11 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
     if (followLoading) return
     setFollowLoading(true)
     if (following) {
-      await supabase.from("designer_follows").delete().eq("user_id", currentUserId).eq("designer_slug", slug)
+      await supabase.from("designer_follows").delete().eq("user_id", currentUserId).eq("designer_id", designer.id)
       setFollowing(false)
       setFollowersCount((prev) => prev - 1)
     } else {
-      await supabase.from("designer_follows").insert({ user_id: currentUserId, designer_slug: slug })
+      await supabase.from("designer_follows").insert({ user_id: currentUserId, designer_id: designer.id, designer_slug: designer.slug })
       setFollowing(true)
       setFollowersCount((prev) => prev + 1)
     }
@@ -214,7 +217,7 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
         <SectionHeading title="Posts" titleJa="投稿" className="mb-8" />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
           {posts.map((post) => {
-            const urlSlug = `${post.brand_slug || "archive"}-${post.id}`
+            const urlSlug = `${post.brands?.slug || "archive"}-${post.id}`
 
             return (
               <Link key={post.id} href={`/posts/${urlSlug}`} className="block group">

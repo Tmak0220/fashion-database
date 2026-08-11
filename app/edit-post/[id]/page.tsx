@@ -14,10 +14,8 @@ type Post = {
   id: string
   title: string | null
   description: string | null
-  brand_slug: string | null
-  collection_slug: string | null
-  season_slug: string | null
-  designer_slug: string | null
+  brands: { slug: string } | null
+  designers: { slug: string } | null
   image_urls: string[]
   user_id: string
 }
@@ -106,7 +104,9 @@ export default function EditPostPage() {
         .from("posts")
         .select(`
           *,
-          users (id, username, avatar_url)
+          users (id, username, avatar_url),
+          brands!posts_brand_id_fkey (slug),
+          designers!posts_designer_id_fkey (slug)
         `)
         .eq("id", postId)
         .single()
@@ -129,11 +129,16 @@ export default function EditPostPage() {
       const { data: tagsData } = await supabase.from("tags").select("*").order("name")
       const { data: postTagsData } = await supabase.from("post_tags").select("tag_id").eq("post_id", postId)
 
-      setPost(postData)
+      const normalizedPost = {
+        ...postData,
+        brands: Array.isArray(postData.brands) ? postData.brands[0] || null : postData.brands,
+        designers: Array.isArray(postData.designers) ? postData.designers[0] || null : postData.designers,
+      }
+      setPost(normalizedPost)
       setTitle(postData.title || "")
       setDescription(postData.description || "")
-      setBrandSlug(postData.brand_slug || "")
-      setDesignerSlug(postData.designer_slug || "")
+      setBrandSlug(normalizedPost.brands?.slug || "")
+      setDesignerSlug(normalizedPost.designers?.slug || "")
       
       const urls = postData.image_urls || []
       setImageUrls(urls)

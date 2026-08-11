@@ -8,13 +8,13 @@ export type DesignerLine = "mens" | "womens" | "both"
 
 type Designer = {
   id: number
-  designer_slug: string
   start_year: number
   end_year: number
   description: string | null
   line?: DesignerLine | null
   designers: {
     name: string
+    slug: string
     name_ja: string
     description: string
     region_slug: string
@@ -111,7 +111,7 @@ function DesignerEntry({
       </p>
 
       <Link
-        href={`/designers/${designer.designers.region_slug}/${designer.designers.country_slug}/${designer.designer_slug}`}
+        href={`/designers/${designer.designers.region_slug}/${designer.designers.country_slug}/${designer.designers.slug}`}
         className="group mt-2 block mx-auto"
       >
         <h3 className="type-display text-2xl sm:text-[1.75rem] text-foreground tracking-[0.06em] uppercase font-light transition-colors group-hover:text-muted">

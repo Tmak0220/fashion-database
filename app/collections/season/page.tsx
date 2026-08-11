@@ -6,18 +6,18 @@ import Link from "@/components/LocalizedLink"
 export default async function AllSeasonsPage() {
   const { data: collectionsResult } = await supabase
     .from("collections")
-    .select("year, season, slug")
+    .select("year, season")
 
   const collections = collectionsResult ?? []
 
   const allSeasons = Array.from(
     new Map(
       collections
-        .filter((c) => c.year && c.season && c.slug)
+        .filter((c) => c.year && c.season)
         .map((c) => [
-          c.slug,
+          `${c.year}-${c.season.toLowerCase()}`,
           {
-            slug: c.slug,
+            slug: `${c.year}-${c.season.toLowerCase()}`,
             year: String(c.year),
             season: c.season.toUpperCase(),
           },

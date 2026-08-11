@@ -16,18 +16,28 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CollectionsPage() {
-  const [seasonsResult, brandsResult] = await Promise.all([
-    supabase.from("seasons").select("*").order("year", { ascending: false }).order("slug"),
+  const [collectionsResult, brandsResult] = await Promise.all([
+    supabase.from("collections").select("id, year, season").order("year", { ascending: false }),
     supabase
       .from("brands")
       .select("id, name, slug, country_slug, region_slug")
       .order("name")
   ])
 
-  const seasonsData = seasonsResult?.data ?? []
+  const seasonsData = Array.from(
+    new Map((collectionsResult.data ?? []).map((collection) => {
+      const slug = `${collection.year}-${collection.season.toLowerCase()}`
+      return [slug, {
+        id: collection.id,
+        slug,
+        year: collection.year,
+        name_ja: `${collection.year}年${collection.season.toLowerCase() === "ss" ? "春夏" : "秋冬"}`,
+      }]
+    })).values()
+  )
   const brandsData = brandsResult?.data ?? []
 
-  if (seasonsResult?.error) {
+  if (collectionsResult.error) {
     //
   }
   if (brandsResult?.error) {

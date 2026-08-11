@@ -3,6 +3,7 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 export type ResolvedEntity = { id: number; slug: string } | null
+export type ResolvedCollection = { id: number; slug: string } | null
 
 type EntityRow = {
   id: number
@@ -61,4 +62,29 @@ export async function resolveEntity(
 
   if (createError || !created) throw new Error(`未登録の${table === "brands" ? "ブランド" : "デザイナー"}を保存できませんでした`)
   return { id: created.id, slug: created.slug }
+}
+
+export async function resolveCollection(
+  admin: SupabaseClient,
+  brand: ResolvedEntity,
+  designer: ResolvedEntity,
+  yearValue: string | null | undefined,
+  seasonValue: string | null | undefined
+): Promise<ResolvedCollection> {
+  const year = Number(yearValue)
+  const season = seasonValue?.trim().toLowerCase()
+  if (!brand || !Number.isInteger(year) || !season) return null
+
+  const slug = `${brand.slug}-${year}-${season}`
+  const { data, error } = await admin
+    .from("collections")
+    .upsert(
+      { brand_id: brand.id, designer_id: designer?.id ?? null, brand_slug: brand.slug, year, season, slug },
+      { onConflict: "brand_id,year,season" }
+    )
+    .select("id, slug")
+    .single()
+
+  if (error || !data) throw new Error("コレクションの紐付けに失敗しました")
+  return { id: data.id, slug: data.slug }
 }

@@ -26,12 +26,13 @@ type Post = {
   id: string
   image_urls: string[]
   title: string | null
-  brand_slug: string | null
+  brands: { slug: string } | null
 }
 
 type FollowBrand = {
-  brand_slug: string
+  brand_id: number
   brands: {
+    slug: string
     name: string
     name_ja: string | null
     region_slug: string
@@ -40,8 +41,9 @@ type FollowBrand = {
 }
 
 type FollowDesigner = {
-  designer_slug: string
+  designer_id: number
   designers: {
+    slug: string
     name: string
     name_ja: string | null
     region_slug: string
@@ -63,22 +65,16 @@ export default function MyPage() {
   
   const fetchPosts = async (userId: string) => {
     try {
-      const { data: profileData } = await supabase
-        .from("users")
-        .select("plus_member")
-        .eq("id", userId)
-        .single()
-
-      if (profileData?.plus_member) {
-        const { data, error } = await supabase
-          .from("posts")
-          .select("id, image_urls, title, brand_slug")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-        
-        if (error) throw error
-        setPosts(data || [])
-      }
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id, image_urls, title, brands!posts_brand_id_fkey(slug)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      setPosts((data || []).map((post) => ({
+        ...post,
+        brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
+      })))
     } catch (err) {
       console.error("Fetch posts error:", err)
     }
@@ -167,8 +163,9 @@ export default function MyPage() {
       const { data: followBrandsData } = await supabase
         .from("brand_follows")
         .select(`
-          brand_slug,
-          brands (
+          brand_id,
+          brands!brand_follows_brand_id_fkey (
+            slug,
             name,
             name_ja,
             region_slug,
@@ -181,8 +178,9 @@ export default function MyPage() {
       const { data: followDesignersData } = await supabase
         .from("designer_follows")
         .select(`
-          designer_slug,
-          designers (
+          designer_id,
+          designers!designer_follows_designer_id_fkey (
+            slug,
             name,
             name_ja,
             region_slug,
@@ -293,8 +291,8 @@ export default function MyPage() {
                 if (!brand) return null
                 return (
                   <Link
-                    key={item.brand_slug}
-                    href={`/brands/${brand.region_slug}/${brand.country_slug}/${item.brand_slug}`}
+                    key={item.brand_id}
+                    href={`/brands/${brand.region_slug}/${brand.country_slug}/${brand.slug}`}
                     className="px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 bg-white border-border hover:border-foreground hover:bg-foreground hover:text-background"
                   >
                     {brand.name}
@@ -324,8 +322,8 @@ export default function MyPage() {
                 if (!designer) return null
                 return (
                   <Link
-                    key={item.designer_slug}
-                    href={`/designers/${designer.region_slug}/${designer.country_slug}/${item.designer_slug}`}
+                    key={item.designer_id}
+                    href={`/designers/${designer.region_slug}/${designer.country_slug}/${designer.slug}`}
                     className="px-5 py-2.5 rounded-full border text-[14px] font-medium tracking-[0.05em] transition-all duration-300 bg-white border-border hover:border-foreground hover:bg-foreground hover:text-background"
                   >
                     {designer.name}
@@ -365,7 +363,7 @@ export default function MyPage() {
 
             <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-12">
               {posts.map((post) => {
-                const prefix = post.brand_slug || "archive"
+                const prefix = post.brands?.slug || "archive"
                 return (
                   <div key={post.id} className="group flex flex-col justify-between">
                     <div className="space-y-3.5">

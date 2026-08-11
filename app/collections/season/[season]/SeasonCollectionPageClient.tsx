@@ -8,8 +8,7 @@ type Post = {
   id: string
   title: string | null
   image_urls: string[]
-  brand_slug: string | null
-  season_slug: string | null
+  brand: { slug: string } | null
 }
 
 type Props = {
@@ -84,9 +83,9 @@ export default function SeasonCollectionPageClient({ season, initialPosts }: Pro
                     )}
                   </div>
                   <div className="space-y-1 px-1">
-                    {post.brand_slug && (
+                    {post.brand?.slug && (
                       <span className="text-[10px] font-semibold uppercase tracking-widest block transition-colors text-foreground group-hover:text-subtle">
-                        {post.brand_slug}
+                        {post.brand.slug}
                       </span>
                     )}
                     {post.title && (

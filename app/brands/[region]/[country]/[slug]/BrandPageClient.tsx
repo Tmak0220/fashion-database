@@ -68,7 +68,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
         if (!isMounted) return
         setCurrentUserId(session.user.id)
         
-        const followStatus = await supabase.from("brand_follows").select("id").eq("user_id", session.user.id).eq("brand_slug", slug).maybeSingle()
+        const followStatus = await supabase.from("brand_follows").select("id").eq("user_id", session.user.id).eq("brand_id", brand.id).maybeSingle()
 
         if (isMounted) {
           setFollowing(!!followStatus.data)
@@ -85,7 +85,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [slug])
+  }, [brand.id])
 
   useEffect(() => {
     let isMounted = true
@@ -106,10 +106,10 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       }
 
       const [designersRes, collectionsRes, postsRes, followCountRes] = await Promise.all([
-        supabase.from("brand_designers").select("*, designers (*)").eq("brand_slug", slug).order("start_year", { ascending: true }),
-        supabase.from("collections").select("*").eq("brand_slug", slug).order("year", { ascending: true }),
-        supabase.from("posts").select("id, image_urls, title").eq("brand_slug", slug).order("created_at", { ascending: false }),
-        supabase.from("brand_follows").select("*", { count: "exact", head: true }).eq("brand_slug", slug)
+        supabase.from("brand_designers").select("*, designers!brand_designers_designer_id_fkey (*)").eq("brand_id", brand.id).order("start_year", { ascending: true }),
+        supabase.from("collections").select("*").eq("brand_id", brand.id).order("year", { ascending: true }),
+        supabase.from("posts").select("id, image_urls, title").eq("brand_id", brand.id).order("created_at", { ascending: false }),
+        supabase.from("brand_follows").select("*", { count: "exact", head: true }).eq("brand_id", brand.id)
       ])
 
       if (isMounted) {
@@ -132,11 +132,11 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
     if (followLoading) return
     setFollowLoading(true)
     if (following) {
-      await supabase.from("brand_follows").delete().eq("user_id", currentUserId).eq("brand_slug", slug)
+      await supabase.from("brand_follows").delete().eq("user_id", currentUserId).eq("brand_id", brand.id)
       setFollowing(false)
       setFollowersCount((prev) => prev - 1)
     } else {
-      await supabase.from("brand_follows").insert({ user_id: currentUserId, brand_slug: slug })
+      await supabase.from("brand_follows").insert({ user_id: currentUserId, brand_id: brand.id, brand_slug: brand.slug })
       setFollowing(true)
       setFollowersCount((prev) => prev + 1)
     }

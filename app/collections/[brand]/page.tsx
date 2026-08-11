@@ -11,8 +11,8 @@ type Post = {
   id: string
   title: string | null
   image_urls: string[]
-  collection_slug: string | null
-  season_slug: string | null
+  year: number | null
+  season: string | null
 }
 
 type SeasonItem = {
@@ -38,11 +38,18 @@ export default function BrandPage({ params }: Props) {
       const { brand: resolvedBrand } = await params
       setBrand(resolvedBrand)
 
-      const { data: postsResult } = await supabase
+      const { data: brandRecord } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("slug", resolvedBrand)
+        .maybeSingle()
+
+      const { data: postsResult } = brandRecord ? await supabase
         .from("posts")
-        .select("id, title, image_urls, collection_slug, season_slug")
-        .eq("brand_slug", resolvedBrand)
+        .select("id, title, image_urls, year, season")
+        .eq("brand_id", brandRecord.id)
         .order("created_at", { ascending: false })
+        : { data: [] }
 
       const fetchedPosts = postsResult ?? []
       setPosts(fetchedPosts)
@@ -50,13 +57,15 @@ export default function BrandPage({ params }: Props) {
       const seasons = Array.from(
         new Map(
           fetchedPosts
-            .filter((post) => post.season_slug)
+            .filter((post) => post.year && post.season)
             .map((post) => {
-              const [year, season] = post.season_slug!.split("-")
+              const year = String(post.year)
+              const season = post.season!
+              const seasonSlug = `${year}-${season}`
               return [
-                post.season_slug,
+                seasonSlug,
                 {
-                  id: `${resolvedBrand}/${post.season_slug}`,
+                  id: `${resolvedBrand}/${seasonSlug}`,
                   year: year,
                   season: season?.toUpperCase() || "",
                 },
@@ -161,9 +170,9 @@ export default function BrandPage({ params }: Props) {
                     />
                   </div>
                   <div className="space-y-1 px-1">
-                    {post.season_slug && (
+                    {post.year && post.season && (
                       <span className="text-[10px] font-medium uppercase tracking-widest text-subtle block">
-                        {post.season_slug.replace("-", " ")}
+                        {post.year} {post.season}
                       </span>
                     )}
                     {post.title && (

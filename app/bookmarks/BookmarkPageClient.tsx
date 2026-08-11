@@ -14,9 +14,7 @@ type BookmarkPost = {
     image_urls: string[]
     year: number | null
     season: string | null
-    brand_slug: string | null
-    designer_slug: string | null
-    brands: { name: string } | null
+    brands: { name: string; slug: string } | null
     designers: { name: string } | null
     tags: string[]
   }
@@ -60,8 +58,8 @@ export default function BookmarkPageClient() {
           image_urls,
           year,
           season,
-          brand_slug,
-          designer_slug
+          brands!posts_brand_id_fkey (name, slug),
+          designers!posts_designer_id_fkey (name)
         )
       `)
       .eq("user_id", user.id)
@@ -79,27 +77,9 @@ export default function BookmarkPageClient() {
           .filter((item: any) => item.posts)
           .map(async (item: any) => {
             const rawPost = item.posts
-            let brandInfo = null
-            let designerInfo = null
+            const brandInfo = Array.isArray(rawPost.brands) ? rawPost.brands[0] || null : rawPost.brands
+            const designerInfo = Array.isArray(rawPost.designers) ? rawPost.designers[0] || null : rawPost.designers
             let tagNames: string[] = []
-
-            if (rawPost.brand_slug) {
-              const { data: brandData } = await supabase
-                .from("brands")
-                .select("name")
-                .eq("slug", rawPost.brand_slug)
-                .maybeSingle()
-              if (brandData) brandInfo = { name: brandData.name }
-            }
-
-            if (rawPost.designer_slug) {
-              const { data: designerData } = await supabase
-                .from("designers")
-                .select("name")
-                .eq("slug", rawPost.designer_slug)
-                .maybeSingle()
-              if (designerData) designerInfo = { name: designerData.name }
-            }
 
             const { data: postTagsData } = await supabase
               .from("post_tags")
@@ -120,8 +100,6 @@ export default function BookmarkPageClient() {
                 image_urls: rawPost.image_urls,
                 year: rawPost.year,
                 season: rawPost.season,
-                brand_slug: rawPost.brand_slug,
-                designer_slug: rawPost.designer_slug,
                 brands: brandInfo,
                 designers: designerInfo,
                 tags: tagNames
@@ -265,7 +243,7 @@ export default function BookmarkPageClient() {
         <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-6">
           {filteredBookmarks.map((item) => {
             const post = item.posts
-            const urlSlug = `${post.brand_slug || "archive"}-${post.id}`
+            const urlSlug = `${post.brands?.slug || "archive"}-${post.id}`
             const isSelected = selectedIds.includes(item.bookmark_id)
 
             return (

@@ -15,7 +15,7 @@ type TimelinePost = {
   title: string | null
   image_urls: string[]
   created_at: string
-  brand_slug: string | null
+  brands: { slug: string } | null
   users: {
     id: string
     username: string | null
@@ -70,7 +70,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
           title,
           image_urls,
           created_at,
-          brand_slug,
+          brands!posts_brand_id_fkey (slug),
           users (
             id,
             username,
@@ -95,7 +95,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
             title: post.title,
             image_urls: post.image_urls,
             created_at: post.created_at,
-            brand_slug: post.brand_slug,
+            brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
             users: rawUser ? {
               id: rawUser.id,
               username: rawUser.username,
@@ -174,7 +174,7 @@ export default function FollowingTimeline({ currentUserId }: Props) {
     <div className="max-w-6xl mx-auto mt-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         {posts.map((post) => {
-          const prefix = post.brand_slug || "archive"
+          const prefix = post.brands?.slug || "archive"
           return (
             <Link
               key={post.id}

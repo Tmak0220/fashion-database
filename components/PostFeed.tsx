@@ -11,7 +11,7 @@ type Post = {
   image_urls: string[]
   title: string | null
   description: string | null
-  brand_slug: string | null
+  brands: { slug: string } | null
   created_at: string
   users: {
     id: string
@@ -36,7 +36,8 @@ export default function PostFeed() {
             username,
             display_name,
             avatar_url
-          )
+          ),
+          brands!posts_brand_id_fkey (slug)
         `)
         .order("created_at", { ascending: false })
 
@@ -46,7 +47,11 @@ export default function PostFeed() {
         return
       }
 
-      setPosts(data || [])
+      setPosts((data || []).map((post) => ({
+        ...post,
+        users: Array.isArray(post.users) ? post.users[0] || null : post.users,
+        brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
+      })))
       setLoading(false)
     }
 
@@ -80,7 +85,7 @@ export default function PostFeed() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
       {posts.map((post) => {
-        const prefix = post.brand_slug || "archive"
+        const prefix = post.brands?.slug || "archive"
         const postHref = `/posts/${prefix}-${post.id}`
 
         return (

@@ -21,7 +21,7 @@ type Post = {
   id: string
   image_urls: string[]
   title: string | null
-  brand_slug: string | null
+  brands: { slug: string } | null
 }
 
 type TabType = "posts" | "followers" | "following" | "timeline"
@@ -68,11 +68,14 @@ export default function UserPage() {
 
       const { data: postsData } = await supabase
         .from("posts")
-        .select("id, image_urls, title, brand_slug")
+        .select("id, image_urls, title, brands!posts_brand_id_fkey(slug)")
         .eq("user_id", targetUserId)
         .order("created_at", { ascending: false })
 
-      setPosts(postsData || [])
+      setPosts((postsData || []).map((post) => ({
+        ...post,
+        brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
+      })))
       setPostsCount(postsData?.length || 0)
 
       const { count: followers } = await supabase
@@ -305,7 +308,7 @@ export default function UserPage() {
             ) : (
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
                 {posts.map((post) => {
-                  const prefix = post.brand_slug || "archive"
+                  const prefix = post.brands?.slug || "archive"
                   return (
                     <Link key={post.id} href={`/posts/${prefix}-${post.id}`} className="group block">
                       <article className="space-y-2.5 sm:space-y-3.5">

@@ -12,7 +12,7 @@ type RelatedPost = {
   id: string
   title: string | null
   image_urls: string[]
-  brand_slug: string | null
+  brands: { slug: string } | null
 }
 
 type Post = {
@@ -22,10 +22,9 @@ type Post = {
   image_urls: string[]
   created_at: string
   user_id: string
-  brand_slug: string | null
-  designer_slug: string | null
-  collection_slug: string | null
-  season_slug: string | null
+  brand_id: number | null
+  designer_id: number | null
+  collection_id: number | null
   year: number | null
   season: string | null
   users: {
@@ -104,21 +103,21 @@ export default function PostPageClient({ id }: Props) {
       }
 
       let brandData = null
-      if (rawPost.brand_slug) {
+      if (rawPost.brand_id) {
         const { data } = await supabase
           .from("brands")
           .select("slug, name, regions(slug), countries(slug)")
-          .eq("slug", rawPost.brand_slug)
+          .eq("id", rawPost.brand_id)
           .maybeSingle()
         brandData = data
       }
 
       let designerData = null
-      if (rawPost.designer_slug) {
+      if (rawPost.designer_id) {
         const { data } = await supabase
           .from("designers")
           .select("slug, name, regions(slug), countries(slug)")
-          .eq("slug", rawPost.designer_slug)
+          .eq("id", rawPost.designer_id)
           .maybeSingle()
         designerData = data
       }
@@ -140,34 +139,40 @@ export default function PostPageClient({ id }: Props) {
       let sameBrandFetched: RelatedPost[] = []
       let otherBrandFetched: RelatedPost[] = []
 
-      if (rawPost.brand_slug) {
+      if (rawPost.brand_id) {
         let query = supabase
           .from("posts")
-          .select("id, title, image_urls, brand_slug")
-          .eq("brand_slug", rawPost.brand_slug)
+          .select("id, title, image_urls, brands!posts_brand_id_fkey(slug)")
+          .eq("brand_id", rawPost.brand_id)
           .neq("id", id)
         
         if (userId) query = query.neq("user_id", userId)
 
         const { data: bPosts } = await query.limit(10)
         if (bPosts && bPosts.length > 0) {
-          sameBrandFetched = bPosts.sort(() => 0.5 - Math.random()).slice(0, 2)
+          sameBrandFetched = bPosts.map((item) => ({
+            ...item,
+            brands: Array.isArray(item.brands) ? item.brands[0] || null : item.brands,
+          })).sort(() => 0.5 - Math.random()).slice(0, 2)
         }
       }
 
       const excludedIds = [id, ...sameBrandFetched.map(p => p.id)]
       let otherQuery = supabase
         .from("posts")
-        .select("id, title, image_urls, brand_slug")
+        .select("id, title, image_urls, brands!posts_brand_id_fkey(slug)")
         .not("id", "in", `(${excludedIds.join(",")})`)
       
-      if (rawPost.brand_slug) otherQuery = otherQuery.neq("brand_slug", rawPost.brand_slug)
+      if (rawPost.brand_id) otherQuery = otherQuery.neq("brand_id", rawPost.brand_id)
       if (userId) otherQuery = otherQuery.neq("user_id", userId)
 
       const { data: oPosts } = await otherQuery.limit(20)
       if (oPosts && oPosts.length > 0) {
         const neededOtherCount = 4 - sameBrandFetched.length
-        otherBrandFetched = oPosts.sort(() => 0.5 - Math.random()).slice(0, neededOtherCount)
+        otherBrandFetched = oPosts.map((item) => ({
+          ...item,
+          brands: Array.isArray(item.brands) ? item.brands[0] || null : item.brands,
+        })).sort(() => 0.5 - Math.random()).slice(0, neededOtherCount)
       }
 
       const finalRelated = [...sameBrandFetched, ...otherBrandFetched].sort(() => 0.5 - Math.random())
@@ -360,20 +365,20 @@ export default function PostPageClient({ id }: Props) {
                     {post.designers.name}
                   </Link>
                 )}
-                {post.collection_slug && (
+                {post.brands && post.year && post.season && (
                   <Link
-                    href={`/collections/${post.collection_slug}`}
+                    href={`/collections/${post.brands.slug}/${post.year}-${post.season}`}
                     className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
                   >
-                    {post.brands?.name || post.brand_slug} {post.year} {post.season}
+                    {post.brands.name} {post.year} {post.season}
                   </Link>
                 )}
-                {!post.collection_slug && post.year && post.season && (
+                {post.year && post.season && (
                   <Link
-                    href={`/search?year=${post.year}&season=${post.season}`}
+                    href={`/collections/season/${post.year}-${post.season}`}
                     className="bg-neutral-100 px-3 py-1 rounded-full text-xs hover:bg-neutral-200 transition"
                   >
-                    {post.year} {post.season}
+                    ALL BRANDS · {post.year} {post.season}
                   </Link>
                 )}
                 {post.post_tags?.map((pt) => (
@@ -484,7 +489,7 @@ export default function PostPageClient({ id }: Props) {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {relatedPosts.map((rPost) => {
-              const rPrefix = rPost.brand_slug || "archive"
+              const rPrefix = rPost.brands?.slug || "archive"
               return (
                 <Link
                   key={rPost.id}

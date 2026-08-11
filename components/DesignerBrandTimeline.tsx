@@ -8,13 +8,13 @@ export type BrandLine = "mens" | "womens" | "both"
 
 type Brand = {
   id: number
-  brand_slug: string // 👈 追加
   start_year: number
   end_year: number | null
   description: string | null
   line?: BrandLine | null
   brands: { // 👈 Supabaseのリレーション結果を想定
     name: string
+    slug: string
     name_ja: string
     region_slug: string
     country_slug: string
@@ -111,7 +111,7 @@ function BrandEntry({
       </p>
 
       <Link
-        href={`/brands/${brand.brands.region_slug}/${brand.brands.country_slug}/${brand.brand_slug}`}
+        href={`/brands/${brand.brands.region_slug}/${brand.brands.country_slug}/${brand.brands.slug}`}
         className="group mt-2 block mx-auto"
       >
         <h3 className="type-display text-2xl sm:text-[1.75rem] text-foreground tracking-[0.06em] uppercase font-light transition-colors group-hover:text-muted">

@@ -9,7 +9,7 @@ import SearchLoading from "./loading"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type Brand = {
-  id: string
+  id: number
   name: string
   name_ja: string | null
   slug: string
@@ -18,7 +18,7 @@ type Brand = {
 }
 
 type Designer = {
-  id: string
+  id: number
   name: string
   name_ja: string | null
   slug: string
@@ -37,7 +37,7 @@ type Post = {
   id: string
   title: string | null
   image_urls: string[]
-  brand_slug: string | null
+  brands: { slug: string } | null
 }
 
 export default function SearchContent() {
@@ -75,7 +75,7 @@ export default function SearchContent() {
           .or(`name.ilike.%${query}%,name_ja.ilike.%${query}%`)
           .limit(12)
 
-        const matchedBrandSlugs = brandsData?.map((brand) => brand.slug) || []
+        const matchedBrandIds = brandsData?.map((brand) => brand.id) || []
 
         const { data: usersData } = await supabase
           .from("users")
@@ -85,11 +85,11 @@ export default function SearchContent() {
 
         let postsQuery = supabase
           .from("posts")
-          .select("id, title, image_urls, brand_slug")
+          .select("id, title, image_urls, brands!posts_brand_id_fkey(slug)")
           .limit(18)
 
-        if (matchedBrandSlugs.length > 0) {
-          postsQuery = postsQuery.or(`title.ilike.%${query}%,brand_slug.in.(${matchedBrandSlugs.map(s => `"${s}"`).join(",")})`)
+        if (matchedBrandIds.length > 0) {
+          postsQuery = postsQuery.or(`title.ilike.%${query}%,brand_id.in.(${matchedBrandIds.join(",")})`)
         } else {
           postsQuery = postsQuery.ilike("title", `%${query}%`)
         }
@@ -99,7 +99,10 @@ export default function SearchContent() {
         setBrands(brandsData || [])
         setDesigners(designersData || [])
         setUsers(usersData || [])
-        setPosts(postsData || [])
+        setPosts((postsData || []).map((post) => ({
+          ...post,
+          brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
+        })))
       } catch (error) {
         console.error(error)
       } finally {
@@ -121,7 +124,7 @@ export default function SearchContent() {
         RESULTS
       </h1>
       <p className="mt-2 text-sm sm:text-base tracking-[0.1em] text-muted font-medium break-all">
-        "{query}"
+        &ldquo;{query}&rdquo;
       </p>
 
       <div className="mt-12 sm:mt-16 space-y-16 sm:space-y-20">
@@ -273,7 +276,7 @@ export default function SearchContent() {
           ) : (
             <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
               {posts.map((post) => {
-                const slugPrefix = post.brand_slug || "archive"
+                const slugPrefix = post.brands?.slug || "archive"
                 const content = (
                   <article className="space-y-2.5 sm:space-y-3.5">
                     <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
