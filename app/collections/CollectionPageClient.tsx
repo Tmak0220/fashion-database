@@ -44,7 +44,7 @@ export default function CollectionPageClient({ initialSeasons, initialBrands }: 
                 className="flex flex-col items-center justify-center p-4 border border-border/40 rounded-xl bg-surface hover:bg-background transition-all duration-200 group text-center"
               >
                 <span className="type-ui text-base font-medium tabular-nums text-foreground group-hover:text-muted">
-                  {season.slug.toUpperCase()}
+                  {season.slug.replaceAll("-", " ").toUpperCase()}
                 </span>
                 {season.name_ja && (
                   <span className="text-[11px] text-muted font-medium mt-1">
