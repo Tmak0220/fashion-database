@@ -9,6 +9,7 @@ import CollectionButton from "@/components/CollectionButton"
 import DesignerBrandTimeline from "@/components/DesignerBrandTimeline"
 import SectionHeading from "@/components/SectionHeading"
 import RelatedDesignerCard from "@/components/RelatedDesignerCard"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { useAuthModal } from "@/context/AuthModalContext"
 
 type Designer = {
@@ -214,9 +215,12 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
                     {item.title}
                   </h3>
                 )}
-                <p className="text-sm sm:text-[15px] text-foreground/80 leading-[2.2] tracking-wide font-normal text-justify whitespace-pre-wrap">
-                  {item.content}
-                </p>
+                <AutoTranslatedText
+                  text={item.content}
+                  markdown
+                  showControls
+                  className="prose prose-sm max-w-none text-sm sm:text-[15px] text-foreground/80 leading-[2.2] tracking-wide font-normal"
+                />
               </div>
             ))}
           </div>

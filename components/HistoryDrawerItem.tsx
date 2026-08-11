@@ -69,7 +69,7 @@ export default function HistoryDrawerItem({ title, content }: Props) {
         title="HISTORY"
         subtitle={<AutoTranslatedText text={title} showControls={false} />}
       >
-        <AutoTranslatedText text={content} as="span" showControls />
+        <AutoTranslatedText text={content} markdown showControls />
       </Drawer>
     </>
   )

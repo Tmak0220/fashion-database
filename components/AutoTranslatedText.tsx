@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
 import { useLocale } from "@/context/LocaleContext"
 
 type Translation = { translatedText: string; detectedSourceLanguage?: string }
@@ -52,9 +53,10 @@ type Props = {
   as?: "p" | "span" | "h1" | "h2"
   className?: string
   showControls?: boolean
+  markdown?: boolean
 }
 
-export default function AutoTranslatedText({ text, as: Tag = "span", className, showControls = true }: Props) {
+export default function AutoTranslatedText({ text, as: Tag = "span", className, showControls = true, markdown = false }: Props) {
   const { locale } = useLocale()
   const [translation, setTranslation] = useState<(Translation & { sourceText: string; target: "ja" | "en" }) | null>(null)
   const [showOriginal, setShowOriginal] = useState(false)
@@ -82,7 +84,13 @@ export default function AutoTranslatedText({ text, as: Tag = "span", className, 
 
   return (
     <>
-      <Tag className={className}>{displayedText}</Tag>
+      {markdown ? (
+        <div className={className}>
+          <ReactMarkdown>{displayedText}</ReactMarkdown>
+        </div>
+      ) : (
+        <Tag className={className}>{displayedText}</Tag>
+      )}
       {wasTranslated && showControls && (
         <button
           type="button"

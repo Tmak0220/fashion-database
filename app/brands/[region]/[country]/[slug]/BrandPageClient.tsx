@@ -9,6 +9,7 @@ import CollectionButton from "@/components/CollectionButton"
 import DesignerTimeline from "@/components/DesignerTimeline"
 import SectionHeading from "@/components/SectionHeading"
 import RelatedBrandCard from "@/components/RelatedBrandCard"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { useAuthModal } from "@/context/AuthModalContext"
 
 type Brand = {
@@ -208,9 +209,12 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
                     {item.title}
                   </h3>
                 )}
-                <p className="text-sm sm:text-[15px] text-foreground/80 leading-[2.2] tracking-wide font-normal text-justify whitespace-pre-wrap">
-                  {item.content}
-                </p>
+                <AutoTranslatedText
+                  text={item.content}
+                  markdown
+                  showControls
+                  className="prose prose-sm max-w-none text-sm sm:text-[15px] text-foreground/80 leading-[2.2] tracking-wide font-normal"
+                />
               </div>
             ))}
           </div>

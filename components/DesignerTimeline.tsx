@@ -3,6 +3,7 @@
 import Link from "@/components/LocalizedLink"
 import { useState } from "react"
 import SectionHeading from "@/components/SectionHeading"
+import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 export type DesignerLine = "mens" | "womens" | "both"
 
@@ -136,9 +137,12 @@ function DesignerEntry({ designer }: { designer: Designer }) {
             }`}
           >
             <div className="overflow-hidden min-h-0 w-full">
-              <p className="text-xs sm:text-[13px] text-foreground/80 leading-[2.1] tracking-wide text-center whitespace-pre-wrap px-4 sm:px-0">
-                {designer.content}
-              </p>
+              <AutoTranslatedText
+                text={designer.content}
+                markdown
+                showControls
+                className="prose prose-sm max-w-none text-xs sm:text-[13px] text-foreground/80 leading-[2.1] tracking-wide text-left px-4 sm:px-0"
+              />
             </div>
           </div>
         </div>
