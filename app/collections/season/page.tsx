@@ -4,15 +4,17 @@ import { supabase } from "@/lib/supabase"
 import Link from "@/components/LocalizedLink"
 
 export default async function AllSeasonsPage() {
-  const { data: collectionsResult } = await supabase
-    .from("collections")
+  const { data: postsResult } = await supabase
+    .from("posts")
     .select("year, season")
+    .not("year", "is", null)
+    .not("season", "is", null)
 
-  const collections = collectionsResult ?? []
+  const posts = postsResult ?? []
 
   const allSeasons = Array.from(
     new Map(
-      collections
+      posts
         .filter((c) => c.year && c.season)
         .map((c) => [
           `${c.year}-${c.season.toLowerCase()}`,

@@ -10,16 +10,6 @@ import { compressImage } from "@/lib/imageCompression"
 import { updatePost } from "@/app/actions/createPost"
 import { useLocale } from "@/context/LocaleContext"
 
-type Post = {
-  id: string
-  title: string | null
-  description: string | null
-  brands: { slug: string } | null
-  designers: { slug: string } | null
-  image_urls: string[]
-  user_id: string
-}
-
 type Tag = {
   id: string | number
   name: string
@@ -43,7 +33,6 @@ export default function EditPostPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [post, setPost] = useState<Post | null>(null)
 
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
@@ -53,8 +42,6 @@ export default function EditPostPage() {
   const [year, setYear] = useState("")
   const [yearError, setYearError] = useState("")
   const [season, setSeason] = useState<"ss" | "fw" | "">("")
-  const [collectionSlug, setCollectionSlug] = useState("")
-  const [seasonSlug, setSeasonSlug] = useState("")
   const [designerSlug, setDesignerSlug] = useState("")
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -134,7 +121,6 @@ export default function EditPostPage() {
         brands: Array.isArray(postData.brands) ? postData.brands[0] || null : postData.brands,
         designers: Array.isArray(postData.designers) ? postData.designers[0] || null : postData.designers,
       }
-      setPost(normalizedPost)
       setTitle(postData.title || "")
       setDescription(postData.description || "")
       setBrandSlug(normalizedPost.brands?.slug || "")
@@ -157,26 +143,6 @@ export default function EditPostPage() {
 
     fetchPostAndVerify()
   }, [postId])
-
-  useEffect(() => {
-    if (!season) {
-      setSeasonSlug("")
-      setCollectionSlug("")
-      return
-    }
-  
-    const generatedSeasonSlug = year
-      ? `${year}-${season}`
-      : season
-  
-    setSeasonSlug(generatedSeasonSlug)
-  
-    if (brandSlug.trim()) {
-      setCollectionSlug(`${brandSlug.trim()}-${generatedSeasonSlug}`)
-    } else {
-      setCollectionSlug(generatedSeasonSlug)
-    }
-  }, [brandSlug, year, season])
 
   const toggleTag = (rawTagId: string | number) => {
     const tagId = String(rawTagId)
@@ -245,10 +211,10 @@ export default function EditPostPage() {
 
       setImageUrls((prev) => [...prev, ...uploadedUrls])
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Upload Error:", err)
       setStatusMessage({ 
-        text: err.message || "画像のアップロード中にエラーが発生しました。", 
+        text: err instanceof Error ? err.message : "画像のアップロード中にエラーが発生しました。",
         type: "error" 
       })
     } finally {
@@ -277,7 +243,7 @@ export default function EditPostPage() {
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
       setStatusMessage({ text: "画像の削除に失敗しました。", type: "error" })
     }
@@ -324,8 +290,6 @@ export default function EditPostPage() {
           description,
           brandSlug: finalBrandSlug,
           designerSlug: finalDesignerSlug,
-          collectionSlug: collectionSlug || null,
-          seasonSlug: seasonSlug || null,
           season: season,
           year: year,
           imageUrls: imageUrls,
@@ -342,9 +306,9 @@ export default function EditPostPage() {
         router.push(localizePath("/mypage"))
       }, 1000)
 
-    } catch (postError: any) {
+    } catch (postError: unknown) {
       console.error(postError)
-      setStatusMessage({ text: "更新に失敗しました: " + postError.message, type: "error" })
+      setStatusMessage({ text: "更新に失敗しました: " + (postError instanceof Error ? postError.message : "不明なエラー"), type: "error" })
     } finally {
       setSaving(false)
     }
@@ -378,9 +342,9 @@ export default function EditPostPage() {
       setTimeout(() => {
         router.push(localizePath("/mypage"))
       }, 1000)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      setStatusMessage({ text: err.message || "削除に失敗しました。", type: "error" })
+      setStatusMessage({ text: err instanceof Error ? err.message : "削除に失敗しました。", type: "error" })
     } finally {
       setDeleting(false)
     }

@@ -20,19 +20,12 @@ export default async function Page({ params }: Props) {
     .maybeSingle()
 
   const [yearText, seasonName] = season.split("-")
-  const { data: collection } = brandRecord ? await supabase
-    .from("collections")
-    .select("id")
+  const { data: postsResult } = brandRecord ? await supabase
+    .from("posts")
+    .select("*")
     .eq("brand_id", brandRecord.id)
     .eq("year", Number(yearText))
     .eq("season", seasonName)
-    .maybeSingle()
-    : { data: null }
-
-  const { data: postsResult } = collection ? await supabase
-    .from("posts")
-    .select("*")
-    .eq("collection_id", collection.id)
     : { data: [] }
 
   const posts = postsResult ?? []

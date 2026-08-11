@@ -9,7 +9,7 @@ type EntityRouteRow = {
   regions: RouteRelation;
   countries: RouteRelation;
 };
-type PostRouteRow = { id: string; updated_at: string | null; brands: RouteRelation };
+type PostRouteRow = { id: string; year: number | null; season: string | null; updated_at: string | null; brands: RouteRelation };
 type CollectionRouteRow = { year: number; season: string; updated_at: string | null; brands: RouteRelation };
 
 const relationSlug = (relation: RouteRelation) =>
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ] = await Promise.all([
     supabase.from("brands").select("slug, updated_at, regions(slug), countries(slug)"),
     supabase.from("designers").select("slug, updated_at, regions(slug), countries(slug)"),
-    supabase.from("posts").select("id, updated_at, brands!posts_brand_id_fkey(slug)"),
+    supabase.from("posts").select("id, year, season, updated_at, brands!posts_brand_id_fkey(slug)"),
     supabase.from("tags").select("slug, updated_at"),
     supabase.from("collections").select("year, season, updated_at, brands!collections_brand_id_fkey(slug)"),
   ]);
@@ -50,7 +50,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   }) || [];
 
-  const postUrls = (posts as unknown as PostRouteRow[] | null)?.map((p) => {
+  const postRows = (posts as unknown as PostRouteRow[] | null) || [];
+  const postUrls = postRows.map((p) => {
     const relatedSlug = relationSlug(p.brands);
     const prefix = relatedSlug === "unknown" ? "archive" : relatedSlug;
     return {
@@ -86,11 +87,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: c.updated_at ? new Date(c.updated_at) : new Date(),
   })) || [];
 
+  const virtualCollectionSeasonUrls = postRows
+    .filter((post) => post.brands && post.year && post.season)
+    .map((post) => ({
+      url: `${baseUrl}/collections/${relationSlug(post.brands)}/${post.year}-${post.season}`,
+      lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
+    }));
+
   const uniqueSeasons = Array.from(
-    new Set(collectionRows.map((c) => `${c.year}-${c.season}`).filter(Boolean))
+    new Set(postRows.filter((post) => post.year && post.season).map((post) => `${post.year}-${post.season}`))
   );
   const seasonUrls = uniqueSeasons.map((seasonSlug) => {
-    const related = collectionRows.filter((c) => `${c.year}-${c.season}` === seasonSlug);
+    const related = postRows.filter((post) => `${post.year}-${post.season}` === seasonSlug);
     const latestUpdate = related.reduce((latest, current) => {
       if (!latest || !current.updated_at) return current.updated_at || latest;
       return new Date(current.updated_at) > new Date(latest) ? current.updated_at : latest;
@@ -117,10 +125,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...tagUrls,
     ...collectionBrandUrls,
     ...collectionSeasonUrls,
+    ...virtualCollectionSeasonUrls,
     ...seasonUrls,
   ];
 
-  return unlocalizedEntries.flatMap((entry) => {
+  const uniqueEntries = Array.from(new Map(unlocalizedEntries.map((entry) => [entry.url, entry])).values());
+
+  return uniqueEntries.flatMap((entry) => {
     const pathname = new URL(entry.url).pathname.replace(/^\/$/, "")
     const languages = {
       ja: `${baseUrl}${pathname}`,

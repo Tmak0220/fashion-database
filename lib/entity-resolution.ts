@@ -67,24 +67,24 @@ export async function resolveEntity(
 export async function resolveCollection(
   admin: SupabaseClient,
   brand: ResolvedEntity,
-  designer: ResolvedEntity,
   yearValue: string | null | undefined,
   seasonValue: string | null | undefined
 ): Promise<ResolvedCollection> {
-  const year = Number(yearValue)
+  const yearText = yearValue?.trim()
+  if (!yearText) return null
+  const year = Number(yearText)
   const season = seasonValue?.trim().toLowerCase()
-  if (!brand || !Number.isInteger(year) || !season) return null
+  if (!brand || !/^\d{4}$/.test(yearText) || !Number.isInteger(year) || !season) return null
 
-  const slug = `${brand.slug}-${year}-${season}`
   const { data, error } = await admin
     .from("collections")
-    .upsert(
-      { brand_id: brand.id, designer_id: designer?.id ?? null, brand_slug: brand.slug, year, season, slug },
-      { onConflict: "brand_id,year,season" }
-    )
     .select("id, slug")
-    .single()
+    .eq("brand_id", brand.id)
+    .eq("year", year)
+    .eq("season", season)
+    .maybeSingle()
 
-  if (error || !data) throw new Error("コレクションの紐付けに失敗しました")
+  if (error) throw new Error("コレクションの照合に失敗しました")
+  if (!data) return null
   return { id: data.id, slug: data.slug }
 }

@@ -21,8 +21,6 @@ type PostInput = {
   imageUrls?: string[]
   brandSlug?: string | null
   designerSlug?: string | null
-  collectionSlug?: string | null
-  seasonSlug?: string | null
   season?: string
   year?: string
   selectedTags?: string[]
@@ -83,7 +81,7 @@ export async function createPost(input: PostInput) {
       resolveEntity(supabaseAdmin, "brands", input.brandSlug),
       resolveEntity(supabaseAdmin, "designers", input.designerSlug),
     ])
-    const collection = await resolveCollection(supabaseAdmin, brand, designer, input.year, input.season)
+    const collection = await resolveCollection(supabaseAdmin, brand, input.year, input.season)
 
     const insertPayload = {
       user_id: currentUserId,
@@ -93,12 +91,8 @@ export async function createPost(input: PostInput) {
       brand_id: brand?.id ?? null,
       designer_id: designer?.id ?? null,
       collection_id: collection?.id ?? null,
-      brand_slug: brand?.slug ?? null,
-      designer_slug: designer?.slug ?? null,
       season: input.season || null,
       year: input.year ? parseInt(input.year, 10) : null,
-      season_slug: (input.season && input.year) ? `${input.year}-${input.season}` : null,
-      collection_slug: collection?.slug ?? null,
     }
 
     const { data: post, error: postError } = await supabaseAdmin
@@ -157,7 +151,7 @@ export async function updatePost(postId: string, input: PostInput) {
       resolveEntity(supabaseAdmin, "brands", input.brandSlug),
       resolveEntity(supabaseAdmin, "designers", input.designerSlug),
     ])
-    const collection = await resolveCollection(supabaseAdmin, brand, designer, input.year, input.season)
+    const collection = await resolveCollection(supabaseAdmin, brand, input.year, input.season)
 
     const updatePayload = {
       title: input.title.trim(),
@@ -166,10 +160,6 @@ export async function updatePost(postId: string, input: PostInput) {
       brand_id: brand?.id ?? null,
       designer_id: designer?.id ?? null,
       collection_id: collection?.id ?? null,
-      brand_slug: brand?.slug ?? null,
-      designer_slug: designer?.slug ?? null,
-      collection_slug: collection?.slug ?? null,
-      season_slug: (input.season && input.year) ? `${input.year}-${input.season}` : null,
       season: input.season || null,
       year: input.year ? parseInt(input.year, 10) : null,
     }

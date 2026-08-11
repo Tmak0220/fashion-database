@@ -16,8 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CollectionsPage() {
-  const [collectionsResult, brandsResult] = await Promise.all([
-    supabase.from("collections").select("id, year, season").order("year", { ascending: false }),
+  const [postsResult, brandsResult] = await Promise.all([
+    supabase.from("posts").select("id, year, season").not("year", "is", null).not("season", "is", null).order("year", { ascending: false }),
     supabase
       .from("brands")
       .select("id, name, slug, country_slug, region_slug")
@@ -25,19 +25,19 @@ export default async function CollectionsPage() {
   ])
 
   const seasonsData = Array.from(
-    new Map((collectionsResult.data ?? []).map((collection) => {
-      const slug = `${collection.year}-${collection.season.toLowerCase()}`
+    new Map((postsResult.data ?? []).map((post) => {
+      const slug = `${post.year}-${post.season.toLowerCase()}`
       return [slug, {
-        id: collection.id,
+        id: post.id,
         slug,
-        year: collection.year,
-        name_ja: `${collection.year}年${collection.season.toLowerCase() === "ss" ? "春夏" : "秋冬"}`,
+        year: post.year,
+        name_ja: `${post.year}年${post.season.toLowerCase() === "ss" ? "春夏" : "秋冬"}`,
       }]
     })).values()
   )
   const brandsData = brandsResult?.data ?? []
 
-  if (collectionsResult.error) {
+  if (postsResult.error) {
     //
   }
   if (brandsResult?.error) {

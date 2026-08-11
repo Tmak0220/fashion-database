@@ -4,7 +4,7 @@ import Link from "@/components/LocalizedLink"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { User, Folder } from "lucide-react"
+import { User, Folder, Shield } from "lucide-react"
 import { useLocale } from "@/context/LocaleContext"
 
 export default function Header() {
@@ -12,19 +12,32 @@ export default function Header() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [search, setSearch] = useState("")
   const { locale, setLocale, localizePath, t } = useLocale()
 
   useEffect(() => {
+    const updateAdminStatus = async (hasUser: boolean) => {
+      if (!hasUser) {
+        setIsAdmin(false)
+        return
+      }
+      const response = await fetch("/api/admin/status", { cache: "no-store" })
+      const data = await response.json().catch(() => ({ isAdmin: false }))
+      setIsAdmin(data.isAdmin === true)
+    }
+
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setEmail(user?.email ?? null)
+      await updateAdminStatus(Boolean(user))
     }
 
     getUser()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email ?? null)
+      void updateAdminStatus(Boolean(session?.user))
     })
 
     return () => {
@@ -84,6 +97,13 @@ export default function Header() {
               <Folder size={20} strokeWidth={1.5} />
               <span className="font-medium tracking-wider text-[10px] md:text-xs">{t("ブックマーク")}</span>
             </Link>
+
+            {isAdmin && (
+              <Link href={localizePath("/admin/entities")} className="flex flex-col items-center gap-1.5 hover:opacity-60 transition">
+                <Shield size={20} strokeWidth={1.5} />
+                <span className="font-medium tracking-wider text-[10px] md:text-xs">ADMIN</span>
+              </Link>
+            )}
 
             <button
               onClick={handleLogout}

@@ -136,7 +136,7 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
       setFollowing(false)
       setFollowersCount((prev) => prev - 1)
     } else {
-      await supabase.from("brand_follows").insert({ user_id: currentUserId, brand_id: brand.id, brand_slug: brand.slug })
+      await supabase.from("brand_follows").insert({ user_id: currentUserId, brand_id: brand.id })
       setFollowing(true)
       setFollowersCount((prev) => prev + 1)
     }

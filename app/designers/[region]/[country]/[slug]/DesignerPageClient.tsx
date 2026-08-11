@@ -139,7 +139,7 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
       setFollowing(false)
       setFollowersCount((prev) => prev - 1)
     } else {
-      await supabase.from("designer_follows").insert({ user_id: currentUserId, designer_id: designer.id, designer_slug: designer.slug })
+      await supabase.from("designer_follows").insert({ user_id: currentUserId, designer_id: designer.id })
       setFollowing(true)
       setFollowersCount((prev) => prev + 1)
     }
