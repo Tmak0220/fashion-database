@@ -126,7 +126,7 @@ export default function Header() {
           {(["ja", "en"] as const).map((value) => (
             <button key={value} type="button" onClick={() => setLocale(value)} aria-pressed={locale === value}
               className={`rounded-full px-2.5 py-1 text-[10px] tracking-wider transition ${locale === value ? "bg-foreground text-background" : "text-muted hover:text-foreground"}`}>
-              {value === "ja" ? "日本語" : "EN"}
+              {value === "ja" ? "JA" : "EN"}
             </button>
           ))}
         </div>

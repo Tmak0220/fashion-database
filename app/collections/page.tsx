@@ -20,7 +20,8 @@ export default async function CollectionsPage() {
     supabase.from("posts").select("id, year, season").not("year", "is", null).not("season", "is", null).order("year", { ascending: false }),
     supabase
       .from("brands")
-      .select("id, name, slug, country_slug, region_slug")
+      .select("id, name, slug")
+      .eq("status", "published")
       .order("name")
   ])
 
@@ -40,8 +41,8 @@ export default async function CollectionsPage() {
   if (postsResult.error) {
     //
   }
-  if (brandsResult?.error) {
-    //
+  if (brandsResult.error) {
+    console.error("Failed to load collection brands", brandsResult.error)
   }
 
   return (

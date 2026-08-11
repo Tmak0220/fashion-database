@@ -13,8 +13,6 @@ type Brand = {
   id: string | number
   name: string
   slug: string
-  country_slug: string
-  region_slug: string
 }
 
 type Props = {
