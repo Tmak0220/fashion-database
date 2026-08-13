@@ -25,6 +25,14 @@ type StatusMessage = {
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
 
+const readUploadResponse = async (response: Response) => {
+  const contentType = response.headers.get("content-type") || ""
+  if (!contentType.includes("application/json")) {
+    throw new Error("アップロードサーバーでエラーが発生しました。時間をおいて再度お試しください。")
+  }
+  return response.json() as Promise<{ error?: string; url?: string }>
+}
+
 export default function CreatePostForm({ onPostCreated }: Props) {
   const { t } = useLocale()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -89,8 +97,9 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         formData.append("file", compressed)
 
         const res = await fetch("/api/upload", { method: "POST", body: formData })
-        const data = await res.json()
+        const data = await readUploadResponse(res)
         if (!res.ok) throw new Error(data.error || "アップロード失敗")
+        if (!data.url) throw new Error("アップロード結果を取得できませんでした。")
         return data.url
       })
 

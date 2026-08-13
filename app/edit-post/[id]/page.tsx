@@ -200,6 +200,11 @@ export default function EditPostPage() {
           body: formData,
         })
 
+        const contentType = res.headers.get("content-type") || ""
+        if (!contentType.includes("application/json")) {
+          throw new Error("アップロードサーバーでエラーが発生しました。時間をおいて再度お試しください。")
+        }
+
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}))
           throw new Error(errorData.error || "画像のアップロードに失敗しました。")

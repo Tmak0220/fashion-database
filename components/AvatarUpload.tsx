@@ -70,6 +70,10 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
         body: formData,
       })
 
+      const contentType = res.headers.get("content-type") || ""
+      if (!contentType.includes("application/json")) {
+        throw new Error("アップロードサーバーでエラーが発生しました。時間をおいて再度お試しください。")
+      }
       const data = await res.json()
 
       if (!res.ok) {

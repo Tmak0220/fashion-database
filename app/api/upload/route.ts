@@ -4,9 +4,10 @@ import { r2 } from "@/lib/r2"
 import { createClient } from "@/lib/supabase-server"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { getR2PublicUrl } from "@/lib/r2-keys"
-import sharp from "sharp"
 
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"])
+
+export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
@@ -42,20 +43,34 @@ export async function POST(req: Request) {
       )
     }
 
-    const bytes = await file.arrayBuffer()
-    const maxDimension = purpose === "avatar" ? 1200 : 2400
-    const buffer = await sharp(Buffer.from(bytes))
-      .rotate()
-      .resize({
-        width: maxDimension,
-        height: maxDimension,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .webp({ quality: 84 })
-      .toBuffer()
+    const bytes = Buffer.from(await file.arrayBuffer())
+    let buffer: Uint8Array = bytes
+    let contentType = file.type
+    let extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1]
 
-    const fileName = `${crypto.randomUUID()}.webp`
+    try {
+      const { default: sharp } = await import("sharp")
+      const maxDimension = purpose === "avatar" ? 1200 : 2400
+      buffer = await sharp(bytes)
+        .rotate()
+        .resize({
+          width: maxDimension,
+          height: maxDimension,
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 84 })
+        .toBuffer()
+      contentType = "image/webp"
+      extension = "webp"
+    } catch (error) {
+      // The browser already compresses uploads before sending them. Keeping
+      // that validated image allows uploads to continue if the optional
+      // native image transformer is unavailable in the server runtime.
+      console.warn("Server image conversion unavailable; storing validated source image", error)
+    }
+
+    const fileName = `${crypto.randomUUID()}.${extension}`
     const fileKey = purpose === "avatar"
       ? `avatars/${user.id}/${fileName}`
       : `tmp/${user.id}/${fileName}`
@@ -65,7 +80,7 @@ export async function POST(req: Request) {
         Bucket: process.env.R2_BUCKET_NAME!,
         Key: fileKey,
         Body: buffer,
-        ContentType: "image/webp",
+        ContentType: contentType,
       })
     )
 
