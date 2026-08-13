@@ -61,12 +61,16 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください。")
+
       const formData = new FormData()
       formData.append("file", fileToUpload)
       formData.append("purpose", "avatar")
 
       const res = await fetch("/api/upload", {
         method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: formData,
       })
 

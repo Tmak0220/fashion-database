@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { r2 } from "@/lib/r2"
-import { createClient } from "@/lib/supabase-server"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { getR2PublicUrl } from "@/lib/r2-keys"
+import { getRequestUser } from "@/lib/request-auth"
 
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"])
 
@@ -11,8 +11,7 @@ export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getRequestUser(req)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const rateLimit = checkRateLimit(`upload:${user.id}`, 30, 10 * 60 * 1000)

@@ -91,12 +91,19 @@ export default function CreatePostForm({ onPostCreated }: Props) {
     setUploadMessage(null)
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください。")
+
       const uploadPromises = imageFiles.map(async (file) => {
         const compressed = await compressImage(file)
         const formData = new FormData()
         formData.append("file", compressed)
 
-        const res = await fetch("/api/upload", { method: "POST", body: formData })
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: formData,
+        })
         const data = await readUploadResponse(res)
         if (!res.ok) throw new Error(data.error || "アップロード失敗")
         if (!data.url) throw new Error("アップロード結果を取得できませんでした。")

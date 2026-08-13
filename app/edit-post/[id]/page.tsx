@@ -187,6 +187,9 @@ export default function EditPostPage() {
     const uploadedUrls: string[] = []
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください。")
+
       for (const file of Array.from(files)) {
         setFileName(file.name)
         
@@ -197,6 +200,7 @@ export default function EditPostPage() {
 
         const res = await fetch("/api/upload", {
           method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
           body: formData,
         })
 
