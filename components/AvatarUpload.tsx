@@ -108,7 +108,10 @@ export default function AvatarUpload({ userId, initialAvatarUrl, username }: Pro
         try {
           await fetch("/api/delete-object", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
             body: JSON.stringify({ url: currentAvatarUrl }),
           })
         } catch (delErr) {

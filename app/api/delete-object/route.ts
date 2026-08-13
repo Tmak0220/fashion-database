@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
-import { createClient } from "@/lib/supabase-server"
 import { getR2KeyFromUrl, isOwnedAvatarKey, isOwnedTemporaryKey } from "@/lib/r2-keys"
+import { getRequestUser } from "@/lib/request-auth"
 
 const r2 = new S3Client({
   region: "auto",
@@ -14,8 +14,7 @@ const r2 = new S3Client({
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getRequestUser(request)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const body = (await request.json().catch(() => null)) as { url?: unknown } | null

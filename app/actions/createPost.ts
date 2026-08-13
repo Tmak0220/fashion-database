@@ -58,6 +58,15 @@ async function moveToPermanentStorage(tmpUrl: string, userId: string): Promise<s
   }
 }
 
+async function deleteOwnedPostImage(url: string, userId: string) {
+  const key = getR2KeyFromUrl(url)
+  if (!isOwnedPostKey(key, userId)) throw new Error("Post image does not belong to this user")
+  await r2.send(new DeleteObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key,
+  }))
+}
+
 export async function createPost(input: PostInput, accessToken: string) {
   try {
     if (!input.title?.trim()) throw new Error("タイトルは必須です")
@@ -137,7 +146,7 @@ export async function updatePost(postId: string, input: PostInput, accessToken: 
 
     const { data: ownedPost } = await supabaseAdmin
       .from("posts")
-      .select("id")
+      .select("id, image_urls")
       .eq("id", postId)
       .eq("user_id", user.id)
       .maybeSingle()
@@ -170,6 +179,20 @@ export async function updatePost(postId: string, input: PostInput, accessToken: 
       .eq("user_id", user.id)
 
     if (postError) throw postError
+
+    const previousImageUrls = Array.isArray(ownedPost.image_urls)
+      ? ownedPost.image_urls.filter((url): url is string => typeof url === "string")
+      : []
+    const removedImageUrls = previousImageUrls.filter((url) => !permanentImageUrls.includes(url))
+    for (const url of removedImageUrls) {
+      try {
+        await deleteOwnedPostImage(url, user.id)
+      } catch (error) {
+        // The database update has succeeded. Log storage cleanup failures so a
+        // temporary orphan never causes the user's edit itself to fail.
+        console.error("Failed to remove replaced post image", error)
+      }
+    }
 
     await supabaseAdmin.from("post_tags").delete().eq("post_id", postId)
     

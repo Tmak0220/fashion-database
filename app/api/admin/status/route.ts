@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { requireAdmin } from "@/lib/admin"
+import { isAdminUser } from "@/lib/admin"
+import { getRequestUser } from "@/lib/request-auth"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    await requireAdmin()
-    return NextResponse.json({ isAdmin: true })
+    const user = await getRequestUser(request)
+    return NextResponse.json({ isAdmin: isAdminUser(user) })
   } catch {
     return NextResponse.json({ isAdmin: false })
   }

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { createClient } from "@supabase/supabase-js"
-import { createClient as createServerClient } from "@/lib/supabase-server"
 import { getR2KeyFromUrl } from "@/lib/r2-keys"
 import { isAdminUser } from "@/lib/admin"
+import { getRequestUser } from "@/lib/request-auth"
 
 const s3 = new S3Client({
   region: "auto",
@@ -21,8 +21,7 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getRequestUser(req)
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const body = (await req.json().catch(() => null)) as { postId?: unknown } | null
@@ -50,15 +49,6 @@ export async function POST(req: NextRequest) {
 
     const imageUrls: string[] = post.image_urls || []
 
-    for (const imageUrl of imageUrls) {
-      try {
-        const key = getR2KeyFromUrl(imageUrl)
-        await s3.send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET_NAME!, Key: key }))
-      } catch (error) {
-        console.error("Skipping invalid image URL during post deletion", error)
-      }
-    }
-
     const { error: tagError } = await supabaseAdmin
       .from("post_tags")
       .delete()
@@ -75,6 +65,18 @@ export async function POST(req: NextRequest) {
 
     if (deletePostError) {
       throw deletePostError
+    }
+
+    // Delete the database record first. If that fails, the published post must
+    // keep its images instead of becoming a broken post. Storage cleanup is
+    // best-effort after the post has been removed successfully.
+    for (const imageUrl of imageUrls) {
+      try {
+        const key = getR2KeyFromUrl(imageUrl)
+        await s3.send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET_NAME!, Key: key }))
+      } catch (error) {
+        console.error("Post deleted, but image cleanup failed", error)
+      }
     }
 
     return NextResponse.json({

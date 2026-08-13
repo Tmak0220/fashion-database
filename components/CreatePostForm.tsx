@@ -54,17 +54,36 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   const [isDragging, setIsDragging] = useState(false)
 
   const imageUrlsRef = useRef<string[]>([])
+  const accessTokenRef = useRef<string | null>(null)
 
   useEffect(() => {
     imageUrlsRef.current = imageUrls
   }, [imageUrls])
 
   useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      accessTokenRef.current = data.session?.access_token ?? null
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      accessTokenRef.current = session?.access_token ?? null
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
     const handleBeforeUnload = () => {
       const urls = imageUrlsRef.current
-      if (urls.length > 0) {
-        const blob = new Blob([JSON.stringify({ urls })], { type: "application/json" })
-        navigator.sendBeacon("/api/delete-object-beacon", blob)
+      const accessToken = accessTokenRef.current
+      if (urls.length > 0 && accessToken) {
+        void fetch("/api/delete-object-beacon", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ urls }),
+          keepalive: true,
+        })
       }
     }
 
@@ -199,10 +218,14 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   const removeImage = async (url: string) => {
     setUploadMessage(null)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください。")
+
       const res = await fetch("/api/delete-object", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ url }),
       })

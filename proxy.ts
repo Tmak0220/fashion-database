@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 
 type Locale = "ja" | "en"
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (request.headers.get("x-fashdb-internal-rewrite") === "1") {
     return NextResponse.next()
   }
@@ -22,7 +23,31 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-fashdb-locale", locale)
   requestHeaders.set("x-fashdb-internal-rewrite", "1")
 
-  const response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+  let response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // Refresh expired auth tokens and propagate updated cookies before the
+  // request reaches Server Components, Server Actions, or Route Handlers.
+  await supabase.auth.getUser()
+
   response.cookies.set("fashdb-locale", locale, {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,

@@ -93,8 +93,18 @@ export default function MyPage() {
   const handleDeleteAccount = async () => {
     setProcessingAccount(true)
     setStatusMessage(null)
-    
-    const res = await fetch("/api/delete-account", { method: "POST" })
+
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) {
+      setProcessingAccount(false)
+      setStatusMessage({ text: "ログインしてください", type: "error" })
+      return
+    }
+
+    const res = await fetch("/api/delete-account", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
     const data = await res.json()
     setProcessingAccount(false)
     

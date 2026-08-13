@@ -24,7 +24,13 @@ export default function Header() {
         setIsAdmin(false)
         return
       }
-      const response = await fetch("/api/admin/status", { cache: "no-store" })
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch("/api/admin/status", {
+        cache: "no-store",
+        headers: session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : undefined,
+      })
       const data = await response.json().catch(() => ({ isAdmin: false }))
       setIsAdmin(data.isAdmin === true)
     }

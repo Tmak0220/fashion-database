@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { r2 } from "@/lib/r2";
-import { createClient as createServerClient } from "@/lib/supabase-server";
+import { getRequestUser } from "@/lib/request-auth";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,13 +45,12 @@ async function deleteUserObjects(userId: string) {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
     const userId = user?.id;
 
-    if (userError || !userId) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

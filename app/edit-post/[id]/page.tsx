@@ -50,10 +50,21 @@ export default function EditPostPage() {
 
   const initialImageUrlsRef = useRef<string[]>([])
   const currentImageUrlsRef = useRef<string[]>([])
+  const accessTokenRef = useRef<string | null>(null)
 
   useEffect(() => {
     currentImageUrlsRef.current = imageUrls
   }, [imageUrls])
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      accessTokenRef.current = data.session?.access_token ?? null
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      accessTokenRef.current = session?.access_token ?? null
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -62,9 +73,17 @@ export default function EditPostPage() {
       
       const abandonedUrls = currentUrls.filter(url => !originalUrls.includes(url))
       
-      if (abandonedUrls.length > 0) {
-        const blob = new Blob([JSON.stringify({ urls: abandonedUrls })], { type: "application/json" })
-        navigator.sendBeacon("/api/delete-object-beacon", blob)
+      const accessToken = accessTokenRef.current
+      if (abandonedUrls.length > 0 && accessToken) {
+        void fetch("/api/delete-object-beacon", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ urls: abandonedUrls }),
+          keepalive: true,
+        })
       }
     }
 
@@ -234,16 +253,21 @@ export default function EditPostPage() {
   const removeImage = async (targetUrl: string) => {
     setStatusMessage(null)
     try {
-      const res = await fetch("/api/delete-object", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: targetUrl }),
-      })
+      const isTemporaryImage = new URL(targetUrl).pathname.includes("/tmp/")
+      if (isTemporaryImage) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.access_token) throw new Error("ログインしてください。")
 
-      if (!res.ok) {
-        throw new Error("R2からの画像削除に失敗しました。")
+        const res = await fetch("/api/delete-object", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ url: targetUrl }),
+        })
+
+        if (!res.ok) throw new Error("R2からの画像削除に失敗しました。")
       }
 
       setImageUrls((prev) => prev.filter((url) => url !== targetUrl))
@@ -331,10 +355,14 @@ export default function EditPostPage() {
     setDeleting(true)
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください。")
+
       const res = await fetch("/api/delete-post", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ postId }),
       })
