@@ -288,8 +288,8 @@ export default function EditPostPage() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("ログインしてください")
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください")
 
       // 新しく追記したサーバーアクションを呼び出し、画像移動とDB更新処理を委ねる
       const result = await updatePost(
@@ -303,7 +303,8 @@ export default function EditPostPage() {
           year: year,
           imageUrls: imageUrls,
           selectedTags: selectedTags,
-        }
+        },
+        session.access_token
       )
 
       initialImageUrlsRef.current = result.imageUrls

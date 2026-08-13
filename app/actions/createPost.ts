@@ -2,7 +2,6 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { S3Client, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
-import { createClient as createServerClient } from "@/lib/supabase-server"
 import { getR2KeyFromUrl, getR2PublicUrl, isOwnedPostKey, isOwnedTemporaryKey } from "@/lib/r2-keys"
 import { resolveCollection, resolveEntity } from "@/lib/entity-resolution"
 
@@ -59,7 +58,7 @@ async function moveToPermanentStorage(tmpUrl: string, userId: string): Promise<s
   }
 }
 
-export async function createPost(input: PostInput) {
+export async function createPost(input: PostInput, accessToken: string) {
   try {
     if (!input.title?.trim()) throw new Error("タイトルは必須です")
     if (!input.imageUrls?.length) throw new Error("画像は1枚以上必要です")
@@ -69,8 +68,8 @@ export async function createPost(input: PostInput) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const serverClient = await createServerClient()
-    const { data: { user } } = await serverClient.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(accessToken)
+    if (authError) throw new Error("ログイン情報を確認できませんでした。再度ログインしてください")
     if (!user) throw new Error("ユーザー認証に失敗しました")
     const currentUserId = user.id
 
@@ -122,7 +121,7 @@ export async function createPost(input: PostInput) {
   }
 }
 
-export async function updatePost(postId: string, input: PostInput) {
+export async function updatePost(postId: string, input: PostInput, accessToken: string) {
   try {
     if (!input.title?.trim()) throw new Error("タイトルは必須です")
     if (!input.imageUrls?.length) throw new Error("画像は1枚以上必要です")
@@ -132,8 +131,8 @@ export async function updatePost(postId: string, input: PostInput) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const serverClient = await createServerClient()
-    const { data: { user } } = await serverClient.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(accessToken)
+    if (authError) throw new Error("ログイン情報を確認できませんでした。再度ログインしてください")
     if (!user) throw new Error("ユーザー認証に失敗しました")
 
     const { data: ownedPost } = await supabaseAdmin

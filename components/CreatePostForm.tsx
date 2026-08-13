@@ -154,10 +154,13 @@ export default function CreatePostForm({ onPostCreated }: Props) {
 
     setCreating(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("ログインしてください")
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error("ログインしてください")
       
-      await createPost({ title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags })
+      await createPost(
+        { title, description, brandSlug, designerSlug, year, season: seasonType, imageUrls, selectedTags },
+        session.access_token
+      )
       
       setStatusMessage({ text: "投稿が完了しました", type: "success" })
 
