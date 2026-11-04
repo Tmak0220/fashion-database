@@ -8,6 +8,7 @@ import PostLoading from "./loading"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { useLocale } from "@/context/LocaleContext"
 import { useAuthModal } from "@/context/AuthModalContext"
+import PostImage from "@/components/PostImage"
 
 type RelatedPost = {
   id: string
@@ -280,18 +281,14 @@ export default function PostPageClient({ id }: Props) {
   return (
     <main className="max-w-[1280px] mx-auto px-[clamp(1.5rem,4vw,4rem)] py-[clamp(2rem,5vw,4rem)] space-y-[clamp(4rem,8vw,6rem)]">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-[clamp(2rem,4vw,4rem)] items-start">
-        <div className="grid w-full max-w-[560px] mx-auto grid-cols-1 gap-4 sm:gap-6">
-          {post.image_urls?.map((url) => (
-            <div key={url} className="relative w-full aspect-[4/5]">
-              <Image
-                src={url}
-                alt={post.title || ""}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-                className="object-cover rounded-2xl border border-border"
-              />
-            </div>
+        <div className="grid w-full max-w-[620px] mx-auto grid-cols-1 gap-4 sm:gap-6">
+          {post.image_urls?.map((url, index) => (
+            <PostImage
+              key={url}
+              src={url}
+              alt={post.title || ""}
+              priority={index === 0}
+            />
           ))}
         </div>
 

@@ -450,7 +450,7 @@ export default function EditPostPage() {
                     alt={`Preview ${index + 1}`}
                     fill
                     sizes="(max-width: 640px) 50vw, 33vw"
-                    className="object-cover"
+                    className="object-contain"
                   />
                 </div>
                 <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
