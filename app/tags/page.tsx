@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
@@ -272,15 +272,13 @@ export default function TagPageClient({ slug = "" }: Props) {
                 {group.posts.map((post) => {
                   const content = (
                     <article className="space-y-3">
-                      <div className="relative overflow-hidden rounded-xl border border-border bg-surface w-full aspect-[4/5]">
+                      <div>
                         {post.image_urls?.[0] && (
-                          <Image
+                          <PostThumbnail
                             src={post.image_urls[0]}
                             alt={post.title || ""}
-                            fill
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             priority
-                            className="object-contain opacity-100"
                           />
                         )}
                       </div>

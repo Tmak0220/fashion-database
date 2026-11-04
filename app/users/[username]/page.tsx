@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
 import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useAuthModal } from "@/context/AuthModalContext"
@@ -312,13 +313,11 @@ export default function UserPage() {
                   return (
                     <Link key={post.id} href={`/posts/${prefix}-${post.id}`} className="group block">
                       <article className="space-y-2.5 sm:space-y-3.5">
-                        <div className="overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-surface aspect-[4/5] relative w-full">
-                          <Image
+                        <div>
+                          <PostThumbnail
                             src={post.image_urls?.[0]}
                             alt={post.title || ""}
-                            fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                           />
                         </div>
                         {post.title && (

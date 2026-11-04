@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { useLocale } from "@/context/LocaleContext"
@@ -366,15 +366,13 @@ export default function MyPage() {
                     <div className="space-y-3.5">
                       <Link 
                         href={`/posts/${prefix}-${post.id}`} 
-                        className="block overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]"
+                        className="group block w-full"
                       >
                         {post.image_urls?.[0] && (
-                          <Image
+                          <PostThumbnail
                             src={post.image_urls[0]}
                             alt={post.title || "Post Image"}
-                            fill
                             sizes="(max-width: 768px) 50vw, 33vw"
-                            className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                           />
                         )}
                       </Link>

@@ -2,6 +2,7 @@
 
 import Link from "@/components/LocalizedLink"
 import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
@@ -90,15 +91,13 @@ export default function PostFeed() {
 
         return (
           <article key={post.id} className="space-y-5">
-            <div className="relative w-full aspect-[4/5]">
-              <Link href={postHref} className="block w-full h-full">
+            <div>
+              <Link href={postHref} className="group block w-full">
                 {post.image_urls?.[0] && (
-                  <Image
+                  <PostThumbnail
                     src={post.image_urls[0]}
                     alt={post.title || "投稿画像"}
-                    fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-contain rounded-2xl border border-border"
                   />
                 )}
               </Link>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
 import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import SearchLoading from "./loading" 
@@ -279,14 +280,12 @@ export default function SearchContent() {
                 const slugPrefix = post.brands?.slug || "archive"
                 const content = (
                   <article className="space-y-2.5 sm:space-y-3.5">
-                    <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
+                    <div>
                       {post.image_urls?.[0] && (
-                        <Image
+                        <PostThumbnail
                           src={post.image_urls[0]}
                           alt={post.title || ""}
-                          fill
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                          className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                         />
                       )}
                     </div>

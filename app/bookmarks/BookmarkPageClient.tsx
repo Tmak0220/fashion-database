@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { supabase } from "@/lib/supabase"
 import BookmarkLoading from "./loading"
 
@@ -298,18 +298,14 @@ export default function BookmarkPageClient() {
                   className="cursor-pointer"
                 >
                   <article className="space-y-3">
-                    <div className={`overflow-hidden rounded-2xl border bg-neutral-50 aspect-[4/5] relative transition-all duration-300 ${
+                    <div className={`rounded-2xl transition-all duration-300 ${
                       isSelected ? "border-black ring-1 ring-black shadow-md" : "border-border"
                     }`}>
                       {post.image_urls?.[0] && (
-                        <Image 
+                        <PostThumbnail
                           src={post.image_urls[0]} 
                           alt={post.title || ""} 
-                          fill 
                           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw" 
-                          className={`object-contain transition-opacity duration-300 ${
-                            isEditing ? "" : "group-hover:opacity-90"
-                          }`} 
                         />
                       )}
                     </div>

@@ -9,6 +9,7 @@ import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { useLocale } from "@/context/LocaleContext"
 import { useAuthModal } from "@/context/AuthModalContext"
 import PostImage from "@/components/PostImage"
+import PostThumbnail from "@/components/PostThumbnail"
 
 type RelatedPost = {
   id: string
@@ -498,17 +499,15 @@ export default function PostPageClient({ id }: Props) {
                   href={`/posts/${rPrefix}-${rPost.id}`}
                   className="group flex flex-col gap-3"
                 >
-                  <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl border border-border bg-neutral-50">
+                  <div>
                     {rPost.image_urls?.[0] ? (
-                      <Image
+                      <PostThumbnail
                         src={rPost.image_urls[0]}
                         alt={rPost.title || ""}
-                        fill
                         sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                       />
                     ) : (
-                      <div className="w-full h-full bg-neutral-100" />
+                      <div className="w-full aspect-[4/5] rounded-2xl bg-neutral-100" />
                     )}
                   </div>
                   <h3 className={`text-xs sm:text-sm font-medium text-foreground line-clamp-1 group-hover:text-neutral-600 transition ${

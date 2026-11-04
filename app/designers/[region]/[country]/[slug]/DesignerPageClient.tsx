@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
@@ -262,14 +262,12 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
             return (
               <Link key={post.id} href={`/posts/${urlSlug}`} className="block group">
                 <article className="space-y-4">
-                  <div className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl border border-border">
+                  <div>
                     {post.image_urls?.[0] && (
-                      <Image 
+                      <PostThumbnail
                         src={post.image_urls[0]} 
                         alt={post.title || ""} 
-                        fill
                         sizes="(max-width: 768px) 50vw, 33vw"
-                        className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                       />
                     )}
                   </div>

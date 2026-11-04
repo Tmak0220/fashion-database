@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { supabase } from "@/lib/supabase"
 import { useLocale } from "@/context/LocaleContext"
 
@@ -181,14 +181,12 @@ export default function FollowingTimeline({ currentUserId }: Props) {
               href={`/posts/${prefix}-${post.id}`}
               className="group flex flex-col gap-3 active:scale-[0.99]"
             >
-              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-xl border border-border bg-surface">
+              <div>
                 {post.image_urls?.[0] && (
-                  <Image
+                  <PostThumbnail
                     src={post.image_urls[0]}
                     alt=""
-                    fill
                     sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                   />
                 )}
               </div>

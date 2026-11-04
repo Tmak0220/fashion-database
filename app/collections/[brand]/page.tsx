@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { supabase } from "@/lib/supabase"
 import CollectionButton from "@/components/CollectionButton"
@@ -161,13 +161,11 @@ export default function BrandPage({ params }: Props) {
             {posts.map((post) => {
               const content = (
                 <article className="space-y-4">
-                  <div className="relative overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
-                    <Image
+                  <div>
+                    <PostThumbnail
                       src={post.image_urls?.[0]}
                       alt={post.title || "Archive image"}
-                      fill
                       sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                     />
                   </div>
                   <div className="space-y-1 px-1">

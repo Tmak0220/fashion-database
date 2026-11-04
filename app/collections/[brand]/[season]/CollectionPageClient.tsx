@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "@/components/LocalizedLink"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 
 type Post = {
@@ -72,14 +72,12 @@ export default function CollectionPageClient({ brandSlug, seasonSlug, initialPos
             {initialPosts.map((post) => {
               const content = (
                 <article className="space-y-4">
-                  <div className="relative overflow-hidden rounded-xl border border-border/40 bg-surface aspect-[4/5]">
+                  <div>
                     {post.image_urls?.[0] && (
-                      <Image
+                      <PostThumbnail
                         src={post.image_urls[0]}
                         alt={post.title || ""}
-                        fill
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                       />
                     )}
                   </div>
