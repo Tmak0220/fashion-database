@@ -285,7 +285,7 @@ export default function TagPageClient({ slug = "" }: Props) {
                             fill
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             priority
-                            className="object-cover opacity-100"
+                            className="object-contain opacity-100"
                           />
                         )}
                       </div>

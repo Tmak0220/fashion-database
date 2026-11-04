@@ -505,7 +505,7 @@ export default function PostPageClient({ id }: Props) {
                         alt={rPost.title || ""}
                         fill
                         sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                        className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                       />
                     ) : (
                       <div className="w-full h-full bg-neutral-100" />

@@ -307,8 +307,8 @@ export default function BookmarkPageClient() {
                           alt={post.title || ""} 
                           fill 
                           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw" 
-                          className={`object-cover transition duration-500 ${
-                            isEditing ? "" : "group-hover:scale-[1.03]"
+                          className={`object-contain transition-opacity duration-300 ${
+                            isEditing ? "" : "group-hover:opacity-90"
                           }`} 
                         />
                       )}

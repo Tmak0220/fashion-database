@@ -98,7 +98,7 @@ export default function PostFeed() {
                     alt={post.title || "投稿画像"}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover rounded-2xl border border-border"
+                    className="object-contain rounded-2xl border border-border"
                   />
                 )}
               </Link>

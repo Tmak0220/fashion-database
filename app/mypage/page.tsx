@@ -374,7 +374,7 @@ export default function MyPage() {
                             alt={post.title || "Post Image"}
                             fill
                             sizes="(max-width: 768px) 50vw, 33vw"
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                            className="object-contain transition-opacity duration-300 group-hover:opacity-90"
                           />
                         )}
                       </Link>
