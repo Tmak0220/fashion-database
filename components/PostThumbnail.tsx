@@ -7,7 +7,6 @@ type PostThumbnailProps = {
   src: string
   alt?: string
   sizes: string
-  priority?: boolean
 }
 
 const frameRatio = 4 / 5
@@ -16,7 +15,6 @@ export default function PostThumbnail({
   src,
   alt = "",
   sizes,
-  priority = false,
 }: PostThumbnailProps) {
   const [imageRatio, setImageRatio] = useState<number | null>(null)
   const isWiderThanFrame = imageRatio !== null && imageRatio > frameRatio
@@ -40,7 +38,6 @@ export default function PostThumbnail({
           alt={alt}
           fill
           sizes={sizes}
-          priority={priority}
           className="object-cover"
           onLoad={(event) => {
             const image = event.currentTarget

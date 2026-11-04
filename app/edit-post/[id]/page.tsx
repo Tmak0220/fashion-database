@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useLayoutEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import Link from "@/components/LocalizedLink"
 import { supabase } from "@/lib/supabase"
 import EditLoading from "./loading"
@@ -444,15 +444,11 @@ export default function EditPostPage() {
           <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-4xl mb-6">
             {imageUrls.map((url, index) => (
               <div key={url} className="space-y-3">
-                <div className="relative overflow-hidden rounded-2xl border border-border bg-surface w-full aspect-[4/5]">
-                  <Image
-                    src={url}
-                    alt={`Preview ${index + 1}`}
-                    fill
-                    sizes="(max-width: 640px) 50vw, 33vw"
-                    className="object-contain"
-                  />
-                </div>
+                <PostThumbnail
+                  src={url}
+                  alt={`Preview ${index + 1}`}
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                />
                 <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
                   削除する
                 </button>

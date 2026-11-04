@@ -278,7 +278,6 @@ export default function TagPageClient({ slug = "" }: Props) {
                             src={post.image_urls[0]}
                             alt={post.title || ""}
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            priority
                           />
                         )}
                       </div>

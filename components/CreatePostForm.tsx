@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import Image from "next/image"
+import PostThumbnail from "@/components/PostThumbnail"
 import { supabase } from "@/lib/supabase"
 import { createPost } from "@/app/actions/createPost"
 import { compressImage } from "@/lib/imageCompression"
@@ -292,15 +292,11 @@ export default function CreatePostForm({ onPostCreated }: Props) {
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {imageUrls.map((url) => (
             <div key={url} className="space-y-3">
-              <div className="overflow-hidden rounded-2xl border border-border bg-surface relative w-full aspect-[4/5]">
-                <Image
-                  src={url}
-                  alt="Preview"
-                  fill
-                  sizes="(max-width: 768px) 50vw, 33vw"
-                  className="object-contain"
-                />
-              </div>
+              <PostThumbnail
+                src={url}
+                alt="Preview"
+                sizes="(max-width: 768px) 50vw, 33vw"
+              />
               <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
                 削除する
               </button>

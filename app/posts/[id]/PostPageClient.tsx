@@ -288,7 +288,7 @@ export default function PostPageClient({ id }: Props) {
               key={url}
               src={url}
               alt={post.title || ""}
-              priority={index === 0}
+              preload={index === 0}
             />
           ))}
         </div>

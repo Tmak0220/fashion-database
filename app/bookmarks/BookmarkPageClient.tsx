@@ -298,9 +298,7 @@ export default function BookmarkPageClient() {
                   className="cursor-pointer"
                 >
                   <article className="space-y-3">
-                    <div className={`rounded-2xl transition-all duration-300 ${
-                      isSelected ? "border-black ring-1 ring-black shadow-md" : "border-border"
-                    }`}>
+                    <div className={isSelected ? "rounded-2xl ring-1 ring-black shadow-md" : undefined}>
                       {post.image_urls?.[0] && (
                         <PostThumbnail
                           src={post.image_urls[0]} 
