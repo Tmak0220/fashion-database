@@ -33,6 +33,8 @@ export default function EditPostPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [hasTagLoadError, setHasTagLoadError] = useState(false)
 
   const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null)
 
@@ -51,6 +53,9 @@ export default function EditPostPage() {
   const initialImageUrlsRef = useRef<string[]>([])
   const currentImageUrlsRef = useRef<string[]>([])
   const accessTokenRef = useRef<string | null>(null)
+  const uploadInProgressRef = useRef(false)
+  const pendingUploadedUrlsRef = useRef<string[]>([])
+  const componentMountedRef = useRef(true)
 
   useEffect(() => {
     currentImageUrlsRef.current = imageUrls
@@ -67,13 +72,17 @@ export default function EditPostPage() {
   }, [])
 
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    componentMountedRef.current = true
+
+    const cleanupAbandonedImages = () => {
       const originalUrls = initialImageUrlsRef.current
       const currentUrls = currentImageUrlsRef.current
-      
-      const abandonedUrls = currentUrls.filter(url => !originalUrls.includes(url))
-      
+      const abandonedUrls = Array.from(new Set([
+        ...currentUrls.filter(url => !originalUrls.includes(url)),
+        ...pendingUploadedUrlsRef.current,
+      ]))
       const accessToken = accessTokenRef.current
+
       if (abandonedUrls.length > 0 && accessToken) {
         void fetch("/api/delete-object-beacon", {
           method: "POST",
@@ -87,8 +96,14 @@ export default function EditPostPage() {
       }
     }
 
+    const handleBeforeUnload = () => cleanupAbandonedImages()
+
     window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+    return () => {
+      componentMountedRef.current = false
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      cleanupAbandonedImages()
+    }
   }, [])
 
   useLayoutEffect(() => {
@@ -132,8 +147,10 @@ export default function EditPostPage() {
 
       setIsAuthorized(true)
 
-      const { data: tagsData } = await supabase.from("tags").select("*").order("name")
-      const { data: postTagsData } = await supabase.from("post_tags").select("tag_id").eq("post_id", postId)
+      const [tagsResult, postTagsResult] = await Promise.all([
+        supabase.from("tags").select("*").order("name"),
+        supabase.from("post_tags").select("tag_id").eq("post_id", postId),
+      ])
 
       const normalizedPost = {
         ...postData,
@@ -147,15 +164,25 @@ export default function EditPostPage() {
       
       const urls = postData.image_urls || []
       setImageUrls(urls)
+      setFileName(urls.length > 0 ? `${urls.length}枚のファイルを選択中` : "選択されていません")
       initialImageUrlsRef.current = urls
       
-      setTags(tagsData || [])
+      setTags(tagsResult.data || [])
 
       setYear(postData.year ? String(postData.year) : "")
       setSeason((postData.season as "ss" | "fw") || "")
 
-      const currentTags = postTagsData?.map((item) => String(item.tag_id)) || []
+      const currentTags = postTagsResult.data?.map((item) => String(item.tag_id)) || []
       setSelectedTags(currentTags)
+
+      if (tagsResult.error || postTagsResult.error) {
+        console.error("Tag data fetch error:", tagsResult.error || postTagsResult.error)
+        setHasTagLoadError(true)
+        setStatusMessage({
+          text: "タグ情報を取得できませんでした。再読み込みしてから編集してください。",
+          type: "error",
+        })
+      }
       
       setIsAuthChecked(true)
     }
@@ -191,17 +218,23 @@ export default function EditPostPage() {
     }
   }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+  const uploadFiles = async (files: File[]) => {
+    if (uploadInProgressRef.current || saving || deleting) return
 
     setStatusMessage(null)
 
-    if (imageUrls.length + files.length > 2) {
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"))
+    if (imageFiles.length === 0) {
+      setStatusMessage({ text: "画像ファイルを選択してください。", type: "error" })
+      return
+    }
+
+    if (imageUrls.length + imageFiles.length > 2) {
       setStatusMessage({ text: "画像は最大2枚までアップロード可能です。", type: "error" })
       return
     }
 
+    uploadInProgressRef.current = true
     setUploading(true)
     const uploadedUrls: string[] = []
 
@@ -209,7 +242,7 @@ export default function EditPostPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) throw new Error("ログインしてください。")
 
-      for (const file of Array.from(files)) {
+      for (const file of imageFiles) {
         setFileName(file.name)
         
         const compressed = await compressImage(file)
@@ -235,22 +268,78 @@ export default function EditPostPage() {
 
         const data = await res.json()
         uploadedUrls.push(data.url)
+        pendingUploadedUrlsRef.current.push(data.url)
+
+        if (!componentMountedRef.current) {
+          const accessToken = accessTokenRef.current
+          if (accessToken) {
+            void fetch("/api/delete-object-beacon", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({ urls: [data.url] }),
+              keepalive: true,
+            })
+          }
+          return
+        }
       }
 
       setImageUrls((prev) => [...prev, ...uploadedUrls])
+      pendingUploadedUrlsRef.current = pendingUploadedUrlsRef.current.filter(
+        (url) => !uploadedUrls.includes(url)
+      )
+      setFileName(`${imageUrls.length + uploadedUrls.length}枚のファイルを選択中`)
 
     } catch (err: unknown) {
+      if (uploadedUrls.length > 0) {
+        const accessToken = accessTokenRef.current
+        if (accessToken) {
+          await fetch("/api/delete-object-beacon", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ urls: uploadedUrls }),
+          }).catch((cleanupError) => console.error("Upload cleanup error:", cleanupError))
+        }
+      }
+      pendingUploadedUrlsRef.current = pendingUploadedUrlsRef.current.filter(
+        (url) => !uploadedUrls.includes(url)
+      )
       console.error("Upload Error:", err)
       setStatusMessage({ 
         text: err instanceof Error ? err.message : "画像のアップロード中にエラーが発生しました。",
         type: "error" 
       })
     } finally {
+      uploadInProgressRef.current = false
       setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length) void uploadFiles(files)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (uploadInProgressRef.current || saving || deleting) return
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length) void uploadFiles(files)
+  }
+
   const removeImage = async (targetUrl: string) => {
+    if (uploadInProgressRef.current || saving || deleting) return
     setStatusMessage(null)
     try {
       const isTemporaryImage = new URL(targetUrl).pathname.includes("/tmp/")
@@ -285,6 +374,11 @@ export default function EditPostPage() {
   const handleUpdate = async () => {
     setStatusMessage(null)
 
+    if (uploadInProgressRef.current || deleting) return
+    if (hasTagLoadError) {
+      setStatusMessage({ text: "タグ情報を取得できていないため保存できません。ページを再読み込みしてください。", type: "error" })
+      return
+    }
     if (yearError) {
       setStatusMessage({ text: "YEARの入力内容を確認してください。", type: "error" })
       return
@@ -295,23 +389,22 @@ export default function EditPostPage() {
     }
 
     setSaving(true)
-    
-    let finalBrandSlug = brandSlug.trim().toLowerCase() || null
-    let finalDesignerSlug = designerSlug.trim() || null
-
-    if (brandSlug.trim()) {
-      const { data: b } = await supabase.from("brands").select("slug")
-        .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
-      if (b?.slug) finalBrandSlug = b.slug
-    }
-
-    if (designerSlug.trim()) {
-      const { data: d } = await supabase.from("designers").select("slug")
-        .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
-      if (d?.slug) finalDesignerSlug = d.slug
-    }
-
     try {
+      let finalBrandSlug = brandSlug.trim().toLowerCase() || null
+      let finalDesignerSlug = designerSlug.trim() || null
+
+      if (brandSlug.trim()) {
+        const { data: b } = await supabase.from("brands").select("slug")
+          .or(`slug.eq.${brandSlug.trim()},name.eq.${brandSlug.trim()}`).maybeSingle()
+        if (b?.slug) finalBrandSlug = b.slug
+      }
+
+      if (designerSlug.trim()) {
+        const { data: d } = await supabase.from("designers").select("slug")
+          .or(`slug.eq.${designerSlug.trim()},name.eq.${designerSlug.trim()}`).maybeSingle()
+        if (d?.slug) finalDesignerSlug = d.slug
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) throw new Error("ログインしてください")
 
@@ -332,13 +425,11 @@ export default function EditPostPage() {
       )
 
       initialImageUrlsRef.current = result.imageUrls
+      currentImageUrlsRef.current = result.imageUrls
       setImageUrls(result.imageUrls)
 
       setStatusMessage({ text: "投稿を更新しました", type: "success" })
-      
-      setTimeout(() => {
-        router.push(localizePath("/mypage"))
-      }, 1000)
+      router.replace(localizePath("/mypage"))
 
     } catch (postError: unknown) {
       console.error(postError)
@@ -349,6 +440,7 @@ export default function EditPostPage() {
   }
 
   const handleDelete = async () => {
+    if (uploadInProgressRef.current || saving || deleting) return
     setStatusMessage(null)
     if (!window.confirm("この投稿を削除しますか？\n（画像も同時に完全に削除されます）")) return
     
@@ -373,13 +465,25 @@ export default function EditPostPage() {
         throw new Error(data.error || "削除に失敗しました。")
       }
 
+      const temporaryUrls = currentImageUrlsRef.current.filter(
+        (url) => !initialImageUrlsRef.current.includes(url)
+      )
+      if (temporaryUrls.length > 0) {
+        await fetch("/api/delete-object-beacon", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ urls: temporaryUrls }),
+        }).catch((cleanupError) => console.error("Temporary image cleanup error:", cleanupError))
+      }
+
       initialImageUrlsRef.current = []
+      currentImageUrlsRef.current = []
 
       setStatusMessage({ text: "投稿と画像を削除しました", type: "success" })
-      
-      setTimeout(() => {
-        router.push(localizePath("/mypage"))
-      }, 1000)
+      router.replace(localizePath("/mypage"))
     } catch (err: unknown) {
       console.error(err)
       setStatusMessage({ text: err instanceof Error ? err.message : "削除に失敗しました。", type: "error" })
@@ -439,7 +543,34 @@ export default function EditPostPage() {
 
         <div>
           <p className="text-sm mt-12 mb-1 tracking-[0.14em] text-muted font-medium">IMAGE</p>
-          <p className="text-xs text-muted mb-4">アーカイブのアイテム画像を選択してください (最大2枚)</p>
+          <p className="text-xs text-muted mb-4">画像をドラッグ＆ドロップするか、ファイルを選択してください（最大2枚）</p>
+
+          <div
+            onDragEnter={(e) => { e.preventDefault(); if (!uploading && !saving && !deleting) setIsDragging(true) }}
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy" }}
+            onDragLeave={(e) => {
+              e.preventDefault()
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsDragging(false)
+            }}
+            onDrop={handleDrop}
+            onClick={() => { if (!uploading && !saving && !deleting) fileInputRef.current?.click() }}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && !uploading && !saving && !deleting) fileInputRef.current?.click()
+            }}
+            className={`mb-6 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
+              isDragging ? "border-foreground bg-white" : "border-border bg-white hover:border-neutral-400"
+            } ${uploading || saving || deleting ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+            role="button"
+            tabIndex={0}
+          >
+            <p className="text-sm font-medium text-foreground">
+              {isDragging ? "ここにドロップしてください" : "画像をここにドラッグ＆ドロップ"}
+            </p>
+            <p className="mt-2 text-xs text-muted">またはクリックしてファイルを選択</p>
+            <p className="mt-4 text-xs text-subtle">{fileName}</p>
+            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
+          </div>
+          {uploading && <p className="mb-6 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
           
           <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-4xl mb-6">
             {imageUrls.map((url, index) => (
@@ -449,23 +580,13 @@ export default function EditPostPage() {
                   alt={`Preview ${index + 1}`}
                   sizes="(max-width: 640px) 50vw, 33vw"
                 />
-                <button type="button" onClick={() => removeImage(url)} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1">
+                <button type="button" onClick={() => removeImage(url)} disabled={uploading || saving || deleting} className="text-xs underline text-red-500 hover:text-red-700 transition-colors pl-1 disabled:cursor-not-allowed disabled:opacity-50">
                   削除する
                 </button>
               </div>
             ))}
           </div>
 
-          <label className="inline-flex items-center gap-4 cursor-pointer">
-            <span className="type-label text-sm px-6 py-4 border border-border rounded-xl bg-surface text-foreground hover:bg-foreground hover:text-background transition-colors duration-300 active:scale-[0.98]">
-              ファイルを追加
-            </span>
-            <span className="text-sm text-muted font-medium truncate max-w-[200px]">
-              {fileName}
-            </span>
-            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
-          </label>
-          {uploading && <p className="mt-4 text-xs text-muted animate-pulse pl-1">アップロード中...</p>}
         </div>
 
         <div className="mt-10 space-y-8 max-w-3xl">
@@ -560,10 +681,10 @@ export default function EditPostPage() {
           )}
 
           <div className="flex flex-col sm:flex-row gap-4 pt-2">
-            <button onClick={handleUpdate} disabled={saving} className="w-full sm:w-auto border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white text-foreground font-medium text-[14px] active:scale-[0.98]">
+            <button onClick={handleUpdate} disabled={saving || uploading || deleting || hasTagLoadError} className="w-full sm:w-auto border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white text-foreground font-medium text-[14px] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
               {saving ? "変更を保存中..." : "変更を保存する"}
             </button>
-            <button onClick={handleDelete} disabled={deleting} className="w-full sm:w-auto border border-red-500 text-red-500 rounded-xl px-6 py-4 hover:bg-red-500 hover:text-white transition bg-white font-medium text-[14px] active:scale-[0.98]">
+            <button onClick={handleDelete} disabled={deleting || saving || uploading} className="w-full sm:w-auto border border-red-500 text-red-500 rounded-xl px-6 py-4 hover:bg-red-500 hover:text-white transition bg-white font-medium text-[14px] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
               {deleting ? "削除中..." : "投稿を削除する"}
             </button>
           </div>

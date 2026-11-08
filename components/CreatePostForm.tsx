@@ -162,6 +162,10 @@ export default function CreatePostForm({ onPostCreated }: Props) {
   const handleCreatePost = async () => {
     setStatusMessage(null)
 
+    if (uploading) {
+      setStatusMessage({ text: "画像のアップロード完了後に投稿してください。", type: "error" })
+      return
+    }
     if (yearError) {
       setStatusMessage({ text: "YEARの入力内容を確認してください。", type: "error" })
       return
@@ -421,8 +425,8 @@ export default function CreatePostForm({ onPostCreated }: Props) {
           </div>
         )}
 
-        <button onClick={handleCreatePost} disabled={creating} className="w-full sm:w-auto border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white text-foreground font-medium text-[14px] active:scale-[0.98]">
-          {t(creating ? "作成中..." : "作成する")}
+        <button onClick={handleCreatePost} disabled={creating || uploading} className="w-full sm:w-auto border border-border rounded-xl px-6 py-4 hover:bg-black hover:text-white transition bg-white text-foreground font-medium text-[14px] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
+          {t(uploading ? "画像をアップロード中..." : creating ? "作成中..." : "作成する")}
         </button>
       </div>
     </div>
