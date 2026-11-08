@@ -276,7 +276,6 @@ export async function updatePost(postId: string, input: PostInput, accessToken: 
       try {
         await deleteOwnedPostImage(url, user.id)
       } catch (error) {
-        // DBとタグの更新は完了済みなので、古い孤立画像の削除失敗だけを記録する。
         console.error("Failed to remove replaced post image", error)
       }
     }

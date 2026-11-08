@@ -408,7 +408,6 @@ export default function EditPostPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.access_token) throw new Error("ログインしてください")
 
-      // 新しく追記したサーバーアクションを呼び出し、画像移動とDB更新処理を委ねる
       const result = await updatePost(
         postId,
         {
