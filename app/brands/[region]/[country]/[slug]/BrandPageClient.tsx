@@ -75,16 +75,36 @@ type BrandHistoryItem = {
 type Props = {
   brand: Brand
   relatedBrands: RelatedBrand[]
+  initialDesigners: BrandDesigner[]
+  initialCollections: Collection[]
+  initialPosts: Post[]
 }
 
-export default function BrandPageClient({ brand, relatedBrands }: Props) {
+function toHistoryItems(brand: Brand): BrandHistoryItem[] {
+  return (brand.brand_histories || []).map((item) => ({
+    title: item.title || `${brand.name_ja || brand.name} について`,
+    content: item.content || "",
+    sort_order: Number(item.sort_order) || 0,
+    type: "markdown" as const,
+  }))
+}
+
+export default function BrandPageClient({
+  brand,
+  relatedBrands,
+  initialDesigners,
+  initialCollections,
+  initialPosts,
+}: Props) {
   const params = useParams()
   const slug = params.slug as string
   const { openAuthModal } = useAuthModal()
-  const [designers, setDesigners] = useState<BrandDesigner[]>([])
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [posts, setPosts] = useState<Post[]>([])
-  const [historyItems, setHistoryItems] = useState<BrandHistoryItem[]>([])
+  const [designers] = useState<BrandDesigner[]>(initialDesigners)
+  const [collections] = useState<Collection[]>(initialCollections)
+  const [posts] = useState<Post[]>(initialPosts)
+  // Keep the history in the initial render so crawlers and no-JS clients receive
+  // the article body instead of an empty shell that is filled after hydration.
+  const [historyItems, setHistoryItems] = useState<BrandHistoryItem[]>(() => toHistoryItems(brand))
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [following, setFollowing] = useState(false)
   const [followersCount, setFollowersCount] = useState(0)
@@ -121,31 +141,14 @@ export default function BrandPageClient({ brand, relatedBrands }: Props) {
     let isMounted = true
 
     const fetchData = async () => {
-      const histories = brand.brand_histories || []
-      if (histories.length > 0) {
-        setHistoryItems(
-          histories.map((item) => ({
-            title: item.title || `${brand.name_ja || brand.name} について`,
-            content: item.content || "",
-            sort_order: Number(item.sort_order) || 0,
-            type: 'markdown' as const
-          }))
-        )
-      } else {
-        setHistoryItems([])
-      }
+      setHistoryItems(toHistoryItems(brand))
 
-      const [designersRes, collectionsRes, postsRes, followCountRes] = await Promise.all([
-        supabase.from("brand_designers").select("*, designers!brand_designers_designer_id_fkey (*)").eq("brand_id", brand.id).order("start_year", { ascending: true }),
-        supabase.from("collections").select("*").eq("brand_id", brand.id).order("year", { ascending: true }),
-        supabase.from("posts").select("id, image_urls, title").eq("brand_id", brand.id).order("created_at", { ascending: false }),
-        supabase.from("brand_follows").select("*", { count: "exact", head: true }).eq("brand_id", brand.id)
-      ])
+      const followCountRes = await supabase
+        .from("brand_follows")
+        .select("*", { count: "exact", head: true })
+        .eq("brand_id", brand.id)
 
       if (isMounted) {
-        setDesigners((designersRes.data || []) as unknown as BrandDesigner[])
-        setCollections((collectionsRes.data || []) as Collection[])
-        setPosts(postsRes.data || [])
         setFollowersCount(followCountRes.count || 0)
       }
     }

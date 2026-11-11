@@ -1,7 +1,21 @@
 export const dynamic = "force-dynamic"
 
+import type { Metadata } from "next"
 import { supabase } from "@/lib/supabase"
 import Link from "@/components/LocalizedLink"
+import { localizedAlternates } from "@/lib/locale-server"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const title = "コレクション・シーズン一覧"
+  const description = "年代・シーズン別にファッションブランドのコレクションと投稿を探せるアーカイブ一覧です。"
+  return {
+    title,
+    description,
+    alternates: await localizedAlternates("/collections/season"),
+    openGraph: { title, description, type: "website" },
+    twitter: { card: "summary", title, description },
+  }
+}
 
 export default async function AllSeasonsPage() {
   const { data: postsResult } = await supabase

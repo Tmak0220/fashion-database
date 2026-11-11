@@ -7,25 +7,26 @@ import { supabase } from "@/lib/supabase"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 import TagsLoading from "./loading"
 
-type Tag = {
+export type Tag = {
   id: string
   name: string
   name_ja: string | null
   slug: string
 }
 
-type RelatedTag = {
+export type RelatedTag = {
   id: string
   name: string
   name_ja: string | null
   slug: string
 }
 
-type Post = {
+export type Post = {
   id: string
   title: string | null
   image_urls: string[]
   tags: RelatedTag[]
+  brands: { slug: string } | null
 }
 
 type GroupedPosts = {
@@ -40,6 +41,8 @@ type PostTagResponse = {
 
 type Props = {
   slug?: string
+  initialTag?: Tag | null
+  initialPosts?: Post[]
 }
 
 const PREFERRED_ORDER = [
@@ -62,10 +65,10 @@ const PREFERRED_ORDER = [
   "down"
 ]
 
-export default function TagPageClient({ slug = "" }: Props) {
-  const [tag, setTag] = useState<Tag | null>(null)
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
+export default function TagPageClient({ slug = "", initialTag = null, initialPosts = [] }: Props) {
+  const [tag, setTag] = useState<Tag | null>(initialTag)
+  const [posts, setPosts] = useState<Post[]>(initialPosts)
+  const [loading, setLoading] = useState(!initialTag && initialPosts.length === 0)
 
   const isAllTagsMode = !slug
 
@@ -120,7 +123,7 @@ export default function TagPageClient({ slug = "" }: Props) {
       const [postsResult, allRelatedTagsResult] = await Promise.all([
         supabase
           .from("posts")
-          .select("id, title, image_urls")
+          .select("id, title, image_urls, brands!posts_brand_id_fkey(slug)")
           .in("id", postIds),
         supabase
           .from("post_tags")
@@ -149,7 +152,8 @@ export default function TagPageClient({ slug = "" }: Props) {
           id: p.id,
           title: p.title,
           image_urls: p.image_urls || [],
-          tags: []
+          tags: [],
+          brands: Array.isArray(p.brands) ? p.brands[0] || null : p.brands,
         })
       })
 
@@ -237,9 +241,9 @@ export default function TagPageClient({ slug = "" }: Props) {
         tag && (
           <section className="max-w-4xl">
             <p className="type-label text-[11px] tracking-[0.12em] text-subtle">TAG</p>
-            <h1 className="mt-6 type-brand text-5xl md:text-6xl tracking-[0.05em] text-foreground">
+            <h2 className="mt-6 type-brand text-5xl md:text-6xl tracking-[0.05em] text-foreground">
               {tag.name.toUpperCase()}
-            </h1>
+            </h2>
             {tag.name_ja && (
               <p className="mt-4 text-sm sm:text-base tracking-wider text-muted font-medium">{tag.name_ja}</p>
             )}
@@ -296,7 +300,7 @@ export default function TagPageClient({ slug = "" }: Props) {
                   return true ? (
                     <Link 
                       key={`${group.tag.slug}-${post.id}`} 
-                      href={`/posts/archive-${post.id}`} 
+                      href={`/posts/${post.brands?.slug || "archive"}-${post.id}`}
                       className="block group opacity-100 hover:opacity-90 transition duration-200"
                     >
                       {content}

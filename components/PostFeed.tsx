@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 
-type Post = {
+export type Post = {
   id: string
   image_urls: string[]
   title: string | null
@@ -22,9 +22,9 @@ type Post = {
   } | null
 }
 
-export default function PostFeed() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
+export default function PostFeed({ initialPosts = [] }: { initialPosts?: Post[] }) {
+  const [posts, setPosts] = useState<Post[]>(initialPosts)
+  const [loading, setLoading] = useState(initialPosts.length === 0)
 
   useEffect(() => {
     const fetchPosts = async () => {

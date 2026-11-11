@@ -24,35 +24,30 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set("x-fashdb-internal-rewrite", "1")
 
   let response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Refresh expired auth tokens and propagate updated cookies before the
-  // request reaches Server Components, Server Actions, or Route Handlers.
-  await supabase.auth.getUser()
-
-  response.cookies.set("fashdb-locale", locale, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  })
+      }
+    )
+    await supabase.auth.getUser()
+  }
+  const privatePrefixes = [
+    "/admin", "/bookmarks", "/edit-post", "/forgot-password", "/login",
+    "/members/success", "/mypage", "/reset-password", "/search",
+  ]
+  if (!privatePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=86400")
+  }
   return response
 }
 

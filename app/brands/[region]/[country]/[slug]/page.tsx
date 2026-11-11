@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import BrandPageClient from "./BrandPageClient"
 import { localizedAlternates } from "@/lib/locale-server"
+import { permanentRedirect } from "next/navigation"
+import { SITE_URL } from "@/lib/site"
 
 type Props = {
   params: Promise<{
@@ -42,6 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select(`
       name, name_ja,
       countries ( id, name, name_ja, slug ),
+      regions ( id, name, name_ja, slug ),
       brand_histories!brand_id (content, sort_order, key, lang, is_visible)
     `)
     .eq("slug", slug)
@@ -54,9 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sortedHistories = jaHistories.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const historyContent = sortedHistories[0]?.content
   
-  const title = brand.name_ja ? `${brand.name_ja} (${brand.name}) - FASHION DATABASE` : `${brand.name} - FASHION DATABASE`
+  const title = brand.name_ja ? `${brand.name_ja} (${brand.name})｜ブランド` : `${brand.name}｜ブランド`
   
   const countryObj = firstRelation(brand.countries as unknown as PlaceRecord | PlaceRecord[] | null)
+  const regionObj = firstRelation(brand.regions as unknown as PlaceRecord | PlaceRecord[] | null)
+  const canonicalPath = `/brands/${regionObj?.slug || region}/${countryObj?.slug || country}/${slug}`
   const countryNameJa = countryObj ? (countryObj.name_ja || countryObj.name) : "不明"
   const description = historyContent 
     ? historyContent.slice(0, 120) 
@@ -65,7 +70,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: await localizedAlternates(`/brands/${region}/${country}/${slug}`),
+    alternates: await localizedAlternates(canonicalPath),
+    openGraph: { title, description, type: "website" },
+    twitter: { card: "summary", title, description },
   }
 }
 
@@ -97,11 +104,30 @@ export default async function Page({ params }: Props) {
     brand_histories: sortedHistories
   }
 
-  const { data: relatedBrands } = await supabase
-    .from("brands")
-    .select("id, name, name_ja, slug")
-    .eq("country_id", brand.country_id)
-    .neq("slug", brand.slug)
+  const [relatedBrandsResult, designersResult, collectionsResult, postsResult] = await Promise.all([
+    supabase
+      .from("brands")
+      .select("id, name, name_ja, slug")
+      .eq("country_id", brand.country_id)
+      .neq("slug", brand.slug),
+    supabase
+      .from("brand_designers")
+      .select("*, designers!brand_designers_designer_id_fkey (*)")
+      .eq("brand_id", brand.id)
+      .order("start_year", { ascending: true }),
+    supabase
+      .from("collections")
+      .select("id, year, season, label")
+      .eq("brand_id", brand.id)
+      .order("year", { ascending: true }),
+    supabase
+      .from("posts")
+      .select("id, image_urls, title")
+      .eq("brand_id", brand.id)
+      .order("created_at", { ascending: false }),
+  ])
+
+  const relatedBrands = relatedBrandsResult.data
 
   const sanitizedRelatedBrands = (relatedBrands || [])
     .sort((a, b) => a.slug.localeCompare(b.slug))
@@ -110,6 +136,35 @@ export default async function Page({ params }: Props) {
 
   const countryData = firstRelation(brand.countries as unknown as PlaceRecord | PlaceRecord[] | null)
   const regionData = firstRelation(brand.regions as unknown as PlaceRecord | PlaceRecord[] | null)
+
+  const canonicalPath = `/brands/${regionData?.slug || region}/${countryData?.slug || country}/${brand.slug}`
+  if (`/brands/${region}/${country}/${slug}` !== canonicalPath) permanentRedirect(canonicalPath)
+
+  const description = sortedHistories[0]?.content?.slice(0, 300) || undefined
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Brand",
+        name: brand.name,
+        alternateName: brand.name_ja || undefined,
+        url: `${SITE_URL}${canonicalPath}`,
+        description,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          ["ファッションデータベース", "/"],
+          ["ブランド", "/brands"],
+          [regionData?.name_ja || regionData?.name || region, `/brands/${regionData?.slug || region}`],
+          [countryData?.name_ja || countryData?.name || country, `/brands/${regionData?.slug || region}/${countryData?.slug || country}`],
+          [brand.name_ja || brand.name, canonicalPath],
+        ].map(([name, path], index) => ({
+          "@type": "ListItem", position: index + 1, name, item: `${SITE_URL}${path}`,
+        })),
+      },
+    ],
+  }
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
@@ -126,15 +181,17 @@ export default async function Page({ params }: Props) {
   ]
 
   return (
-    <PageLayout
-      title={brand.name}
-      subtitle={brand.name_ja}
-      breadcrumbs={breadcrumbs}
-    >
-      <BrandPageClient 
-        brand={brandWithHistories}
-        relatedBrands={sanitizedRelatedBrands} 
-      />
-    </PageLayout>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <PageLayout title={brand.name} subtitle={brand.name_ja} breadcrumbs={breadcrumbs}>
+        <BrandPageClient
+          brand={brandWithHistories}
+          relatedBrands={sanitizedRelatedBrands}
+          initialDesigners={(designersResult.data || []) as never[]}
+          initialCollections={collectionsResult.data || []}
+          initialPosts={postsResult.data || []}
+        />
+      </PageLayout>
+    </>
   )
 }

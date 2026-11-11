@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase"
 import PageLayout from "@/components/PageLayout"
 import DesignerPageClient from "./DesignerPageClient"
 import { localizedAlternates } from "@/lib/locale-server"
+import { permanentRedirect } from "next/navigation"
+import { SITE_URL } from "@/lib/site"
 
 type Props = {
   params: Promise<{
@@ -42,6 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .select(`
       name, name_ja,
       countries ( id, name, name_ja, slug ),
+      regions ( id, name, name_ja, slug ),
       designer_histories!designer_id (content, sort_order, key, lang, is_visible)
     `)
     .eq("slug", slug)
@@ -54,9 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sortedHistories = jaHistories.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
   const historyContent = sortedHistories[0]?.content
   
-  const title = designer.name_ja ? `${designer.name_ja} (${designer.name}) - FASHION DATABASE` : `${designer.name} - FASHION DATABASE`
+  const title = designer.name_ja ? `${designer.name_ja} (${designer.name})｜デザイナー` : `${designer.name}｜デザイナー`
   
   const countryObj = firstRelation(designer.countries as unknown as PlaceRecord | PlaceRecord[] | null)
+  const regionObj = firstRelation(designer.regions as unknown as PlaceRecord | PlaceRecord[] | null)
+  const canonicalPath = `/designers/${regionObj?.slug || region}/${countryObj?.slug || country}/${slug}`
   const countryNameJa = countryObj ? (countryObj.name_ja || countryObj.name) : "不明"
   const description = historyContent 
     ? historyContent.slice(0, 120) 
@@ -65,7 +70,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: await localizedAlternates(`/designers/${region}/${country}/${slug}`),
+    alternates: await localizedAlternates(canonicalPath),
+    openGraph: { title, description, type: "profile" },
+    twitter: { card: "summary", title, description },
   }
 }
 
@@ -97,11 +104,30 @@ export default async function Page({ params }: Props) {
     designer_histories: sortedHistories
   }
 
-  const { data: relatedDesigners } = await supabase
-    .from("designers")
-    .select("id, name, name_ja, slug")
-    .eq("country_id", designer.country_id)
-    .neq("slug", designer.slug)
+  const [relatedDesignersResult, brandsResult, collectionsResult, postsResult] = await Promise.all([
+    supabase
+      .from("designers")
+      .select("id, name, name_ja, slug")
+      .eq("country_id", designer.country_id)
+      .neq("slug", designer.slug),
+    supabase
+      .from("brand_designers")
+      .select("*, brands!brand_designers_brand_id_fkey (*)")
+      .eq("designer_id", designer.id)
+      .order("start_year", { ascending: true }),
+    supabase
+      .from("collections")
+      .select("id, year, season, label, brands!collections_brand_id_fkey(slug)")
+      .eq("designer_id", designer.id)
+      .order("year", { ascending: true }),
+    supabase
+      .from("posts")
+      .select("id, image_urls, title, brands!posts_brand_id_fkey(slug)")
+      .eq("designer_id", designer.id)
+      .order("created_at", { ascending: false }),
+  ])
+
+  const relatedDesigners = relatedDesignersResult.data
 
   const sanitizedRelatedDesigners = (relatedDesigners || [])
     .sort((a, b) => a.slug.localeCompare(b.slug))
@@ -110,6 +136,35 @@ export default async function Page({ params }: Props) {
 
   const countryData = firstRelation(designer.countries as unknown as PlaceRecord | PlaceRecord[] | null)
   const regionData = firstRelation(designer.regions as unknown as PlaceRecord | PlaceRecord[] | null)
+
+  const canonicalPath = `/designers/${regionData?.slug || region}/${countryData?.slug || country}/${designer.slug}`
+  if (`/designers/${region}/${country}/${slug}` !== canonicalPath) permanentRedirect(canonicalPath)
+
+  const description = sortedHistories[0]?.content?.slice(0, 300) || undefined
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        name: designer.name,
+        alternateName: designer.name_ja || undefined,
+        url: `${SITE_URL}${canonicalPath}`,
+        description,
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          ["ファッションデータベース", "/"],
+          ["デザイナー", "/designers"],
+          [regionData?.name_ja || regionData?.name || region, `/designers/${regionData?.slug || region}`],
+          [countryData?.name_ja || countryData?.name || country, `/designers/${regionData?.slug || region}/${countryData?.slug || country}`],
+          [designer.name_ja || designer.name, canonicalPath],
+        ].map(([name, path], index) => ({
+          "@type": "ListItem", position: index + 1, name, item: `${SITE_URL}${path}`,
+        })),
+      },
+    ],
+  }
 
   const breadcrumbs = [
     { label: "ファッションデータベース", href: "/" },
@@ -126,15 +181,24 @@ export default async function Page({ params }: Props) {
   ]
 
   return (
-    <PageLayout
-      title={designer.name}
-      subtitle={designer.name_ja}
-      breadcrumbs={breadcrumbs}
-    >
-      <DesignerPageClient 
-        designer={designerWithHistories}
-        relatedDesigners={sanitizedRelatedDesigners} 
-      />
-    </PageLayout>
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <PageLayout title={designer.name} subtitle={designer.name_ja} breadcrumbs={breadcrumbs}>
+        <DesignerPageClient
+          designer={designerWithHistories}
+          relatedDesigners={sanitizedRelatedDesigners}
+          initialBrands={(brandsResult.data || []) as never[]}
+          initialCollections={(collectionsResult.data || []).map((collection) => ({
+            ...collection,
+            brands: firstRelation(collection.brands),
+          }))}
+          initialPosts={(postsResult.data || []).map((post) => ({
+            ...post,
+            image_urls: post.image_urls || [],
+            brands: firstRelation(post.brands),
+          }))}
+        />
+      </PageLayout>
+    </>
   )
 }

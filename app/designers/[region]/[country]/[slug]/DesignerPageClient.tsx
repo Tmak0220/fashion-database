@@ -75,16 +75,36 @@ type DesignerHistoryItem = {
 type Props = {
   designer: Designer
   relatedDesigners: RelatedDesigner[]
+  initialBrands: DesignerBrand[]
+  initialCollections: Collection[]
+  initialPosts: Post[]
 }
 
-export default function DesignerPageClient({ designer, relatedDesigners }: Props) {
+function toHistoryItems(designer: Designer): DesignerHistoryItem[] {
+  return (designer.designer_histories || []).map((item) => ({
+    title: item.title || `${designer.name_ja || designer.name} について`,
+    content: item.content || "",
+    sort_order: Number(item.sort_order) || 0,
+    type: "markdown" as const,
+  }))
+}
+
+export default function DesignerPageClient({
+  designer,
+  relatedDesigners,
+  initialBrands,
+  initialCollections,
+  initialPosts,
+}: Props) {
   const params = useParams()
   const slug = params.slug as string
   const { openAuthModal } = useAuthModal()
-  const [brands, setBrands] = useState<DesignerBrand[]>([])
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [posts, setPosts] = useState<Post[]>([])
-  const [historyItems, setHistoryItems] = useState<DesignerHistoryItem[]>([])
+  const [brands] = useState<DesignerBrand[]>(initialBrands)
+  const [collections] = useState<Collection[]>(initialCollections)
+  const [posts] = useState<Post[]>(initialPosts)
+  // Render the biography on the server; previously it appeared only after the
+  // client-side effect, which made the primary page content invisible in HTML.
+  const [historyItems, setHistoryItems] = useState<DesignerHistoryItem[]>(() => toHistoryItems(designer))
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [following, setFollowing] = useState(false)
   const [followersCount, setFollowersCount] = useState(0)
@@ -121,37 +141,14 @@ export default function DesignerPageClient({ designer, relatedDesigners }: Props
     let isMounted = true
 
     const fetchData = async () => {
-      const histories = designer.designer_histories || []
-      if (histories.length > 0) {
-        setHistoryItems(
-          histories.map((item) => ({
-            title: item.title || `${designer.name_ja || designer.name} について`,
-            content: item.content || "",
-            sort_order: Number(item.sort_order) || 0,
-            type: 'markdown' as const
-          }))
-        )
-      } else {
-        setHistoryItems([])
-      }
+      setHistoryItems(toHistoryItems(designer))
 
-      const [brandsRes, collectionsRes, postsRes, followCountRes] = await Promise.all([
-        supabase.from("brand_designers").select("*, brands!brand_designers_brand_id_fkey (*)").eq("designer_id", designer.id).order("start_year", { ascending: true }),
-        supabase.from("collections").select("id, year, season, label, brands!collections_brand_id_fkey(slug)").eq("designer_id", designer.id).order("year", { ascending: true }),
-        supabase.from("posts").select("id, image_urls, title, brands!posts_brand_id_fkey(slug)").eq("designer_id", designer.id).order("created_at", { ascending: false }),
-        supabase.from("designer_follows").select("*", { count: "exact", head: true }).eq("designer_id", designer.id)
-      ])
+      const followCountRes = await supabase
+        .from("designer_follows")
+        .select("*", { count: "exact", head: true })
+        .eq("designer_id", designer.id)
 
       if (isMounted) {
-        setBrands((brandsRes.data || []) as unknown as DesignerBrand[])
-        setCollections((collectionsRes.data || []).map((collection) => ({
-          ...collection,
-          brands: Array.isArray(collection.brands) ? collection.brands[0] || null : collection.brands,
-        })))
-        setPosts((postsRes.data || []).map((post) => ({
-          ...post,
-          brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
-        })))
         setFollowersCount(followCountRes.count || 0)
       }
     }

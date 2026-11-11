@@ -66,6 +66,26 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   const locale = await getRequestLocale()
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: "FASHION DATABASE",
+        url: SITE_URL,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: "FASHION DATABASE",
+        alternateName: "ファッションデータベース",
+        url: SITE_URL,
+        publisher: { "@id": `${SITE_URL}/#organization` },
+        inLanguage: ["ja", "en"],
+      },
+    ],
+  }
 
   return (
     <html
@@ -78,6 +98,10 @@ export default async function RootLayout({
       `}
     >
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+        />
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
           strategy="afterInteractive"

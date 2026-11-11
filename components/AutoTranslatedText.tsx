@@ -86,7 +86,15 @@ export default function AutoTranslatedText({ text, as: Tag = "span", className, 
     <>
       {markdown ? (
         <div className={className}>
-          <ReactMarkdown>{displayedText}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              h1: ({ children }) => <h2>{children}</h2>,
+              h2: ({ children }) => <h3>{children}</h3>,
+              h3: ({ children }) => <h4>{children}</h4>,
+            }}
+          >
+            {displayedText}
+          </ReactMarkdown>
         </div>
       ) : (
         <Tag className={className}>{displayedText}</Tag>

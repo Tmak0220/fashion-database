@@ -2,11 +2,12 @@ export const dynamic = "force-dynamic"
 
 import type { Metadata } from "next"
 import Link from "@/components/LocalizedLink"
-import PostFeed from "@/components/PostFeed"
+import PostFeed, { type Post } from "@/components/PostFeed"
 import CardSection from "@/components/CardSection"
 import SectionHeading from "@/components/SectionHeading"
 import { getRequestLocale, localizedAlternates } from "@/lib/locale-server"
 import { translateText } from "@/lib/i18n"
+import { supabase } from "@/lib/supabase"
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale()
@@ -30,6 +31,19 @@ const navigationItems = [
 export default async function Home() {
   const locale = await getRequestLocale()
   const t = (text: string) => translateText(text, locale)
+  const { data } = await supabase
+    .from("posts")
+    .select(`
+      id, image_urls, title, description, created_at,
+      users:profiles!posts_user_id_fkey (id, username, display_name, avatar_url),
+      brands!posts_brand_id_fkey (slug)
+    `)
+    .order("created_at", { ascending: false })
+  const initialPosts = (data || []).map((post) => ({
+    ...post,
+    users: Array.isArray(post.users) ? post.users[0] || null : post.users,
+    brands: Array.isArray(post.brands) ? post.brands[0] || null : post.brands,
+  })) as Post[]
 
   return (
     <main className="min-h-screen">
@@ -83,7 +97,7 @@ export default async function Home() {
           titleJa="最新投稿"
           className="mb-8 [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:md:text-4xl [&_h2]:font-normal [&_p]:text-xs [&_p]:sm:text-sm [&_p]:tracking-[0.08em] [&_p]:mt-1.5"
         />
-        <PostFeed />
+        <PostFeed initialPosts={initialPosts} />
       </section>
     </main>
   )

@@ -1,11 +1,9 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import Link from "@/components/LocalizedLink"
 import PostThumbnail from "@/components/PostThumbnail"
 import AutoTranslatedText from "@/components/AutoTranslatedText"
 import { supabase } from "@/lib/supabase"
 import CollectionButton from "@/components/CollectionButton"
+import { notFound } from "next/navigation"
 
 type Post = {
   id: string
@@ -27,65 +25,40 @@ type Props = {
   }>
 }
 
-export default function BrandPage({ params }: Props) {
-  const [brandName, setBrandName] = useState<string>("")
-  const [posts, setPosts] = useState<Post[]>([])
-  const [uniqueSeasons, setUniqueSeasons] = useState<SeasonItem[]>([])
-  const [loading, setLoading] = useState(true)
+export default async function BrandPage({ params }: Props) {
+  const { brand: resolvedBrand } = await params
+  const { data: brandRecord } = await supabase
+    .from("brands")
+    .select("id, name, name_ja")
+    .eq("slug", resolvedBrand)
+    .maybeSingle()
 
-  useEffect(() => {
-    const initData = async () => {
-      const { brand: resolvedBrand } = await params
+  if (!brandRecord) notFound()
 
-      const { data: brandRecord } = await supabase
-        .from("brands")
-        .select("id, name")
-        .eq("slug", resolvedBrand)
-        .maybeSingle()
+  const { data: postsResult } = await supabase
+    .from("posts")
+    .select("id, title, image_urls, year, season")
+    .eq("brand_id", brandRecord.id)
+    .order("created_at", { ascending: false })
 
-      setBrandName(brandRecord?.name || resolvedBrand.replaceAll("-", " "))
-
-      const { data: postsResult } = brandRecord ? await supabase
-        .from("posts")
-        .select("id, title, image_urls, year, season")
-        .eq("brand_id", brandRecord.id)
-        .order("created_at", { ascending: false })
-        : { data: [] }
-
-      const fetchedPosts = postsResult ?? []
-      setPosts(fetchedPosts)
-
-      const seasons = Array.from(
-        new Map(
-          fetchedPosts
-            .filter((post) => post.year && post.season)
-            .map((post) => {
-              const year = String(post.year)
-              const season = post.season!
-              const seasonSlug = `${year}-${season}`
-              return [
-                seasonSlug,
-                {
-                  id: `${resolvedBrand}/${seasonSlug}`,
-                  year: year,
-                  season: season?.toUpperCase() || "",
-                },
-              ]
-            })
-        ).values()
-      ).sort((a, b) => b.id.localeCompare(a.id))
-
-      setUniqueSeasons(seasons)
-      setLoading(false)
-    }
-
-    initData()
-
-  }, [params])
-
-  if (loading) {
-    return <div className="p-10 md:p-14 lg:p-16 text-center text-xs text-subtle">LOADING...</div>
-  }
+  const posts = (postsResult ?? []) as Post[]
+  const brandName = brandRecord.name_ja || brandRecord.name
+  const uniqueSeasons = Array.from(
+    new Map(
+      posts
+        .filter((post) => post.year && post.season)
+        .map((post) => {
+          const year = String(post.year)
+          const season = post.season!
+          const seasonSlug = `${year}-${season}`
+          return [seasonSlug, {
+            id: `${resolvedBrand}/${seasonSlug}`,
+            year,
+            season: season.toUpperCase(),
+          }]
+        })
+    ).values()
+  ).sort((a, b) => b.id.localeCompare(a.id)) as SeasonItem[]
 
   return (
     <main className="p-10 md:p-14 lg:p-16 max-w-7xl mx-auto w-full min-h-screen">
@@ -181,7 +154,7 @@ export default function BrandPage({ params }: Props) {
                 </article>
               )
 
-              return <Link key={post.id} href={`/posts/${post.id}`} className="group block">{content}</Link>
+              return <Link key={post.id} href={`/posts/${resolvedBrand}-${post.id}`} className="group block">{content}</Link>
             })}
           </div>
         )}

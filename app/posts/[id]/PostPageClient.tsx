@@ -18,7 +18,7 @@ type RelatedPost = {
   brands: { slug: string } | null
 }
 
-type Post = {
+export type Post = {
   id: string
   title: string | null
   description: string | null
@@ -58,14 +58,15 @@ type Post = {
 
 type Props = {
   id: string
+  initialPost: Post
 }
 
-export default function PostPageClient({ id }: Props) {
+export default function PostPageClient({ id, initialPost }: Props) {
   const { localizePath } = useLocale()
   const { openAuthModal } = useAuthModal()
-  const [post, setPost] = useState<Post | null>(null)
+  const [post, setPost] = useState<Post | null>(initialPost)
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [liked, setLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
@@ -84,49 +85,8 @@ export default function PostPageClient({ id }: Props) {
         setCurrentUserId(userId)
       }
 
-      const { data: rawPost, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          users:profiles!posts_user_id_fkey (id, username, display_name, avatar_url),
-          post_tags (tags (slug, name))
-        `)
-        .eq("id", id)
-        .single()
-
-      if (error || !rawPost) {
-        console.error("投稿の取得失敗:", error)
-        setLoading(false)
-        return
-      }
-
-      let brandData = null
-      if (rawPost.brand_id) {
-        const { data } = await supabase
-          .from("brands")
-          .select("slug, name, regions(slug), countries(slug)")
-          .eq("id", rawPost.brand_id)
-          .maybeSingle()
-        brandData = data
-      }
-
-      let designerData = null
-      if (rawPost.designer_id) {
-        const { data } = await supabase
-          .from("designers")
-          .select("slug, name, regions(slug), countries(slug)")
-          .eq("id", rawPost.designer_id)
-          .maybeSingle()
-        designerData = data
-      }
-
-      const combinedPost = {
-        ...rawPost,
-        brands: brandData,
-        designers: designerData
-      } as Post
-
-      setPost(combinedPost)
+      const rawPost = initialPost
+      const combinedPost = initialPost
 
       const slugPrefix = combinedPost.brands?.slug || "archive"
       const expectedPath = localizePath(`/posts/${slugPrefix}-${id}`)
@@ -199,7 +159,7 @@ export default function PostPageClient({ id }: Props) {
     }
 
     fetchPost()
-  }, [id, localizePath])
+  }, [id, initialPost, localizePath])
   
   const requireAuth = () => {
     if (!currentUserId) {

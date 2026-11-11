@@ -2,6 +2,8 @@ import { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase";
 import { SITE_URL } from "@/lib/site";
 
+export const revalidate = 3600;
+
 type RouteRelation = { slug: string } | { slug: string }[] | null;
 type EntityRouteRow = {
   slug: string;
@@ -9,11 +11,13 @@ type EntityRouteRow = {
   regions: RouteRelation;
   countries: RouteRelation;
 };
-type PostRouteRow = { id: string; year: number | null; season: string | null; updated_at: string | null; brands: RouteRelation };
+type PostRouteRow = { id: string; year: number | null; season: string | null; updated_at: string | null; image_urls: string[] | null; brands: RouteRelation };
 type CollectionRouteRow = { year: number; season: string; updated_at: string | null; brands: RouteRelation };
 
 const relationSlug = (relation: RouteRelation) =>
   (Array.isArray(relation) ? relation[0]?.slug : relation?.slug) || "unknown";
+
+const modified = (value: string | null) => value ? { lastModified: new Date(value) } : {};
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_URL;
@@ -27,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ] = await Promise.all([
     supabase.from("brands").select("slug, updated_at, regions(slug), countries(slug)"),
     supabase.from("designers").select("slug, updated_at, regions(slug), countries(slug)"),
-    supabase.from("posts").select("id, year, season, updated_at, brands!posts_brand_id_fkey(slug)"),
+    supabase.from("posts").select("id, year, season, updated_at, image_urls, brands!posts_brand_id_fkey(slug)"),
     supabase.from("tags").select("slug, updated_at"),
     supabase.from("collections").select("year, season, updated_at, brands!collections_brand_id_fkey(slug)"),
   ]);
@@ -37,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const countrySlug = relationSlug(b.countries);
     return {
       url: `${baseUrl}/brands/${regionSlug}/${countrySlug}/${b.slug}`,
-      lastModified: b.updated_at ? new Date(b.updated_at) : new Date(),
+      ...modified(b.updated_at),
     };
   }) || [];
 
@@ -46,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const countrySlug = relationSlug(d.countries);
     return {
       url: `${baseUrl}/designers/${regionSlug}/${countrySlug}/${d.slug}`,
-      lastModified: d.updated_at ? new Date(d.updated_at) : new Date(),
+      ...modified(d.updated_at),
     };
   }) || [];
 
@@ -56,13 +60,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const prefix = relatedSlug === "unknown" ? "archive" : relatedSlug;
     return {
       url: `${baseUrl}/posts/${prefix}-${p.id}`,
-      lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
+      ...modified(p.updated_at),
+      images: p.image_urls || [],
     };
   }) || [];
 
   const tagUrls = tags?.map((t) => ({
     url: `${baseUrl}/tags/${t.slug}`,
-    lastModified: t.updated_at ? new Date(t.updated_at) : new Date(),
+    ...modified(t.updated_at),
   })) || [];
 
   const collectionRows = (collections as unknown as CollectionRouteRow[] | null) || [];
@@ -78,20 +83,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return {
       url: `${baseUrl}/collections/${brandSlug}`,
-      lastModified: latestUpdate ? new Date(latestUpdate) : new Date(),
+      ...modified(latestUpdate || null),
     };
   });
 
   const collectionSeasonUrls = collectionRows.map((c) => ({
     url: `${baseUrl}/collections/${relationSlug(c.brands)}/${c.year}-${c.season}`,
-    lastModified: c.updated_at ? new Date(c.updated_at) : new Date(),
+    ...modified(c.updated_at),
   })) || [];
 
   const virtualCollectionSeasonUrls = postRows
     .filter((post) => post.brands && post.year && post.season)
     .map((post) => ({
       url: `${baseUrl}/collections/${relationSlug(post.brands)}/${post.year}-${post.season}`,
-      lastModified: post.updated_at ? new Date(post.updated_at) : new Date(),
+      ...modified(post.updated_at),
     }));
 
   const uniqueSeasons = Array.from(
@@ -106,19 +111,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return {
       url: `${baseUrl}/collections/season/${seasonSlug}`,
-      lastModified: latestUpdate ? new Date(latestUpdate) : new Date(),
+      ...modified(latestUpdate || null),
     };
   });
 
   const unlocalizedEntries: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date() },
-    { url: `${baseUrl}/brands`, lastModified: new Date() },
-    { url: `${baseUrl}/designers`, lastModified: new Date() },
-    { url: `${baseUrl}/collections`, lastModified: new Date() },
-    { url: `${baseUrl}/guide`, lastModified: new Date() },
-    { url: `${baseUrl}/legal`, lastModified: new Date() },
-    { url: `${baseUrl}/privacy`, lastModified: new Date() },
-    { url: `${baseUrl}/terms`, lastModified: new Date() },
+    { url: baseUrl },
+    { url: `${baseUrl}/brands` },
+    { url: `${baseUrl}/designers` },
+    { url: `${baseUrl}/collections` },
+    { url: `${baseUrl}/guide` },
+    { url: `${baseUrl}/legal` },
+    { url: `${baseUrl}/privacy` },
+    { url: `${baseUrl}/terms` },
     ...brandUrls,
     ...designerUrls,
     ...postUrls,
@@ -137,7 +142,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ja: `${baseUrl}${pathname}`,
       en: `${baseUrl}/en${pathname}`,
     }
-
     return (["ja", "en"] as const).map((locale) => ({
       ...entry,
       url: languages[locale],
